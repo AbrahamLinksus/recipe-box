@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from '@playwright/test';
 
 const PORT = '47399';
@@ -8,6 +9,7 @@ export default defineConfig({
   use: { channel: 'msedge', baseURL: BASE },
   webServer: {
     command: 'node server/main.js',
+    cwd: fileURLToPath(new URL('../..', import.meta.url)),
     env: { RECIPE_BOX_PORT: PORT, RECIPE_BOX_NO_OPEN: '1' },
     url: `${BASE}/__recipe-box/health`,
   },

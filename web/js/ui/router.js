@@ -2,6 +2,12 @@
  * @typedef {{ name: 'list' } | { name: 'view', id: string } | { name: 'new' }
  *   | { name: 'edit', id: string } | { name: 'notFound' }} Route
  * @typedef {{ start(): void, navigate(route: Route, opts?: { replace?: boolean }): void }} Router
+ *
+ * @typedef {{ store: import('../store/recipe-store.js').RecipeStore, router: Router,
+ *   dialogs: import('./dialogs.js').Dialogs, banner: import('./banner.js').Banner,
+ *   filterState: import('./filter-state.js').FilterState }} ScreenContext
+ * @typedef {{ unmount(): void, canLeave?(): Promise<boolean> }} ScreenHandle
+ * @typedef {(container: HTMLElement, ctx: ScreenContext, route: Route) => ScreenHandle} MountScreen
  */
 
 /**
