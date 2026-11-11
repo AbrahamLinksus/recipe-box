@@ -20,6 +20,12 @@
 
 | Agent | Model | Why on this project |
 | ----- | ----- | ------------------- |
+| frontend-coder | Sonnet | M2–M5 shell + screens, M8 search UI |
+| backend-coder | Sonnet | M1 launcher, M6 model, M7 scaling, M9–M10 store/persistence |
+| tester | Sonnet | every task: check.sh vs acceptance criteria |
+| reviewer | Opus (Sonnet on low-risk, balanced mode) | every task, read-only |
+| debugger | Opus (Sonnet on low-risk) | failures, max 2 rounds |
+| docs | Haiku | milestone README/docs |
 
 ## Open work
 
@@ -49,6 +55,9 @@ Context gaps agents reported (`Context gap:` in a REPORT). The Orchestrator adds
 
 | Role | Also read | Why (from gap report) |
 | ---- | --------- | --------------------- |
+| architect | <plugin root>/skills/setup-project/scopes.json; package.json; .prettierignore | scopes override format; §0.4 package pins (gap reports: plan lld, M1-docs) |
+| reviewer | DECISIONS.md (rows relevant to the task); docs/SPEC.md §5 when fixtures are involved | T-02 / T-03 reviews needed decisions + spec examples |
+| debugger | docs/CONVENTIONS.md logging rules | T-05 debug needed them |
 
 ## Notes for the next session
 - Owner chose: T-16 (scaling, pure) starts as soon as T-03 is Done, in parallel with M2.
