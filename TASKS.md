@@ -114,14 +114,14 @@ Notes for every task
 - Owner: frontend-coder
 - Depends on: T-02, T-06, T-07
 - Context: SPEC US-02, US-08, US-11, §4 F-0 · LLD §1.4, §2.1, §2.5, §3.1, §3.4, §11.6 · files: web/js/main.js, web/js/ui/app.js, web/js/ui/screens/*, web/css/app.css, tests/e2e/*, docs/wireframes/recipe-list.html
-- Status: Backlog
+- Status: Done
 - Acceptance criteria:
-  - [ ] `web/js/main.js` (≤ 30 lines) builds `LocalStoragePersistence` → `RecipeStore` → `init()` → `requestDurability()` → `createApp(...).start()`; `app.js` mounts screens per route, shows "Page not found" + "All recipes" for unknown routes, and routes unhandled rejections to the banner
-  - [ ] With no stored data, `npm start` shows "No recipes yet" and an "Add your first recipe" button (`empty-state`, `add-first-recipe`); screenshots at 1280 and 390 px in `.results/T-08/`
-  - [ ] Base layout in `web/css/app.css` (mobile-first single column, page max-width 1100 px) with the list header and "Add recipe" button (`add-recipe`)
-  - [ ] E2E `tests/e2e/list.spec.js` (empty state) and `tests/e2e/persistence.spec.js` (stored value `{oops` → banner "Your saved recipes could not be read, so Recipe Box will not change them. Nothing has been deleted.", Add disabled, stored value byte-identical afterwards) pass in both projects; e2e seed helper `tests/e2e/helpers/seed.js` writes `recipe-box:collection` via `page.addInitScript`
-  - [ ] `bash scripts/check.sh --e2e` passes
-- Result: —
+  - [x] `web/js/main.js` (≤ 30 lines) builds `LocalStoragePersistence` → `RecipeStore` → `init()` → `requestDurability()` → `createApp(...).start()`; `app.js` mounts screens per route, shows "Page not found" + "All recipes" for unknown routes, and routes unhandled rejections to the banner
+  - [x] With no stored data, `npm start` shows "No recipes yet" and an "Add your first recipe" button (`empty-state`, `add-first-recipe`); screenshots at 1280 and 390 px in `.results/T-08/`
+  - [x] Base layout in `web/css/app.css` (mobile-first single column, page max-width 1100 px) with the list header and "Add recipe" button (`add-recipe`)
+  - [x] E2E `tests/e2e/list.spec.js` (empty state) and `tests/e2e/persistence.spec.js` (stored value `{oops` → banner "Your saved recipes could not be read, so Recipe Box will not change them. Nothing has been deleted.", Add disabled, stored value byte-identical afterwards) pass in both projects; e2e seed helper `tests/e2e/helpers/seed.js` writes `recipe-box:collection` via `page.addInitScript`
+  - [x] `bash scripts/check.sh --e2e` passes
+- Result: ✅ 5/5 goals · e2e 14/14 · 3491ef1
 
 ## M2 · Add, list and open
 
@@ -227,13 +227,13 @@ Notes for every task
 - Owner: backend-coder
 - Depends on: T-03
 - Context: SPEC US-06, §4 F-3, §5 F-3 · LLD §7.1, §7.2, §6.1 · files: web/js/core/scaling/*, tests/unit/core/scaling/*, tests/helpers/recipes.fixture.js
-- Status: Backlog
+- Status: Done
 - Acceptance criteria:
-  - [ ] `roundToQuarter`, `formatQuarter`, `scaleAmount`, `formatIngredientLine`, `parseServingsInput`, `stepServings` match §7.1; `core/scaling` imports only `core/recipe`
-  - [ ] Unit tests cover every §7.2 row: Pancakes 4→6 `300 g`, `3`, `450 ml`; 4→3 `150 g`, `1½`, `225 ml`; 4→1 `50 g`, `½`, `75 ml`; 4→4 as typed; salt unchanged in all; Banana Bread 8→2 `¾`, `¼ tsp`, `62½ g`; 8→1 `½` (0.375 rounds up), `¼ tsp` (never 0), `31¼ g`; `1 1/2 cup` 2→2 as typed; `½` 1→3 `1½`
-  - [ ] `parseServingsInput` returns previous (3) for `'0'`, `''`, `'abc'`, `'2.5'`, `'-1'` and 6 for `' 6 '`; `stepServings(1, -1)` = 1; typed `0` scales to `0`
-  - [ ] Checks pass
-- Result: —
+  - [x] `roundToQuarter`, `formatQuarter`, `scaleAmount`, `formatIngredientLine`, `parseServingsInput`, `stepServings` match §7.1; `core/scaling` imports only `core/recipe`
+  - [x] Unit tests cover every §7.2 row: Pancakes 4→6 `300 g`, `3`, `450 ml`; 4→3 `150 g`, `1½`, `225 ml`; 4→1 `50 g`, `½`, `75 ml`; 4→4 as typed; salt unchanged in all; Banana Bread 8→2 `¾`, `¼ tsp`, `62½ g`; 8→1 `½` (0.375 rounds up), `¼ tsp` (never 0), `31¼ g`; `1 1/2 cup` 2→2 as typed; `½` 1→3 `1½`
+  - [x] `parseServingsInput` returns previous (3) for `'0'`, `''`, `'abc'`, `'2.5'`, `'-1'` and 6 for `' 6 '`; `stepServings(1, -1)` = 1; typed `0` scales to `0`
+  - [x] Checks pass
+- Result: ✅ 4/4 goals · 125 tests · batch-approved early (owner) · 06c9266
 
 ### T-17 · Servings control on the recipe view
 

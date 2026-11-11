@@ -18,3 +18,4 @@
 | A-07 | 2026-11-11 | Listener errors in the store | isolated per listener, reported via globalThis.reportError (microtask fallback); never fail a saved write | backend debugger | T-05 |
 | A-08 | 2026-11-11 | Stored-data check | lenient shape check (types only) separate from write-side assertRecipeInput | backend debugger | T-06 |
 | A-09 | 2026-11-11 | Save over data it can't read | adapter refuses (PersistenceWriteError 'unavailable') if stored value is v2 / missing version / not JSON | backend debugger | T-06 |
+| A-10 | 2026-11-11 | Not-yet-built routes | #/new, view, edit show Page not found until M2 | frontend-coder | T-08 |
