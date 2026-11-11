@@ -19,13 +19,13 @@ Notes for every task
 - Owner: backend-coder
 - Depends on: —
 - Context: SPEC US-11 · LLD §0.5, §1.1, §1.2, §1.5, §11.6 · files: server/*, tests/unit/server/*
-- Status: Backlog
+- Status: Done
 - Acceptance criteria:
-  - [ ] `server/config.js`, `server/log.js`, `server/static-handler.js` export the §1.1 signatures; `loadConfig({})` gives port 47321, host `127.0.0.1`, origin `http://127.0.0.1:47321`; `RECIPE_BOX_PORT=80` or `abc` throws `ConfigError` with the exact §1.2 message
-  - [ ] Unit tests (handler started on port 0) cover every §1.2 contract row: `GET /` → 200 index.html, `/__recipe-box/health` → `{"app":"recipe-box","version":…}`, MIME types for .html/.js/.css/.svg/.json, 404 for missing / directory / unknown extension / `..` / `%00`, 405 with `Allow: GET, HEAD` for POST, 403 "Forbidden host" for a foreign `Host` header
-  - [ ] Every response carries the §1.2 headers (`Cache-Control: no-cache`, `X-Content-Type-Options`, `Referrer-Policy`, the exact CSP), asserted in a test
-  - [ ] Checks pass (coverage ≥ 80 % over `server/**` except `server/main.js`)
-- Result: —
+  - [x] `server/config.js`, `server/log.js`, `server/static-handler.js` export the §1.1 signatures; `loadConfig({})` gives port 47321, host `127.0.0.1`, origin `http://127.0.0.1:47321`; `RECIPE_BOX_PORT=80` or `abc` throws `ConfigError` with the exact §1.2 message
+  - [x] Unit tests (handler started on port 0) cover every §1.2 contract row: `GET /` → 200 index.html, `/__recipe-box/health` → `{"app":"recipe-box","version":…}`, MIME types for .html/.js/.css/.svg/.json, 404 for missing / directory / unknown extension / `..` / `%00`, 405 with `Allow: GET, HEAD` for POST, 403 "Forbidden host" for a foreign `Host` header
+  - [x] Every response carries the §1.2 headers (`Cache-Control: no-cache`, `X-Content-Type-Options`, `Referrer-Policy`, the exact CSP), asserted in a test
+  - [x] Checks pass (coverage ≥ 80 % over `server/**` except `server/main.js`)
+- Result: ✅ 4/4 goals · 59 pass 1 skip · 99.6% cov · 1 debugger round · D-06 · 94e8683
 
 ### T-02 · Launcher and the one start command
 
