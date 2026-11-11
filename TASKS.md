@@ -46,14 +46,14 @@ Notes for every task
 - Owner: backend-coder
 - Depends on: —
 - Context: SPEC US-01, US-09, §4 F-1, §5 · LLD §6.1, §6.2, §6.3, §6.5 · files: web/js/core/recipe/*, tests/unit/core/recipe/*, tests/helpers/*
-- Status: Backlog
+- Status: Done
 - Acceptance criteria:
-  - [ ] `web/js/core/recipe/{types,amount,tags,validation,errors}.js` export the §6.1 signatures; no DOM/storage access (lint `core/` globals rule passes)
-  - [ ] Unit tests cover every §6.2 `parseAmount` row: `2`, `300`, `0.5`, `.5`, `1.25`, `½`, `1½`, `1 ½`, `1/2`, `1 1/2` parse to their values; `a pinch`, `2-3`, `1/0`, `0,5`, empty → `value: null` with text kept
-  - [ ] `validateDraft` tests: empty title → "Title is required"; servings `0`/`2.5`/`` → "Servings must be 1 or more"; "Toast" serves 1 with no ingredients → "Add at least one ingredient"; no steps → "Add at least one step"; row with amount but no name → "Enter the ingredient name" at its index; all errors reported at once; tags `Breakfast`, `sweet ` → `breakfast`, `sweet`
-  - [ ] `tests/helpers/recipes.fixture.js` holds the SPEC §5 recipes (Pancakes serves 4 with 200 g flour, 2 eggs, 300 ml milk, a pinch of salt and 4 steps; Tomato Soup `lunch`/`vegetarian`; Banana Bread serves 8 with 3 bananas, 1 tsp baking soda, 250 g flour, `breakfast`/`baking`)
-  - [ ] Checks pass
-- Result: —
+  - [x] `web/js/core/recipe/{types,amount,tags,validation,errors}.js` export the §6.1 signatures; no DOM/storage access (lint `core/` globals rule passes)
+  - [x] Unit tests cover every §6.2 `parseAmount` row: `2`, `300`, `0.5`, `.5`, `1.25`, `½`, `1½`, `1 ½`, `1/2`, `1 1/2` parse to their values; `a pinch`, `2-3`, `1/0`, `0,5`, empty → `value: null` with text kept
+  - [x] `validateDraft` tests: empty title → "Title is required"; servings `0`/`2.5`/`` → "Servings must be 1 or more"; "Toast" serves 1 with no ingredients → "Add at least one ingredient"; no steps → "Add at least one step"; row with amount but no name → "Enter the ingredient name" at its index; all errors reported at once; tags `Breakfast`, `sweet ` → `breakfast`, `sweet`
+  - [x] `tests/helpers/recipes.fixture.js` holds the SPEC §5 recipes (Pancakes serves 4 with 200 g flour, 2 eggs, 300 ml milk, a pinch of salt and 4 steps; Tomato Soup `lunch`/`vegetarian`; Banana Bread serves 8 with 3 bananas, 1 tsp baking soda, 250 g flour, `breakfast`/`baking`)
+  - [x] Checks pass
+- Result: ✅ 5/5 goals · 71 tests · 100% cov · 1 debugger round · e46115d · open minors → T-04/T-05: save guard accepts untrimmed text and sparse arrays
 
 ### T-04 · Recipe store: port, errors and read side
 
