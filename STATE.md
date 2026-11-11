@@ -9,7 +9,7 @@
 | Stage        | 1 Spec interview                                                                                        |
 | Milestone    | — (planning)                                                                                            |
 | Next step    | Spec interview round 1 · planner                                                                        |
-| Last updated | 2026-11-11                                                                                              |
+| Last updated | 2026-11-12 |
 
 ## Config
 
@@ -60,6 +60,8 @@ Context gaps agents reported (`Context gap:` in a REPORT). The Orchestrator adds
 | debugger | docs/CONVENTIONS.md logging rules | T-05 debug needed them |
 
 ## Notes for the next session
+- M1 approved 2026-11-12 (milestone card). Owner chose: continue M2 in a fresh session via `/setup-project resume recipe-box`.
+- After the plan merge, DECISIONS.md/STATE.md rows recorded on main during planning were overwritten; restored in 3f7e683. Verify rows after any merge that owns shared files.
 - Owner chose: T-16 (scaling, pure) starts as soon as T-03 is Done, in parallel with M2.
 - T-02 must pass createLogger() to createRequestHandler (D-06) and catch ConfigError at startup.
 - T-08 brief: add a global error handler in ui/app.js (window error + unhandledrejection → banner) so reportError from the store surfaces (A-07).
