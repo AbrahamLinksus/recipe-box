@@ -11,7 +11,7 @@ sequenceDiagram
   participant S as RecipeStore (§9)
   participant UI as ui/app.js + list-screen.js
   Owner->>Main: npm start
-  Main->>L: startOrReuse(config, listen, probe, openBrowser)
+  Main->>L: startOrReuse(config, listen = createListen(handler), probe, openBrowser, log)
   L->>L: listen(47321, '127.0.0.1')
   alt listening
     L-->>Owner: "Recipe Box is running at ..."

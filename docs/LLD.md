@@ -9,6 +9,9 @@
 > Section numbers match the HLD modules: §1 = M1 … §10 = M10. §11 = dev tooling and tests.
 > Written 2026-11-11 from the approved SPEC and HLD. Decisions D1–D6 are settled in §0.6;
 > D1 (persistence location), D6 (stack) and the Playwright dev dependency await the owner's approval.
+> **As-built sync M1 (2026-11-12):** §0–§2, §6, §7, §9, §10, §11 checked against the code at the end of
+> milestone M1 (T-01..T-08, T-16). Changes are marked "As built (M1)" in place and listed in
+> "Changes since last milestone" at the end; deferred minors are listed under "Known deferred minors".
 
 ## §0 Overview
 
@@ -38,7 +41,7 @@ recipe-box/
 ├─ scripts/check.sh             # §11.5 (Git Bash)
 ├─ server/                      # §1 M1 Launcher (Node only)
 │  ├─ main.js                   #   composition root (server side)
-│  ├─ config.js  launcher.js  probe.js  browser.js  static-handler.js  log.js
+│  ├─ config.js  launcher.js  probe.js  browser.js  static-handler.js  log.js  listen.js (as built M1, A-06)
 ├─ web/                         # everything served to the browser (static root)
 │  ├─ index.html  favicon.svg
 │  ├─ css/app.css               # §2 layout, 800 px breakpoint, usable at 390 px
@@ -51,11 +54,11 @@ recipe-box/
 │     ├─ store/                 # §9 M9  recipe-store.js ports.js errors.js
 │     ├─ persistence/           # §10 M10 collection-codec.js local-storage-persistence.js
 │     └─ ui/                    # §2–§5 app.js router.js dialogs.js dom.js banner.js filter-state.js form-model.js
-│        └─ screens/            #        list-screen.js view-screen.js form-screen.js
+│        └─ screens/            #        list-screen.js view-screen.js form-screen.js not-found-screen.js (as built M1)
 └─ tests/
    ├─ helpers/                  # fake-storage.js, memory-persistence.js, recipes.fixture.js (SPEC §5 data)
    ├─ unit/                     # node:test, mirrors source: server/ core/ store/ persistence/ ui/
-   └─ e2e/                      # Playwright: playwright.config.js, *.spec.js (only if P1 approved)
+   └─ e2e/                      # Playwright: playwright.config.js, *.spec.js, helpers/seed.js (as built M1)
 ```
 
 ### §0.3 Layer map and module dependencies
@@ -64,7 +67,9 @@ Browser:   ui (§2–§5)  →  store (§9)  →  core (§6, §7, §8)
                               ↑ ports.js (interface)
            persistence (§10) ─┘ implements, may also use core/recipe types
            main.js = composition root: the ONLY file that imports persistence and touches window.localStorage
-Server:    server/main.js (root) → launcher → probe, browser, static-handler, config, log
+Server:    server/main.js (root) → config, log, static-handler, listen, probe, browser, launcher
+           (as built M1: main.js constructs every dependency and injects listen/probe/openBrowser/log
+            into launcher.startOrReuse; launcher.js imports types only; static-handler → config (ConfigError))
            server/ and web/ never import each other.
 ```
 | § | Depends on (interfaces only) |
@@ -92,11 +97,12 @@ flowchart TB
     probe["probe.js"]
     opener["browser.js<br/>BrowserOpener"]
     handler["static-handler.js<br/>static files + /__recipe-box/health"]
+    listen["listen.js<br/>createListen(handler)"]
   end
   subgraph WEB["web/ (browser, origin http://127.0.0.1:47321)"]
     wmain["js/main.js<br/>composition root"]
     subgraph UI["js/ui"]
-      app["app.js, router.js, dialogs.js, banner.js §2"]
+      app["app.js, router.js, dialogs.js, banner.js §2<br/>screens/not-found-screen.js"]
       list["screens/list-screen.js §3"]
       view["screens/view-screen.js §4"]
       form["screens/form-screen.js + form-model.js §5"]
@@ -114,9 +120,14 @@ flowchart TB
   ls[("localStorage<br/>recipe-box:collection")]
 
   owner --> smain --> launcher
-  launcher --> probe
-  launcher --> opener
-  launcher --> handler
+  smain --> handler
+  smain --> listen
+  smain --> probe
+  smain --> opener
+  listen -. "receives handler" .-> handler
+  launcher -. "injected: listen" .-> listen
+  launcher -. "injected: probe" .-> probe
+  launcher -. "injected: openBrowser" .-> opener
   opener -- "cmd /c start" --> wmain
   handler -- "serves" --> WEB
   wmain --> app
@@ -154,12 +165,14 @@ flowchart TB
 
 Version caveat: these majors are from the research and general knowledge, not verified with `npm view` in this session. Whoever runs `npm install` pins the latest patch inside the listed major with `--save-exact`; the as-built sync records the exact versions. Copy of this table: `.results/lld/packages.md`.
 
+**As built (M1), exact pins in `package.json` `devDependencies`:** `eslint` 9.39.5 · `@eslint/js` 9.39.5 · `globals` 16.5.0 · `prettier` 3.9.10 · `typescript` 5.9.3 · `@types/node` 24.19.2 · `dependency-cruiser` 17.4.3 · `@playwright/test` 1.59.1 (P1 in use: e2e runs in M1). All inside the listed majors; no packages added or removed. Runtime dependencies: still none.
+
 ### §0.5 Config and secrets
 No secrets, no `.env` needed. Environment variables (documented in README, all optional):
 
 | Var | Default | Used by | Notes |
 |---|---|---|---|
-| `RECIPE_BOX_PORT` | `47321` | §1 `loadConfig` | Integer 1024–65535. **Changing it shows a different, empty recipe box** (browser storage is per address); README warns. Tests use other ports so they never touch real data. |
+| `RECIPE_BOX_PORT` | `47321` | §1 `loadConfig` | Integer 1024–65535 (digits only); an empty value counts as unset (as built M1). **Changing it shows a different, empty recipe box** (browser storage is per address); README warns. Tests use other ports so they never touch real data. |
 | `RECIPE_BOX_NO_OPEN` | unset | §1 | `1` = do not open a browser (tests, Playwright). |
 
 Host is not configurable: always `127.0.0.1`. Browser-side constants live in `web/js/persistence/collection-codec.js` (`STORAGE_KEY`, `SCHEMA_VERSION`).
@@ -187,16 +200,29 @@ Host is not configurable: always `127.0.0.1`. Browser-side constants live in `we
 // server/config.js
 /** @typedef {{ host: '127.0.0.1', port: number, origin: string, webRoot: string,
  *   openBrowser: boolean, appId: 'recipe-box', version: string }} Config */
-/** @param {NodeJS.ProcessEnv} env @returns {Config} @throws {ConfigError} bad RECIPE_BOX_PORT */
+/** @param {NodeJS.ProcessEnv} env @returns {Config}
+ *  @throws {ConfigError} bad RECIPE_BOX_PORT; package.json without a version string (as built M1)
+ *  version is read from package.json; webRoot = <repo>/web/ */
 export function loadConfig(env) {}
-export class ConfigError extends Error {}
+export class ConfigError extends Error {}   // name 'ConfigError'
 
 // server/static-handler.js
-/** @param {{ webRoot: string, identity: { app: string, version: string }, allowedHosts: string[] }} opts
- *  @returns {(req: import('node:http').IncomingMessage, res: import('node:http').ServerResponse) => void} */
+/** @param {{ webRoot: string, identity: { app: string, version: string }, allowedHosts: string[],
+ *   log?: Logger }} opts   // log optional (D-06); server/main.js passes createLogger()
+ *  @returns {(req: import('node:http').IncomingMessage, res: import('node:http').ServerResponse) => void}
+ *  @throws {ConfigError} `Web folder not found: <path>` when webRoot is missing or not a folder
+ *   (root resolved once with realpath at construction, so a bad root fails loudly instead of 404-ing everything) */
 export function createRequestHandler(opts) {}
 export const HEALTH_PATH = '/__recipe-box/health';
-/** @param {string} ext @returns {string | undefined} */ export function contentTypeFor(ext) {}
+/** @param {string} ext (case-insensitive) @returns {string | undefined} */ export function contentTypeFor(ext) {}
+// An unexpected error while handling a request → opts.log?.error('Request failed', { error: <code|message>, url })
+//   and 500 text/plain "Server error" (or res.end() if headers were already sent).
+
+// server/listen.js  (as built M1, A-06: separate so a test can assert the bound address)
+/** @param {import('node:http').RequestListener} handler
+ *  @returns {(port: number, host: string) => Promise<import('node:http').Server>}
+ *  creates http.createServer(handler); resolves on 'listening', rejects with the listen error (EADDRINUSE, EACCES, ...) */
+export function createListen(handler) {}
 
 // server/probe.js
 /** @typedef {'ours' | 'other' | 'none'} ProbeResult */
@@ -205,7 +231,9 @@ export function probeExistingInstance(origin, opts) {}   // timeoutMs default 15
 
 // server/browser.js
 /** @typedef {(url: string) => void} BrowserOpener */
-/** @param {{ platform: NodeJS.Platform, spawn: typeof import('node:child_process').spawn }} deps @returns {BrowserOpener} */
+/** @param {{ platform: NodeJS.Platform, spawn: typeof import('node:child_process').spawn,
+ *   onError?: (err: Error) => void }} deps @returns {BrowserOpener}
+ *  as built M1 (A-06): spawn throws and child 'error' events go to onError, never thrown */
 export function createBrowserOpener(deps) {}
 
 // server/launcher.js
@@ -214,17 +242,25 @@ export function createBrowserOpener(deps) {}
  *   listen: (port: number, host: string) => Promise<import('node:http').Server>,
  *   probe: (origin: string) => Promise<ProbeResult>,
  *   openBrowser: BrowserOpener, log: Logger }} LauncherDeps */
-/** @param {LauncherDeps} deps @returns {Promise<{ outcome: LaunchOutcome, server?: import('node:http').Server }>} */
-export async function startOrReuse(deps) {}
+/** @typedef {{ outcome: LaunchOutcome, server?: import('node:http').Server }} LaunchResult */
+/** @param {LauncherDeps} deps @returns {Promise<LaunchResult>}
+ *  a listen error other than EADDRINUSE / EACCES is rethrown (main.js reports it, exit 1) */
+export function startOrReuse(deps) {}
 /** @param {LaunchOutcome} outcome @returns {0 | 1 | null} null = keep running */
 export function exitCodeFor(outcome) {}
 
 // server/log.js  (the only server file allowed to call console)
 /** @typedef {{ info(msg: string): void, error(msg: string, fields?: Record<string, unknown>): void }} Logger */
+/** info → stdout `msg\n`; error → stderr `msg key=value ...\n` (strings JSON-quoted, non-printable-ASCII escaped) */
 export function createLogger(stream = process) {}
 
-// server/main.js — composition root: loadConfig(process.env) → createRequestHandler → startOrReuse
+// server/main.js — composition root: createLogger() → loadConfig(process.env)
+//   → createRequestHandler({ webRoot, identity, allowedHosts: ['127.0.0.1:<port>', 'localhost:<port>'], log })
+//   → createBrowserOpener({ platform, spawn, onError: log 'Could not open the browser; open the address by hand.' })
+//   → startOrReuse({ config, listen: createListen(handler), probe: origin => probeExistingInstance(origin, { appId }),
+//        openBrowser, log })
 //   → on 'started': keep running, SIGINT/SIGTERM → server.close() → exit 0; else process.exitCode = exitCodeFor(outcome)
+//   catch: ConfigError → log.error(err.message); anything else → log.error('Recipe Box could not start.', { error }); exit 1
 ```
 
 ### §1.2 Contracts
@@ -234,7 +270,10 @@ export function createLogger(stream = process) {}
 | GET/HEAD | `/` | — | `200` `web/index.html` | — |
 | GET/HEAD | `/<path>` (e.g. `/js/main.js`, `/css/app.css`, `/favicon.svg`) | — | `200` file from `web/` with MIME from `contentTypeFor` (`.html` `text/html; charset=utf-8`, `.js` `text/javascript; charset=utf-8`, `.css` `text/css; charset=utf-8`, `.svg` `image/svg+xml`, `.json` `application/json`) | `404 text/plain "Not found"` (missing, directory, unknown extension, path outside `web/` after `path.resolve`, any `..` or `%00`) |
 | other methods | any | — | — | `405` with `Allow: GET, HEAD` |
-| any | any, `Host` not in `127.0.0.1:<port>` / `localhost:<port>` | — | — | `403 "Forbidden host"` (DNS-rebinding guard) |
+| any | any, `Host` not in `127.0.0.1:<port>` / `localhost:<port>` | — | — | `403 "Forbidden host"` (DNS-rebinding guard; checked first, before the method) |
+| any | any (unexpected handler error) | — | — | `500 text/plain "Server error"`, logged `Request failed error=… url=…` (as built M1) |
+
+As built (M1): the health path matches with any query string; `HEAD /__recipe-box/health` returns headers only; `%2e%2e`, `%5c` and `\` are rejected (404) like `..` and `%00`; symlinks resolving outside `web/` → 404. 405 body is `Method not allowed`.
 
 Headers on every response: `Cache-Control: no-cache`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`,
 `Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'` (also guarantees no network dependency: offline).
@@ -247,6 +286,10 @@ Console messages (ASCII only; exact text, tested):
 | port-conflict | `Port 47321 is used by another program, so Recipe Box cannot start. Close that program and run the command again (see README "Port problems").` | 1 |
 | port-forbidden (`EACCES`, Windows reserved range) | `Windows does not allow Recipe Box to use port 47321 (reserved port range). See README "Port problems".` | 1 |
 | bad `RECIPE_BOX_PORT` | `RECIPE_BOX_PORT must be a whole number between 1024 and 65535.` | 1 |
+| `web/` folder missing (as built M1, `ConfigError` from `createRequestHandler`) | `Web folder not found: <path>` | 1 |
+| `package.json` has no version (as built M1, `ConfigError` from `loadConfig`) | `package.json has no version string.` | 1 |
+| browser could not be opened (as built M1, stderr, not fatal) | `Could not open the browser; open the address by hand. error="<message>"` | keeps running |
+| any other start-up error (as built M1) | `Recipe Box could not start. error="<error>"` | 1 |
 
 ### §1.4 Key sequence (start → open → load recipes)
 Source: `docs/diagrams/lld-sequence.mmd` (copy in `.results/lld/lld-sequence.mmd`).
@@ -264,7 +307,7 @@ sequenceDiagram
   participant S as RecipeStore (§9)
   participant UI as ui/app.js + list-screen.js
   Owner->>Main: npm start
-  Main->>L: startOrReuse(config, listen, probe, openBrowser)
+  Main->>L: startOrReuse(config, listen = createListen(handler), probe, openBrowser, log)
   L->>L: listen(47321, '127.0.0.1')
   alt listening
     L-->>Owner: "Recipe Box is running at ..."
@@ -294,6 +337,7 @@ sequenceDiagram
   UI->>S: list()
   UI->>UI: filterRecipes(recipes, filter) (§8), render A-Z or "No recipes yet"
 ```
+As built (M1): the last step is not built yet; M1's list screen renders `store.list()` in insertion order with no filter (see §3).
 
 ### §1.5 Errors and edge cases
 - `listen` rejects with `EADDRINUSE` → probe. Probe outcomes: `ours` → open + exit 0; `other` (non-200, wrong JSON, timeout 1500 ms) → port-conflict; `none` (`ECONNREFUSED`: the other instance exited meanwhile) → retry `listen` once, then port-conflict.
@@ -303,12 +347,14 @@ sequenceDiagram
 - Closing the console window or Ctrl+C ends the process; no state to clean up (no pid/lock file).
 - Server never writes files (option a). Static root is resolved once at start; symlinks are not followed outside `web/`.
 - `start.cmd`: `@echo off` / `cd /d "%~dp0"` / `node server\main.js` / `if errorlevel 1 pause` (keeps error messages visible on double-click).
+- As built (M1): `listen` comes from `server/listen.js` `createListen(handler)` (A-06), so a unit test can start the real server and assert it is bound to `127.0.0.1`. A listen error other than `EADDRINUSE`/`EACCES` propagates out of `startOrReuse` and `main.js` reports "Recipe Box could not start." (exit 1).
+- As built (M1): a missing/non-folder `web/` makes `createRequestHandler` throw `ConfigError('Web folder not found: <path>')` at start (before listening); `main.js` prints the message and exits 1.
 
 ---
 
 ## §2 M2 App shell and navigation
 - **Responsibility:** Bootstraps the UI, routes between screens, owns shared dialogs, the store-status banner, the unsaved-changes guard and the responsive layout.
-- **Path(s):** `web/index.html`, `web/css/app.css`, `web/js/main.js`, `web/js/ui/{app,router,dialogs,dom,banner,filter-state}.js`
+- **Path(s):** `web/index.html`, `web/css/app.css`, `web/js/main.js`, `web/js/ui/{app,router,dialogs,dom,banner,filter-state}.js`, `web/js/ui/screens/not-found-screen.js` (as built M1)
 - **Depends on:** §3, §4, §5 (screen contract §2.1), §9 (`RecipeStore`). `main.js` additionally constructs §10.
 
 ### §2.1 Interfaces / signatures
@@ -317,9 +363,14 @@ sequenceDiagram
 /** @typedef {{ name: 'list' } | { name: 'view', id: string } | { name: 'new' }
  *   | { name: 'edit', id: string } | { name: 'notFound' }} Route */
 /** @param {string} hash e.g. '#/recipe/abc/edit' @returns {Route} */ export function parseRoute(hash) {}
-/** @param {Route} route @returns {string} */                        export function routeToHash(route) {}
-/** @param {{ window: Window, onRoute: (r: Route) => void, canLeave: () => Promise<boolean> }} deps */
-export function createRouter(deps) {}  // → { start(): void, navigate(r: Route, opts?: { replace?: boolean }): void }
+/** @param {Route} route @returns {string} notFound → '#/not-found' (A-02) */ export function routeToHash(route) {}
+/** @typedef {{ start(): void, navigate(route: Route, opts?: { replace?: boolean }): void }} Router */
+/** @param {{ window: Window, onRoute: (r: Route) => void, canLeave: () => Promise<boolean> }} deps @returns {Router} */
+export function createRouter(deps) {}
+// As built (M1): ids in '#/recipe/<id>' are URI-decoded (bad escape or empty id → notFound) and encoded by routeToHash;
+//   '' and '#/' are the same location; a rejected canLeave() counts as "stay"; while a canLeave() prompt is open,
+//   further hash changes are reverted to the hash being decided (re-entrancy guard); navigate(r, { replace: true })
+//   uses history.replaceState and calls onRoute directly (no canLeave), otherwise it sets location.hash.
 
 // Screen contract (every file in ui/screens/ exports one mount function of this shape)
 /** @typedef {{ store: import('../store/recipe-store.js').RecipeStore, router: Router,
@@ -327,28 +378,47 @@ export function createRouter(deps) {}  // → { start(): void, navigate(r: Route
 /** @typedef {{ unmount(): void, canLeave?(): Promise<boolean> }} ScreenHandle */
 /** @typedef {(container: HTMLElement, ctx: ScreenContext, route: Route) => ScreenHandle} MountScreen */
 
-// web/js/ui/dialogs.js — native <dialog id="confirm-dialog"> in index.html
-/** @param {{ message: string, confirmLabel: string, cancelLabel: string }} opts @returns {Promise<boolean>} */
-export function confirmDialog(opts) {}  // Esc / backdrop = cancel; focus starts on the cancel button
+// web/js/ui/dialogs.js — native <dialog id="confirm-dialog"> in index.html (parts: confirm-message, confirm-ok, confirm-cancel)
+/** @typedef {{ message: string, confirmLabel: string, cancelLabel: string }} ConfirmOptions */
+/** @typedef {{ confirm(opts: ConfirmOptions): Promise<boolean> }} Dialogs   (as built M1: what ScreenContext.dialogs holds) */
+/** @param {ConfirmOptions} opts @param {Document} [doc] default document @returns {Promise<boolean>} */
+export function confirmDialog(opts, doc) {}  // Esc / backdrop click (outside the dialog box) = cancel; focus starts on Cancel
+/** @returns {Dialogs} */ export function createDialogs() {}  // screens call ctx.dialogs.confirm(...)
 
 // web/js/ui/banner.js
-export function createBanner(el) {}  // → { show(kind: 'error' | 'info', message: string): void, clear(): void }
+/** @typedef {{ show(kind: 'error' | 'info', message: string): void, clear(): void }} Banner */
+/** @param {HTMLElement} el @returns {Banner} */
+export function createBanner(el) {}  // show: data-kind + textContent + unhide; clear: empty + hidden
 
 // web/js/ui/filter-state.js — survives list → view → list while the tab is open (not persisted)
 /** @typedef {{ query: string, tag: string | null, favouritesOnly: boolean }} RecipeFilter */
-export function createFilterState() {}  // → { get(): RecipeFilter, set(patch: Partial<RecipeFilter>): void, reset(): void }
+/** @typedef {{ get(): RecipeFilter, set(patch: Partial<RecipeFilter>): void, reset(): void }} FilterState */
+/** @returns {FilterState} */ export function createFilterState() {}  // get() returns a copy
 
 // web/js/ui/dom.js
-/** @param {string} tag @param {Record<string, unknown>} [attrs] @param {...(Node|string|null|false)} children */
+/** @param {string} tag @param {Record<string, unknown>} [attrs] @param {...(Node|string|null|false)} children
+ *  @returns {HTMLElement} */
 export function h(tag, attrs, ...children) {}  // sets textContent only, never innerHTML
-export function clear(el) {}
+// As built (M1): attrs key 'text' → textContent; function values → addEventListener(key minus 'on');
+//   'class' → className; value/checked/disabled/selected set as properties; null/undefined/false skipped;
+//   unsafe attrs silently skipped: on* given a string, href/src/action/formaction with javascript: or data: (A-01).
+/** @param {HTMLElement} el */ export function clear(el) {}
 
 // web/js/ui/app.js
-/** @param {{ root: HTMLElement, store: RecipeStore, window: Window }} deps */
-export function createApp(deps) {}  // → { start(): void } builds router, dialogs, banner, filterState; mounts screens
+/** @param {{ root: HTMLElement, store: RecipeStore, window: Window }} deps @returns {{ start(): void }} */
+export function createApp(deps) {}  // builds router, dialogs, banner, filterState; mounts screens
+// As built (M1): screens are looked up in a route-name map (M1: { list: mountListScreen }); any route without a
+//   screen mounts mountNotFoundScreen (A-10). start() installs, in order: window 'error' + 'unhandledrejection'
+//   listeners → console.error + banner GENERIC_ERROR (this is where store listener errors reported through
+//   reportError surface, §9.5 / A-07); a store subscriber that mirrors status unreadable/unavailable into the
+//   banner (and clears it once the status returns to ready); then router.start().
+
+// web/js/ui/screens/not-found-screen.js (as built M1)
+/** @type {MountScreen} */ export function mountNotFoundScreen(container) {}  // "Page not found" + "All recipes" (#/)
 
 // web/js/main.js — composition root (≤ 30 lines): new LocalStoragePersistence(...) → new RecipeStore(...)
 //   → await store.init() → persistence.requestDurability() → createApp(...).start()
+//   (as built M1: requestDurability is fire-and-forget; root = document.getElementById('app'))
 ```
 
 ### §2.4 Key sequence — leaving the form with unsaved changes
@@ -359,6 +429,8 @@ export function createApp(deps) {}  // → { start(): void } builds router, dial
 
 ### §2.5 Errors and edge cases
 - Routes: `#/` or empty → list; `#/recipe/<id>` → view; `#/recipe/<id>/edit` → edit; `#/new` → add; anything else → `notFound` screen ("Page not found" + "All recipes" link).
+- As built (M1, A-10): only the list screen exists, so `#/new`, `#/recipe/<id>` and `#/recipe/<id>/edit` parse correctly but show "Page not found" until M2 adds their screens (the "Add recipe" / "Add your first recipe" buttons therefore lead there for now).
+- As built (M1): the generic-error banner and the status banner share one region; a status change back to `ready` calls `banner.clear()`, which can also clear a generic error (deferred minor, see "Known deferred minors").
 - After a successful save or delete, navigate with `{ replace: true }` so Back does not return to the form/deleted recipe.
 - Store status banner (shown on every screen, `role="alert"`):
   - `unreadable`: "Your saved recipes could not be read, so Recipe Box will not change them. Nothing has been deleted." All write controls disabled (Add, star, Edit, Delete, Save).
@@ -367,7 +439,7 @@ export function createApp(deps) {}  // → { start(): void } builds router, dial
 - Unhandled promise rejections in UI → `banner.show('error', 'Something went wrong. Reload the page to continue.')` and `console.error` (the only console call in web code, in `app.js`).
 - Layout (`app.css`): mobile-first single column; `@media (min-width: 800px)` → filters sidebar 280 px on list, two-column ingredients/steps on view and form, page max-width 1100 px (matches wireframes). At 390 px nothing overflows horizontally; tap targets ≥ 40 px.
 - Accessibility: header `<h1>` per screen, buttons are `<button>`, star is `<button aria-pressed>` with `aria-label`.
-- Test ids (stable, for §11 e2e): `add-recipe`, `banner`, `confirm-dialog`, `confirm-ok`, `confirm-cancel`, `back-to-list`.
+- Test ids (stable, for §11 e2e): `add-recipe`, `banner`, `confirm-dialog`, `confirm-ok`, `confirm-cancel`, `back-to-list`; as built (M1) also `confirm-message` and `not-found` (the not-found page `<main>`).
 
 ---
 
@@ -382,6 +454,8 @@ export function createApp(deps) {}  // → { start(): void } builds router, dial
 export function mountListScreen(container, ctx, route) {}
 ```
 Internal structure: the filter panel (search input, tag `<select>`, favourites checkbox) is rendered **once** per mount; only the results region (`count` + rows / state) re-renders on input or store change, so the search box keeps focus and caret while typing.
+
+**As built (M1, T-08 walking skeleton), the rest is M2 (T-09/T-10):** the screen renders a header (`<h1>Recipe Box</h1>` + `add-recipe` "+ Add recipe") and a separate results region (`div.results`) that re-renders on every store change via `store.subscribe` (the unsubscribe is the handle's `unmount`). Results: `store.list().length === 0` → `empty-state` "No recipes yet" + `add-first-recipe`; otherwise `recipe-count` + `<ul>` of `recipe-row` (title link `recipe-row-title` to `#/recipe/<encoded id>`, tag chips). Not yet built: filter panel, A–Z sort (rows are in store insertion order), stars, no-match state. Both add buttons navigate to `#/new`, which shows "Page not found" until M2 (A-10). Write controls are disabled when `store.status !== 'ready'`, computed once at mount (deferred minor).
 
 ### §3.4 Behaviour
 | Trigger | Effect |
@@ -481,6 +555,7 @@ Test ids: `title-input`, `servings-input`, `ingredient-row`, `ingredient-amount-
 ### §5.5 Errors and edge cases
 - Save rejected by the store (`StoreReadOnlyError`, `PersistenceWriteError`, `RecipeNotFoundError` when another tab deleted the recipe) → banner with the reason, form stays dirty and open.
 - Double-click on Save: button disabled while the save promise is pending.
+- (M1 sync, A-03) A `ValidationError` from the store with an empty `fieldErrors` (`{}`: non-object input or bad tags) has no field to mark → show a generic "Could not save" banner and keep the form open; a non-empty `fieldErrors` is rendered inline like `validateDraft` errors.
 
 ---
 
@@ -522,7 +597,19 @@ export const MESSAGES = Object.freeze({
 
 // errors.js
 export class ValidationError extends Error { /** @param {FieldErrors} fieldErrors */ constructor(fieldErrors) {} }
+//   as built (M1): name 'ValidationError', message 'Recipe failed validation', .fieldErrors holds the argument
 ```
+
+**`assertRecipeInput` rules (as built M1, A-03).** The write-side guard of §9; it checks an input that should already be in `validateDraft` output form and never normalises:
+- Non-object input (`null`, `undefined`, primitive) → `ValidationError({})`.
+- `title` must be a non-empty string equal to its own `trim()` (untrimmed text is rejected) → else `title: titleRequired`.
+- `servings` must be a safe integer ≥ 1 → else `servings: servingsMin` (`validateDraft` uses the same rule).
+- `ingredients` must be a non-empty array → else `ingredients: ingredientsMin`. Each row needs a trimmed non-empty `name`, a string `unit`, and an `amount` with string `text` and `value` that is `null` or finite → else `ingredientRows[i] = ingredientName`. Holes in a sparse array count as invalid rows.
+- `steps` must be a non-empty array of trimmed non-empty strings (holes are invalid) → else `steps: stepsMin`.
+- `tags` must be an array of strings already in `normaliseTags` form (lower-case, unique, A–Z). Tags have no `FieldErrors` key, so bad tags alone throw `ValidationError({})`.
+- **An empty `fieldErrors` (`{}`) means "show a generic error"**: the form (§5.5) cannot point at a field, so it shows the generic save-failed banner instead of inline messages.
+
+`parseAmount` as built (M1): digit strings so long that they overflow to `Infinity` give `value: null` (only finite values are stored). `UNICODE_FRACTIONS` is frozen.
 
 ### §6.2 Rules (contract for `parseAmount` / `validateDraft`)
 `parseAmount(text)` after trim (empty → `{ text: '', value: null }`):
@@ -536,7 +623,7 @@ export class ValidationError extends Error { /** @param {FieldErrors} fieldError
 
 `validateDraft(draft)`:
 1. `title = draft.title.trim()`; empty → `titleRequired`. Duplicate titles allowed.
-2. `servings` must match `^\d+$` after trim and be ≥ 1 → else `servingsMin`.
+2. `servings` must match `^\d+$` after trim and be ≥ 1 → else `servingsMin`. As built (M1): it must also be a safe integer (≤ 2^53−1), so it survives JSON.
 3. Ingredient rows: trim all fields; rows with all three empty are dropped. Remaining row with empty name → `ingredientRows[i] = ingredientName` (index in the original draft). After dropping, 0 rows → `ingredients = ingredientsMin`. Each kept row → `{ amount: parseAmount(amount), unit, name }`.
 4. Steps: trim, drop empty; 0 left → `stepsMin`. Order kept.
 5. Tags → `normaliseTags` (so `Breakfast`, `sweet ` → `breakfast`, `sweet`).
@@ -576,6 +663,7 @@ erDiagram
 ### §6.5 Errors and edge cases
 - `value` 0 (typed `0`) is valid and scales to `0` (§7).
 - Comma decimals (`0,5`) are not parsed → `null` (shown as typed, not scaled). Can be added later without a data change.
+- As built (M1): the §6.3 schema is enforced in two places with different strictness. Writes go through `assertRecipeInput` (strict: trimmed text, normalised tags, no sparse arrays, see §6.1). Reads of stored data go through the codec's lenient shape check (§10.1, A-08), so tightening a write rule can never make already-stored data unreadable.
 
 ---
 
@@ -609,6 +697,8 @@ export function parseServingsInput(raw, previous) {}
 export function stepServings(current, delta) {}
 ```
 Compute `value * target / base` with multiplication first (all SPEC examples are binary-exact); the `1e-9` nudge makes near-halfway float results (e.g. 0.37499999) round up as specified.
+
+As built (M1, T-16 built early): `web/js/core/scaling/{fractions,scaling,servings}.js` match these signatures; `core/scaling` imports only `core/recipe` types. No deviations.
 
 ### §7.2 Contract examples (each is a unit test)
 | Recipe | base → target | Expected display |
@@ -673,10 +763,10 @@ Matching: `title.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())`
  *   requestDurability(): Promise<boolean>                    // best effort
  * }} CollectionPersistence */
 
-// errors.js
-export class RecipeNotFoundError extends Error {}   // .id
-export class StoreReadOnlyError extends Error {}    // .status: 'unreadable' | 'unavailable' | 'loading'
-export class PersistenceWriteError extends Error {} // .reason: 'quota' | 'unavailable' | 'io'
+// errors.js (as built M1: each sets .name to its class name)
+export class RecipeNotFoundError extends Error {}   // constructor(id); .id; message 'Recipe not found: <id>'
+export class StoreReadOnlyError extends Error {}    // constructor(status); .status: 'unreadable' | 'unavailable' | 'loading'
+export class PersistenceWriteError extends Error {} // constructor(reason, message?); .reason: 'quota' | 'unavailable' | 'io'
 
 // recipe-store.js
 /** @typedef {'loading' | 'ready' | 'unreadable' | 'unavailable'} StoreStatus */
@@ -684,7 +774,8 @@ export class RecipeStore {
   /** @param {CollectionPersistence} persistence
    *  @param {{ newId?: () => string, now?: () => string }} [deps] defaults crypto.randomUUID, new Date().toISOString() */
   constructor(persistence, deps) {}
-  /** loads once, sets status, starts watch() @returns {Promise<StoreStatus>} */ async init() {}
+  /** loads, sets status, starts watch() once (idempotent: a second call re-loads but never adds a second watch)
+   *  @returns {Promise<StoreStatus>} */ async init() {}
   /** @returns {StoreStatus} */ get status() {}
   /** @returns {string | null} reason for unreadable/unavailable */ get statusReason() {}
   /** @returns {readonly Recipe[]} frozen snapshot, insertion order */ list() {}
@@ -694,7 +785,7 @@ export class RecipeStore {
   /** @throws RecipeNotFoundError */ async remove(id) {}
   /** flips favourite, sets updatedAt @returns {Promise<Recipe>} */ async toggleFavourite(id) {}
   /** @param {() => void} listener @returns {() => void} unsubscribe */ subscribe(listener) {}
-  /** re-load after another tab changed storage; notifies */ async reload() {}
+  /** re-load after another tab changed storage; notifies. Runs on the same serial chain as writes */ async reload() {}
 }
 ```
 
@@ -704,10 +795,20 @@ export class RecipeStore {
 3. Build the next array (new frozen objects), `await persistence.save(next)`.
 4. Success → replace the in-memory array, notify subscribers, resolve with the recipe. Failure → in-memory state unchanged, reject with the `PersistenceWriteError`.
 
+As built (M1), in detail:
+- `create`/`update` validate **at call time** (before queuing): `assertRecipeInput(input)` → `structuredClone` → `assertRecipeInput(copy)`, so a caller mutating its object afterwards cannot change what is saved. An invalid input rejects with `ValidationError` without touching the chain.
+- The status guard (step 1, `StoreReadOnlyError`) runs **inside** the chain, so it sees the status left by any earlier `init`/`reload`.
+- One chain serialises `init`'s load, `reload()` and every write; a failed task does not break the chain for later tasks.
+- `create` throws `Error('duplicate id from newId: <id>')` (nothing saved) if `newId()` returns an id already in the collection.
+- `toggleFavourite` / `update` / `remove` look the id up inside the chain → `RecipeNotFoundError` if another write or a reload removed it.
+
 ### §9.5 Errors and edge cases
 - `init()` result mapping: `ok` → `ready` with recipes; `empty` → `ready` with `[]` (nothing written until the first change); `unreadable` / `unavailable` → that status, `list()` returns `[]`, all writes rejected.
 - Cross-tab: `watch` callback → `reload()`; if the reload yields `unreadable`, switch to read-only. Last write wins between tabs (acceptable for one user).
 - Returned recipes are deep-frozen; UI never mutates them.
+- As built (M1): loaded recipes are `structuredClone`d before deep-freezing, so objects owned by the persistence layer are never frozen (A-05).
+- As built (M1): `persistence.load()` **rejecting** (instead of returning a `LoadResult`) maps to status `unavailable` with reason `load failed: <message>`; the store never stays stuck in `loading`. `statusReason` is the `LoadResult.reason` (or `null` for ok/empty). A reload that returns `ok`/`empty` after `unreadable` makes the store `ready` again.
+- As built (M1, A-07): listener isolation. `#notify()` calls each subscriber in a `try`; a throwing listener does not stop the others and never fails the write or reload that triggered it (the data is already saved). The error is passed to `globalThis.reportError` (browser: fires the window `error` event, which §2's `app.js` turns into the generic-error banner); where `reportError` is missing (Node) it is rethrown on a fresh microtask.
 
 ---
 
@@ -741,6 +842,12 @@ export class LocalStoragePersistence {
 }
 ```
 
+**As built (M1): `decodeCollection` in detail (A-08).**
+- `null` → `empty`; JSON parse error → `unreadable 'not JSON'`; not an object, or `version !== 1` (incl. missing) → `unreadable 'unknown version <v>'`; `recipes` not an array → `unreadable 'recipes is not a list'`; first recipe failing the shape check → `unreadable 'invalid recipe at index <i>'`; `recipes: []` → `empty`; else `ok`.
+- The stored-shape check is **lenient and deliberately separate from the write-side `assertRecipeInput` (§6.1)**: types only. A recipe needs non-empty string `id`; string `title`, `createdAt`, `updatedAt`; boolean `favourite`; safe-integer `servings` ≥ 1; ≥ 1 ingredient, each with an object `amount` (string `text`, `value` null or finite number), string `unit` and string `name`; ≥ 1 step (strings); `tags` an array of strings. It does **not** check trimming, empty strings (other than `id`), tag normal form or locale rules, so a stricter write rule or a different browser can never make already-stored v1 data unreadable.
+
+**As built (M1): `save` refuses to overwrite data it cannot read (A-09).** Before `setItem`, `save` reads the current value. If a value is stored that this build does not understand (not JSON, not an object, or `version` other than `SCHEMA_VERSION`, e.g. written by a newer tab), or the read itself throws, `save` rejects with `PersistenceWriteError('unavailable')` and writes nothing. A missing value (`null`) is fine. Other `setItem` errors: quota (`QuotaExceededError`, `NS_ERROR_DOM_QUOTA_REACHED` or `code === 22`) → `'quota'`; anything else → `'unavailable'`. `load()` never writes. `watch` without an `eventTarget` returns a no-op remover; `requestDurability` without a `storageManager` returns `false`.
+
 ### §10.3 Data / schema owned
 One `localStorage` entry at origin `http://127.0.0.1:47321`:
 ```
@@ -761,7 +868,7 @@ erDiagram
 Size: a few hundred recipes ≈ well under 1 MB vs the ~5 MiB per-origin limit.
 
 ### §10.5 Errors and edge cases
-- Never writes when the store is not `ready` (§9.5), so an unreadable value is left exactly as it was.
+- Never writes when the store is not `ready` (§9.5), so an unreadable value is left exactly as it was. As built (M1): the adapter also guards this itself (A-09, §10.1), so a value another tab changed to an unknown version after this tab loaded is not overwritten either.
 - Future schema versions: add `decodeV2`; `decodeCollection` upgrades older versions in memory, written back on the next change. Not needed in v1.
 - Private/incognito windows lose data at session end (README note). Clearing site data for `127.0.0.1` deletes all recipes (owner accepted; README warns).
 - `requestDurability()` is called once per start; Firefox may show a permission prompt the first time.
@@ -794,6 +901,8 @@ Replaces only `web/js/persistence/local-storage-persistence.js` with `http-file-
 }
 ```
 DOM-bound files excluded from unit coverage are covered by e2e (§11.6) or, without P1, by the tester's manual checklist.
+
+As built (M1): `package.json` also has `"test:nocov": "node --test \"tests/unit/**/*.test.js\""` (fast run without coverage thresholds) and `"prepare": "git config core.hooksPath .githooks || true"` (installs the repo's pre-commit hook on `npm ci`; the hook skips checks when `node_modules` is missing). `web/js/ui/screens/not-found-screen.js` falls under the existing `screens/**` coverage exclusion.
 
 ### §11.2 ESLint (`eslint.config.js`, flat config)
 - `@eslint/js` recommended for all `**/*.js`; `ignores`: `node_modules`, `.results`, `docs`, `test-results`, `playwright-report`.
@@ -851,9 +960,36 @@ echo "check.sh: all checks passed"
 - Unit (`node:test`, `node:assert/strict`): `tests/unit/<area>/<file>.test.js` mirroring source. Fakes in `tests/helpers/`: `fake-storage.js` (in-memory `Storage` with switchable `QuotaExceededError` / `SecurityError`), `memory-persistence.js` (implements §9.1), `recipes.fixture.js` (SPEC §5 Pancakes / Tomato Soup / Banana Bread). Server tests start the handler on port `0` and call `startOrReuse` with fake `listen` / `probe` / `openBrowser`.
 - Required unit coverage: every row of §7.2, §8.2, §6.2; codec (empty, ok, bad JSON, unknown version, invalid recipe); store write rollback; launcher outcomes and messages of §1.2; static handler 200/404/405/403 + traversal.
 - E2E (only if P1 approved) `tests/e2e/playwright.config.js`: `use: { channel: 'msedge', baseURL: 'http://127.0.0.1:47399' }`, `webServer: { command: 'node server/main.js', env: { RECIPE_BOX_PORT: '47399', RECIPE_BOX_NO_OPEN: '1' }, url: 'http://127.0.0.1:47399/__recipe-box/health' }`, projects `desktop` (1280×800) and `narrow` (390×844). Specs per flow: `list.spec.js` (F-2), `add.spec.js` (F-1), `view-scale.spec.js` (F-3), `favourite.spec.js` (F-4), `edit.spec.js` (F-5), `delete.spec.js` (F-6), `persistence.spec.js` (reload keeps data; corrupt value → banner, value untouched). Seed data with `page.addInitScript` writing `recipe-box:collection`. Port 47399 ≠ 47321, so e2e never touches the owner's recipes.
+- As built (M1): P1 is in use. `playwright.config.js` matches the above (plus `testDir: '.'` and `webServer.cwd` = repo root). Seeding lives in `tests/e2e/helpers/seed.js`. Specs so far: `list.spec.js` (empty state) and `persistence.spec.js` (corrupt value → banner, Add disabled, value byte-identical); the other specs arrive with their screens. Extra unit suites beyond the mirror layout: `tests/unit/server/main-process.test.js` (spawns `server/main.js`), `tests/unit/persistence/{no-write-on-load,form-path-roundtrip}.test.js`, `tests/unit/store/recipe-store-{writes,races,listeners}.test.js`, `tests/unit/core/scaling/scaling.edge.test.js`, `tests/unit/ui/index-html.test.js`.
 
 ---
 
 ## Changes since last milestone
 | Milestone | Section | Change | Why | Ref |
 |---|---|---|---|---|
+| M1 | §1.1 | `createRequestHandler` takes optional `opts.log`; logs `Request failed` and answers 500 on unexpected errors | owner decision during T-01 | D-06 |
+| M1 | §1.1, §1.2, §1.5 | `createRequestHandler` throws `ConfigError('Web folder not found: <path>')` at construction; added to @throws and the message table | fail loudly instead of 404-ing everything | D-06 (T-01) |
+| M1 | §0.2, §0.3, §1.1, §1.4, §1.5, diagrams | New `server/listen.js` `createListen(handler)`; `main.js` wires every dependency; launcher only receives them | bound-address test | A-06 |
+| M1 | §1.1, §1.2, §1.5 | `createBrowserOpener` takes `onError`; open failures are logged and never fatal; new message rows (browser not opened, generic start failure, missing package version) | browser errors never stop the server | A-06 |
+| M1 | §1.1, §1.2, §0.5 | Smaller details: `LaunchResult` typedef; other listen errors rethrown; empty `RECIPE_BOX_PORT` = unset; logger format; 500 row; extra traversal patterns | describe code as built | T-01/T-02 |
+| M1 | §2.1, §2.5 | `Router`/`Banner`/`FilterState`/`Dialogs` typedefs; `createDialogs()` → `{ confirm }`; router re-entrancy guard; `h()` skips unsafe attrs; `routeToHash(notFound)` = `#/not-found`; `app.js` global error listeners + status sync | describe code as built | A-01, A-02, T-07/T-08 |
+| M1 | §0.2, §2, §2.5, §3.1 | `not-found-screen.js`; `#/new`, view and edit routes show "Page not found" until M2; M1 list screen is the minimal empty/list version | walking skeleton scope | A-10 |
+| M1 | §6.1, §6.2, §6.5 | `assertRecipeInput` rules written out: rejects untrimmed text and sparse arrays; non-object or bad tags → `ValidationError({})`; servings safe integer | T-03 minors closed in T-04/T-05 | A-03 |
+| M1 | §5.5, §6.1 | An empty `fieldErrors` means "show a generic error" | no field to mark | A-03 |
+| M1 | §9.1, §9.4, §9.5 | `init` idempotent (one watch); `load` rejecting → `unavailable`; `reload` on the write chain; validate-and-copy at call time; duplicate-id guard; structuredClone before freeze | T-04 minors m1/m2 + T-05 | A-05, T-05 |
+| M1 | §9.5 | Listener isolation: a throwing subscriber is reported via `globalThis.reportError` and never fails the write | a UI bug must not lose a saved change | A-07 |
+| M1 | §10.1, §6.5 | Lenient stored-shape check in the codec, separate from write-side validation; extra `'recipes is not a list'` reason; `recipes: []` → empty | stored data must stay readable when write rules tighten | A-08 |
+| M1 | §10.1, §10.5 | `save` refuses to overwrite foreign/unknown-version/non-JSON data (`PersistenceWriteError('unavailable')`) | never destroy data written by a newer tab | A-09 |
+| M1 | §0.4, §11.1, §11.6 | Exact dev-dependency pins recorded; `test:nocov` and `prepare` scripts; e2e seed helper and the extra unit suites | as-built record | T-01..T-08 |
+| M1 | §7.1 | Checked against T-16 (built early): no deviations | — | T-16 |
+
+### Known deferred minors (M1 tidy-up list, owner-approved to defer)
+- T-02: `browser.js` has no URL guard of its own (relies on the URL coming from config).
+- T-02: `probe.js` has no overall deadline and no response body size cap (only the 1500 ms socket timeout).
+- T-02: `server/listen.js` calls `http.createServer`, but CONVENTIONS §2 says only `main.js` constructs concrete dependencies.
+- T-02: `HEALTH_PATH` is defined twice (`static-handler.js` exports it; `probe.js` has its own copy).
+- T-05 m2: a `save` that never settles stalls the write queue (no timeout on the chain).
+- T-06 m-A: `isForeignData` in `local-storage-persistence.js` repeats the codec's version check; base it on `decodeCollection` before any v2 format exists.
+- T-08: the list screen's Add buttons are enabled/disabled once at mount, so they go stale after a cross-tab status change.
+- T-08: errors thrown before `createApp(...).start()` miss the banner (the global listeners are installed in `start()`).
+- T-08: the status-sync `banner.clear()` can wipe a generic error banner.

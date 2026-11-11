@@ -1,0 +1,65 @@
+# Recipe Box
+
+A small personal recipe box that runs on your own computer. It keeps your recipes in your browser, and nothing is sent anywhere.
+
+> **Status: milestone M1 (skeleton).** The app opens to an empty recipe list. Adding, searching, scaling and favouriting recipes come in later milestones. For now the "Add recipe" buttons lead to a "Page not found" page.
+
+## Requirements
+
+- Windows 10 or 11
+- Node.js 24 or newer (from https://nodejs.org)
+- Microsoft Edge, only needed for the browser tests
+
+## How to run
+
+1. Open a terminal in the project folder (the folder that contains this README).
+2. Run `npm ci` once. It installs the development tools used by the checks. The app itself needs no install.
+3. Start the app, either by running `npm start` or by double-clicking `start.cmd`.
+4. Your browser opens `http://127.0.0.1:47321/` on the recipe list. The window shows:
+   `Recipe Box is running at http://127.0.0.1:47321/ - opening your browser. Close this window to stop it.`
+5. To stop the app, close that window (or press Ctrl+C in a terminal).
+
+If the app is already running and you start it again, the browser simply opens the running copy.
+
+Always use the address `http://127.0.0.1:47321/`. The browser treats `localhost:47321` as a different address with its own empty storage.
+
+## Where your recipes are stored
+
+- Recipes are saved in the storage of your browser, for the address `http://127.0.0.1:47321/`. They are not saved in a file.
+- Use the same browser every time. Another browser cannot see them.
+- There is no backup and no export. Clearing the browser's site data for this address deletes all your recipes permanently.
+- Recipes stay saved when you close the browser, stop the app or restart the computer.
+
+## Port problems
+
+The app always uses port 47321 on purpose. Your recipes are tied to the address `http://127.0.0.1:47321/`, so the app never switches to another port.
+
+If you see this message:
+
+> Port 47321 is used by another program, so Recipe Box cannot start. Close that program and run the command again (see README "Port problems").
+
+another program on your computer is already using port 47321. Close that program and run `npm start` (or double-click `start.cmd`) again. If you are not sure which program it is, restart the computer and try again.
+
+If you see this message:
+
+> Windows does not allow Recipe Box to use port 47321 (reserved port range). See README "Port problems".
+
+Windows reserves some port ranges for itself. To list them, run `netsh interface ipv4 show excludedportrange protocol=tcp` in Command Prompt. If 47321 falls inside a listed range, Recipe Box cannot run on this computer until that range changes.
+
+## How to test
+
+Run these from the project folder in Git Bash, after `npm ci`:
+
+- `bash scripts/check.sh` runs lint, formatting, type checks, layer rules, and the unit tests with coverage. It must pass.
+- `bash scripts/check.sh --e2e` also runs the browser tests in Microsoft Edge.
+- `CHECK_NO_COVERAGE=1 bash scripts/check.sh` is the same as the first command but skips only the coverage thresholds.
+
+## Project layout
+
+- `server/`: the start-up program. It serves the app on 127.0.0.1 and opens the browser.
+- `web/`: the app itself, which runs in the browser (HTML, CSS and JavaScript).
+- `tests/`: the automated tests (unit tests and browser tests).
+- `scripts/`: `check.sh` (runs all checks) and `screenshot.mjs` (takes screenshots of the running app).
+- `docs/`: the spec, the design (LLD) and the coding conventions. Start with `docs/SPEC.md`.
+- `.githooks/`: the git pre-commit hook, which runs the lint, format, type and layer checks before each commit.
+- `.devteam/`: settings for the AI team tooling. You do not need it to run the app.

@@ -26,7 +26,8 @@ Browser (web/js):
   main.js = the ONLY composition root: constructs persistence + store, passes them to ui/app.js
 
 Server (server/):
-  main.js (composition root) → launcher.js → probe.js / browser.js / static-handler.js → config.js, log.js
+  main.js (composition root) → config.js, log.js, static-handler.js, listen.js, probe.js, browser.js, launcher.js
+  (launcher.js receives listen / probe / openBrowser / log from main.js; static-handler.js imports config.js for ConfigError)
 ```
 - `ui/` never imports `persistence/` or touches `localStorage`/`sessionStorage`/`indexedDB`; it talks to data only through `RecipeStore` (§9).
 - `store/` never imports `ui/`, `persistence/` or `main.js`; it receives its `CollectionPersistence` in the constructor.

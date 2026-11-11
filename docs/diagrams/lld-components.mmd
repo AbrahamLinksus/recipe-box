@@ -6,11 +6,12 @@ flowchart TB
     probe["probe.js"]
     opener["browser.js<br/>BrowserOpener"]
     handler["static-handler.js<br/>static files + /__recipe-box/health"]
+    listen["listen.js<br/>createListen(handler)"]
   end
   subgraph WEB["web/ (browser, origin http://127.0.0.1:47321)"]
     wmain["js/main.js<br/>composition root"]
     subgraph UI["js/ui"]
-      app["app.js, router.js, dialogs.js, banner.js §2"]
+      app["app.js, router.js, dialogs.js, banner.js §2<br/>screens/not-found-screen.js"]
       list["screens/list-screen.js §3"]
       view["screens/view-screen.js §4"]
       form["screens/form-screen.js + form-model.js §5"]
@@ -28,9 +29,14 @@ flowchart TB
   ls[("localStorage<br/>recipe-box:collection")]
 
   owner --> smain --> launcher
-  launcher --> probe
-  launcher --> opener
-  launcher --> handler
+  smain --> handler
+  smain --> listen
+  smain --> probe
+  smain --> opener
+  listen -. "receives handler" .-> handler
+  launcher -. "injected: listen" .-> listen
+  launcher -. "injected: probe" .-> probe
+  launcher -. "injected: openBrowser" .-> opener
   opener -- "cmd /c start" --> wmain
   handler -- "serves" --> WEB
   wmain --> app
