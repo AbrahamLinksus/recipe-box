@@ -60,13 +60,13 @@ Notes for every task
 - Owner: backend-coder
 - Depends on: T-03
 - Context: SPEC US-02, US-08 · LLD §9.1, §9.5 · files: web/js/store/*, tests/unit/store/*, tests/helpers/*
-- Status: Backlog
+- Status: Done
 - Acceptance criteria:
-  - [ ] `web/js/store/ports.js` (`CollectionPersistence`, `LoadResult` typedefs) and `errors.js` (`RecipeNotFoundError`, `StoreReadOnlyError`, `PersistenceWriteError` with `.id` / `.status` / `.reason`) match §9.1
-  - [ ] `RecipeStore` constructor, `init`, `status`, `statusReason`, `list`, `get`, `subscribe` implemented; `init()` maps `ok` → ready with recipes, `empty` → ready with `[]` and nothing written, `unreadable` / `unavailable` → that status with `list()` = `[]` (one test each)
-  - [ ] Returned recipes and the `list()` snapshot are deep-frozen (test tries to mutate and fails)
-  - [ ] `tests/helpers/memory-persistence.js` implements the port and is used by the tests; checks pass
-- Result: —
+  - [x] `web/js/store/ports.js` (`CollectionPersistence`, `LoadResult` typedefs) and `errors.js` (`RecipeNotFoundError`, `StoreReadOnlyError`, `PersistenceWriteError` with `.id` / `.status` / `.reason`) match §9.1
+  - [x] `RecipeStore` constructor, `init`, `status`, `statusReason`, `list`, `get`, `subscribe` implemented; `init()` maps `ok` → ready with recipes, `empty` → ready with `[]` and nothing written, `unreadable` / `unavailable` → that status with `list()` = `[]` (one test each)
+  - [x] Returned recipes and the `list()` snapshot are deep-frozen (test tries to mutate and fails)
+  - [x] `tests/helpers/memory-persistence.js` implements the port and is used by the tests; checks pass
+- Result: ✅ 4/4 goals · 117 tests · 7113cbf · minors m1 (init twice) + m2 (load reject → stuck loading) carried into T-05
 
 ### T-05 · Recipe store: writes, favourite toggle and cross-tab reload
 
