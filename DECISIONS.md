@@ -11,6 +11,7 @@
 | D-05 | 2026-11-11 | Spec, assumptions, HLD, team | Approved as proposed; devops declined | — | plan |
 | D-06 | 2026-11-11 | 500 errors in the static server | Log them: optional `log` in createRequestHandler opts (LLD §1.1, synced at M1 as-built); main.js passes createLogger() | Keep §1.1, silent 500 | T-01 |
 | D-07 | 2026-11-11 | Leftover review minors | Carry T-03 minors into T-05 and T-04 m1/m2 into T-05 (owner: "fix in T-05"); defer other minors to the M1 tidy-up list | Fix in each task before approval | T-03, T-04 |
+| D-08 | 2026-11-11 | Browser for e2e (amends D-03) | Edge (channel msedge) when installed, else the Playwright Chromium already on the machine; same Chromium engine. Implemented in T-12 | Always Chromium; skip e2e in the cloud | T-12 |
 
 ## Tier 2 — decided by agents (overrule any time)
 

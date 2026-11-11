@@ -8,8 +8,8 @@
 | Repo         | AbrahamLinksus/recipe-box (public)                                                                      |
 | Stage | 7 Build |
 | Milestone | M2 · Add, list and open (0/5 tasks) — M1 done (8666dd4) |
-| Next step | Start M2: T-09 (search/filter logic) ∥ T-10 (form model), both need only T-03 ✅; then T-11, T-12, T-13 |
-| Last updated | 2026-11-12 |
+| Next step | T-09 queued for batch; T-10 in review; T-12 started (includes D-08 e2e browser fallback). Then T-11 (after T-09), T-13 |
+| Last updated | 2026-11-11 |
 
 ## Config
 
@@ -70,5 +70,7 @@ Context gaps agents reported (`Context gap:` in a REPORT). The Orchestrator adds
 - M1 tidy-up list (minors, owner-approved to defer): T-02 browser.js own URL guard; probe.js overall deadline + body size cap; createServer in listen.js vs CONVENTIONS (main-only); HEALTH_PATH defined twice.; T-05 m2 a save that never settles stalls the queue; T-06 m-A isForeignData duplicates codec version check (base it on decodeCollection before any v2 format).; T-08: Add button disabled computed once at mount (stale after cross-tab status change); pre-start errors miss the banner (listeners installed in start()); status-sync banner.clear() can wipe a generic error banner.
 - Main checkout needs `npm ci` after a fresh clone (pre-commit hook skips checks without node_modules).
 - No python on PATH: screenshots use `node scripts/screenshot.mjs` (Playwright via Edge), not capture.py.
+- Cloud sessions: clone to /home/user/recipe-box (taskgit takes that path; worktrees in /home/user/recipe-box-wt). No Edge there; D-08 falls back to /opt/pw-browsers Chromium.
+- Flaky: server/main.js + start.cmd process tests failed once under parallel worktree runs, passed on rerun (T-10 tester). Watch for repeats.
 
 -
