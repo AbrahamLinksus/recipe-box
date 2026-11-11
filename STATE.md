@@ -6,18 +6,25 @@
 |---|---|
 | Problem | Single-user recipe box web app: add, search by title/tag, scale servings, favourite; data saved locally |
 | Repo | AbrahamLinksus/recipe-box (public) |
-| Stage | 1 Spec interview |
+| Stage | 4 LLD (spec, HLD, team approved) |
 | Milestone | — (planning) |
-| Next step | Spec interview round 1 · planner |
+| Next step | LLD: researcher → architect on wip/plan |
 | Last updated | 2026-11-11 |
 
 ## Config
 - Owner: Jake · GitHub owner: AbrahamLinksus
 - Approval mode: batch-low-risk · Cost mode: balanced (owner chose "Batch + economy")
+- Optional agents declined: devops (no CI; handover skips the devops step)
 
 ## Team
 | Agent | Model | Why on this project |
 |---|---|---|
+| frontend-coder | Sonnet | M2–M5 shell + screens, M8 search UI |
+| backend-coder | Sonnet | M1 launcher, M6 model, M7 scaling, M9–M10 store/persistence |
+| tester | Sonnet | every task: check.sh vs acceptance criteria |
+| reviewer | Opus (Sonnet on low-risk, balanced mode) | every task, read-only |
+| debugger | Opus (Sonnet on low-risk) | failures, max 2 rounds |
+| docs | Haiku | milestone README/docs |
 
 ## Open work
 - Tasks in progress live on `wip/*` branches (see `taskgit.sh list`); their step states are in each branch's TASK_PROGRESS.md.
