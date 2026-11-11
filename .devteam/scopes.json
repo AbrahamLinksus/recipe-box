@@ -1,0 +1,35 @@
+{
+  "_comment": "Recipe Box layout (LLD §0.2): the browser app lives in web/ but backend-coder owns the pure logic and data modules inside it (M6 model, M7 scaling, M9 store, M10 persistence); frontend-coder owns the shell, screens, CSS and M8 search. Default deny of @frontend_dirs for backend-coder is replaced by the specific UI paths.",
+  "agents": {
+    "backend-coder": {
+      "write": ["**"],
+      "deny": [
+        "@main_owned",
+        "@design",
+        "@raw_data",
+        "frontend/**",
+        "ui/**",
+        "client/**",
+        "web/index.html",
+        "web/favicon.svg",
+        "web/css/**",
+        "web/js/main.js",
+        "web/js/ui/**",
+        "web/js/core/search/**"
+      ]
+    },
+    "frontend-coder": {
+      "write": ["**"],
+      "deny": [
+        "@main_owned",
+        "@design",
+        "@backend_dirs",
+        "@raw_data",
+        "web/js/core/recipe/**",
+        "web/js/core/scaling/**",
+        "web/js/store/**",
+        "web/js/persistence/**"
+      ]
+    }
+  }
+}

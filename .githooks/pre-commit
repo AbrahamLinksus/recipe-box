@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Fast checks only (no tests / e2e). Enabled via: git config core.hooksPath .githooks
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+if [ ! -d node_modules ]; then
+  echo "pre-commit: node_modules missing in $(pwd); skipping checks (run 'npm ci' to enable them)." >&2
+  exit 0
+fi
+npm run --silent lint
+npm run --silent format:check
+npm run --silent typecheck
+npm run --silent deps

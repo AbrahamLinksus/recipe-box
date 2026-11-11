@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireframe · recipe-form</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Arial, Helvetica, sans-serif; font-size: 15px; color: #222; background: #fff; }
+  .wf-label { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: #777; margin: 0 0 6px; }
+  header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 2px solid #999; background: #eee; }
+  header h1 { font-size: 20px; margin: 0; }
+  .btn { display: inline-block; border: 2px solid #555; background: #ddd; padding: 8px 12px; font-size: 14px; font-weight: bold; }
+  .btn.light { background: #fff; font-weight: normal; }
+  .btn.small { padding: 4px 8px; font-size: 13px; font-weight: normal; background: #fff; }
+  .page { padding: 16px; }
+  label { display: block; font-weight: bold; margin-bottom: 4px; }
+  .field { margin-bottom: 14px; }
+  .input { border: 2px solid #888; background: #fff; padding: 8px; min-height: 38px; }
+  .input.error { border-width: 3px; border-color: #333; border-style: dashed; }
+  .placeholder { color: #999; }
+  .err { font-size: 13px; font-weight: bold; margin-top: 4px; }
+  .err::before { content: "⚠ "; }
+  .help { font-size: 12px; color: #666; margin-top: 4px; }
+  section { border: 1px solid #999; padding: 12px; margin-bottom: 16px; }
+  h2 { font-size: 17px; margin: 0 0 10px; }
+  .ing-row { display: flex; gap: 6px; margin-bottom: 8px; align-items: center; }
+  .ing-row .input { padding: 6px; min-height: 34px; }
+  .ing-row .amount { width: 58px; }
+  .ing-row .unit { width: 58px; }
+  .ing-row .name { flex: 1; }
+  .colhead { display: flex; gap: 6px; font-size: 12px; color: #666; margin-bottom: 4px; }
+  .colhead span:nth-child(1), .colhead span:nth-child(2) { width: 58px; }
+  .step-row { display: flex; gap: 6px; margin-bottom: 8px; align-items: center; }
+  .step-row .n { width: 20px; font-weight: bold; }
+  .step-row .input { flex: 1; padding: 6px; min-height: 34px; }
+  .tag { display: inline-block; border: 1px solid #888; background: #eee; padding: 1px 8px; font-size: 12px; margin-right: 4px; border-radius: 10px; }
+  .footer { display: flex; justify-content: flex-end; gap: 8px; border-top: 2px solid #999; padding-top: 12px; }
+  .states { margin-top: 28px; border-top: 2px dashed #aaa; padding-top: 12px; }
+  .dialog-backdrop { background: #ccc; padding: 24px 12px; }
+  .dialog { background: #fff; border: 2px solid #555; padding: 16px; max-width: 360px; margin: 0 auto; }
+  .dialog p { margin: 0 0 16px; font-size: 16px; }
+  .dialog .acts { display: flex; justify-content: flex-end; gap: 8px; }
+  .top { display: block; }
+  @media (min-width: 800px) {
+    .page { max-width: 1100px; margin: 0 auto; padding: 24px; }
+    .top { display: flex; gap: 16px; }
+    .top .field:first-child { flex: 1; }
+    .top .field:last-child { width: 160px; }
+    .cols { display: flex; gap: 24px; align-items: flex-start; }
+    .cols section { flex: 1; }
+    .ing-row .amount, .ing-row .unit, .colhead span:nth-child(1), .colhead span:nth-child(2) { width: 80px; }
+    .states-grid { display: flex; gap: 16px; }
+    .states-grid > div { flex: 1; }
+  }
+</style>
+</head>
+<body>
+  <header>
+    <h1>Edit recipe</h1>
+    <span class="placeholder">(title is "Add recipe" when adding)</span>
+  </header>
+
+  <div class="page">
+    <p class="wf-label">Screen: recipe-form · editing Pancakes (servings 4 → 6, tag "weekend" added)</p>
+
+    <div class="top">
+      <div class="field">
+        <label>Title</label>
+        <div class="input">Pancakes</div>
+      </div>
+      <div class="field">
+        <label>Servings</label>
+        <div class="input">6</div>
+      </div>
+    </div>
+
+    <div class="cols">
+      <section>
+        <h2>Ingredients</h2>
+        <div class="colhead"><span>Amount</span><span>Unit</span><span>Name</span></div>
+        <div class="ing-row"><div class="input amount">200</div><div class="input unit">g</div><div class="input name">flour</div><span class="btn small">✕</span></div>
+        <div class="ing-row"><div class="input amount">2</div><div class="input unit"></div><div class="input name">eggs</div><span class="btn small">✕</span></div>
+        <div class="ing-row"><div class="input amount">300</div><div class="input unit">ml</div><div class="input name">milk</div><span class="btn small">✕</span></div>
+        <div class="ing-row"><div class="input amount"></div><div class="input unit"></div><div class="input name">a pinch of salt</div><span class="btn small">✕</span></div>
+        <p class="help">Amount: 2, 0.5, ½ or 1½. Leave empty for "a pinch", "to taste" (never scaled).</p>
+        <span class="btn small">+ Add ingredient</span>
+      </section>
+
+      <section>
+        <h2>Steps</h2>
+        <div class="step-row"><span class="n">1</span><div class="input">Whisk flour and salt</div><span class="btn small">↑</span><span class="btn small">↓</span><span class="btn small">✕</span></div>
+        <div class="step-row"><span class="n">2</span><div class="input">Beat in eggs and milk</div><span class="btn small">↑</span><span class="btn small">↓</span><span class="btn small">✕</span></div>
+        <div class="step-row"><span class="n">3</span><div class="input">Rest 10 min</div><span class="btn small">↑</span><span class="btn small">↓</span><span class="btn small">✕</span></div>
+        <div class="step-row"><span class="n">4</span><div class="input">Fry in a hot pan</div><span class="btn small">↑</span><span class="btn small">↓</span><span class="btn small">✕</span></div>
+        <span class="btn small">+ Add step</span>
+      </section>
+    </div>
+
+    <div class="field">
+      <label>Tags</label>
+      <div class="input"><span class="tag">breakfast ✕</span><span class="tag">sweet ✕</span><span class="tag">weekend ✕</span> <span class="placeholder">add a tag…</span></div>
+      <p class="help">Tags are saved in lower case.</p>
+    </div>
+
+    <div class="footer">
+      <span class="btn light">Cancel</span>
+      <span class="btn">Save</span>
+    </div>
+
+    <div class="states">
+      <p class="wf-label">Other states of this screen</p>
+      <div class="states-grid">
+        <div>
+          <p class="wf-label">State: Add recipe, Save pressed with empty title and no ingredients</p>
+          <section>
+            <div class="field">
+              <label>Title</label>
+              <div class="input error"></div>
+              <div class="err">Title is required</div>
+            </div>
+            <div class="field">
+              <label>Servings</label>
+              <div class="input error">0</div>
+              <div class="err">Servings must be 1 or more</div>
+            </div>
+            <h2>Ingredients</h2>
+            <div class="err">Add at least one ingredient</div>
+            <h2 style="margin-top:12px">Steps</h2>
+            <div class="err">Add at least one step</div>
+          </section>
+        </div>
+        <div>
+          <p class="wf-label">State: Cancel pressed with unsaved changes</p>
+          <div class="dialog-backdrop">
+            <div class="dialog">
+              <p>Discard changes?</p>
+              <div class="acts">
+                <span class="btn light">Keep editing</span>
+                <span class="btn">Discard</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

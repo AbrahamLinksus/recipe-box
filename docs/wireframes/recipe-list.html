@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireframe · recipe-list</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Arial, Helvetica, sans-serif; font-size: 15px; color: #222; background: #fff; }
+  .wf-label { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: #777; margin: 0 0 6px; }
+  header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 2px solid #999; background: #eee; }
+  header h1 { font-size: 20px; margin: 0; }
+  .btn { display: inline-block; border: 2px solid #555; background: #ddd; padding: 8px 12px; font-size: 14px; font-weight: bold; }
+  .btn.light { background: #fff; font-weight: normal; }
+  .page { padding: 16px; }
+  .layout { display: block; }
+  .filters { border: 1px dashed #999; padding: 12px; margin-bottom: 16px; background: #f6f6f6; }
+  .input { border: 2px solid #888; background: #fff; padding: 8px; color: #777; margin-bottom: 10px; }
+  .row-flex { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .select { border: 2px solid #888; background: #fff; padding: 8px; flex: 1; min-width: 140px; }
+  .check { display: flex; gap: 6px; align-items: center; }
+  .box { width: 16px; height: 16px; border: 2px solid #666; display: inline-block; background: #fff; }
+  .count { color: #666; font-size: 13px; margin: 0 0 8px; }
+  .list { border: 1px solid #999; }
+  .item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #ccc; }
+  .item:last-child { border-bottom: none; }
+  .item .title { font-weight: bold; font-size: 16px; margin-bottom: 4px; }
+  .tag { display: inline-block; border: 1px solid #888; background: #eee; padding: 1px 8px; font-size: 12px; margin-right: 4px; border-radius: 10px; }
+  .star { font-size: 22px; padding: 4px 8px; }
+  .states { margin-top: 28px; border-top: 2px dashed #aaa; padding-top: 12px; }
+  .state { border: 1px solid #999; padding: 24px 12px; text-align: center; margin-bottom: 16px; background: #f6f6f6; }
+  .state p { margin: 0 0 12px; font-size: 16px; }
+  @media (min-width: 800px) {
+    .page { max-width: 1100px; margin: 0 auto; padding: 24px; }
+    .layout { display: flex; gap: 24px; align-items: flex-start; }
+    .filters { width: 280px; flex-shrink: 0; margin-bottom: 0; }
+    .main { flex: 1; }
+    .states-grid { display: flex; gap: 16px; }
+    .states-grid .state { flex: 1; }
+  }
+</style>
+</head>
+<body>
+  <header>
+    <h1>Recipe Box</h1>
+    <span class="btn">+ Add recipe</span>
+  </header>
+
+  <div class="page">
+    <p class="wf-label">Screen: recipe-list · default state (3 recipes, A–Z by title)</p>
+    <div class="layout">
+      <div class="filters">
+        <p class="wf-label">Search &amp; filter</p>
+        <div class="input">Search by title…</div>
+        <div class="row-flex">
+          <div class="select">Tag: All tags ▾</div>
+          <div class="check"><span class="box"></span> Favourites only</div>
+        </div>
+      </div>
+
+      <div class="main">
+        <p class="count">3 recipes</p>
+        <div class="list">
+          <div class="item">
+            <div>
+              <div class="title">Banana Bread</div>
+              <span class="tag">baking</span><span class="tag">breakfast</span>
+            </div>
+            <span class="star" title="Favourite">★</span>
+          </div>
+          <div class="item">
+            <div>
+              <div class="title">Pancakes</div>
+              <span class="tag">breakfast</span><span class="tag">sweet</span>
+            </div>
+            <span class="star" title="Not favourite">☆</span>
+          </div>
+          <div class="item">
+            <div>
+              <div class="title">Tomato Soup</div>
+              <span class="tag">lunch</span><span class="tag">vegetarian</span>
+            </div>
+            <span class="star" title="Not favourite">☆</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="states">
+      <p class="wf-label">Other states of this screen</p>
+      <div class="states-grid">
+        <div class="state">
+          <p class="wf-label">State: search "xyz" (no matches)</p>
+          <p>No recipes match your search</p>
+          <span class="btn light">Clear filters</span>
+        </div>
+        <div class="state">
+          <p class="wf-label">State: no recipes saved yet</p>
+          <p>No recipes yet</p>
+          <span class="btn">Add your first recipe</span>
+        </div>
+        <div class="state" style="text-align:left">
+          <p class="wf-label">State: tag "breakfast" selected</p>
+          <div class="item"><div><div class="title">Banana Bread</div><span class="tag">baking</span><span class="tag">breakfast</span></div><span class="star">★</span></div>
+          <div class="item"><div><div class="title">Pancakes</div><span class="tag">breakfast</span><span class="tag">sweet</span></div><span class="star">☆</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

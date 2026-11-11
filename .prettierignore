@@ -1,0 +1,16 @@
+node_modules
+.results
+test-results
+playwright-report
+coverage
+package-lock.json
+.githooks
+*.png
+docs
+
+# orchestration files (edited by the setup-project orchestrator)
+TASK_PROGRESS.md
+STATE.md
+TASKS.md
+DECISIONS.md
+.results/

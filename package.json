@@ -1,0 +1,32 @@
+{
+  "name": "recipe-box",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "start": "node server/main.js",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc -p tsconfig.web.json && tsc -p tsconfig.node.json",
+    "deps": "depcruise server web/js --config .dependency-cruiser.cjs",
+    "test": "node --test --experimental-test-coverage --test-coverage-include=\"server/**\" --test-coverage-include=\"web/js/**\" --test-coverage-exclude=\"web/js/ui/screens/**\" --test-coverage-exclude=\"web/js/ui/{app,dialogs,dom,banner}.js\" --test-coverage-exclude=\"web/js/main.js\" --test-coverage-exclude=\"server/main.js\" --test-coverage-lines=80 --test-coverage-branches=80 --test-coverage-functions=80 \"tests/unit/**/*.test.js\"",
+    "test:nocov": "node --test \"tests/unit/**/*.test.js\"",
+    "test:e2e": "playwright test -c tests/e2e/playwright.config.js",
+    "check": "bash scripts/check.sh",
+    "prepare": "git config core.hooksPath .githooks || true"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@playwright/test": "1.59.1",
+    "@types/node": "24.19.2",
+    "dependency-cruiser": "17.4.3",
+    "eslint": "9.39.5",
+    "globals": "16.5.0",
+    "prettier": "3.9.10",
+    "typescript": "5.9.3"
+  }
+}

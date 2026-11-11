@@ -1,0 +1,42 @@
+sequenceDiagram
+  actor Owner
+  participant Main as server/main.js
+  participant L as launcher.js
+  participant P as probe.js
+  participant Open as browser.js
+  participant Br as Default browser
+  participant H as static-handler.js
+  participant WM as web/js/main.js
+  participant LS as LocalStoragePersistence (§10)
+  participant S as RecipeStore (§9)
+  participant UI as ui/app.js + list-screen.js
+  Owner->>Main: npm start
+  Main->>L: startOrReuse(config, listen, probe, openBrowser)
+  L->>L: listen(47321, '127.0.0.1')
+  alt listening
+    L-->>Owner: "Recipe Box is running at ..."
+    L->>Open: open('http://127.0.0.1:47321/')
+  else EADDRINUSE
+    L->>P: probe(origin)
+    P->>H: GET /__recipe-box/health (existing instance)
+    alt app == recipe-box
+      L->>Open: open(origin)
+      L-->>Owner: "already running" (exit 0)
+    else other program or timeout
+      L-->>Owner: "Port 47321 is used by another program" (exit 1)
+    end
+  end
+  Open->>Br: cmd /c start "" http://127.0.0.1:47321/
+  Br->>H: GET / , /css/app.css, /js/main.js, modules
+  H-->>Br: static files (CSP, no-cache)
+  Br->>WM: run module
+  WM->>LS: new LocalStoragePersistence({ storage: localStorage, storageManager: navigator.storage, eventTarget: window })
+  WM->>S: new RecipeStore(persistence)
+  WM->>S: await init()
+  S->>LS: load()
+  LS->>LS: getItem('recipe-box:collection') then decodeCollection()
+  LS-->>S: { kind: 'ok', recipes } or 'empty' / 'unreadable' / 'unavailable'
+  WM->>LS: requestDurability() (fire and forget)
+  WM->>UI: createApp(...).start()
+  UI->>S: list()
+  UI->>UI: filterRecipes(recipes, filter) (§8), render A-Z or "No recipes yet"

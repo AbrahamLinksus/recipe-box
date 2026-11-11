@@ -1,0 +1,33 @@
+flowchart LR
+  owner(["Owner at his computer"])
+  launcher["M1 Launcher<br/>one start command"]
+  browser["Default browser<br/>fixed local address"]
+  shell["M2 App shell<br/>navigation, dialogs, unsaved-changes guard"]
+  list["M3 Recipe list screen"]
+  view["M4 Recipe view screen"]
+  form["M5 Recipe form screen"]
+  domain["M6 Recipe model and validation<br/>amount parsing, tag normalising"]
+  scale["M7 Scaling and kitchen fractions"]
+  finder["M8 Search and filter"]
+  store["M9 Recipe store<br/>create, read, update, delete, favourite"]
+  persist[("M10 Local persistence<br/>survives restart; location = LLD decision D1")]
+
+  owner -- "runs command" --> launcher
+  launcher -- "serves app on loopback only, opens or reuses tab" --> browser
+  browser --> shell
+  shell --> list
+  shell --> view
+  shell --> form
+  list -- "query: text, tag, favourites only" --> finder
+  finder -- "matching recipes A-Z" --> list
+  finder -- "all recipes" --> store
+  view -- "recipe + chosen servings" --> scale
+  scale -- "scaled amounts as fractions" --> view
+  form -- "draft recipe" --> domain
+  domain -- "errors or valid recipe" --> form
+  form -- "save new / save edit" --> store
+  view -- "toggle favourite, delete" --> store
+  list -- "toggle favourite" --> store
+  store -- "load recipe" --> view
+  store -- "load recipe for editing" --> form
+  store <-- "read on start, write on every change" --> persist

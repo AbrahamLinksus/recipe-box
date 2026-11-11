@@ -1,0 +1,50 @@
+flowchart TB
+  owner(["Owner: npm start"])
+  subgraph SRV["server/ (Node, 127.0.0.1:47321)"]
+    smain["main.js<br/>composition root"]
+    launcher["launcher.js §1"]
+    probe["probe.js"]
+    opener["browser.js<br/>BrowserOpener"]
+    handler["static-handler.js<br/>static files + /__recipe-box/health"]
+  end
+  subgraph WEB["web/ (browser, origin http://127.0.0.1:47321)"]
+    wmain["js/main.js<br/>composition root"]
+    subgraph UI["js/ui"]
+      app["app.js, router.js, dialogs.js, banner.js §2"]
+      list["screens/list-screen.js §3"]
+      view["screens/view-screen.js §4"]
+      form["screens/form-screen.js + form-model.js §5"]
+    end
+    store["js/store/recipe-store.js §9"]
+    port{{"js/store/ports.js<br/>CollectionPersistence"}}
+    subgraph CORE["js/core (pure)"]
+      model["recipe/ §6"]
+      scaling["scaling/ §7"]
+      search["search/ §8"]
+    end
+    lsp["js/persistence/local-storage-persistence.js §10"]
+    codec["js/persistence/collection-codec.js §10"]
+  end
+  ls[("localStorage<br/>recipe-box:collection")]
+
+  owner --> smain --> launcher
+  launcher --> probe
+  launcher --> opener
+  launcher --> handler
+  opener -- "cmd /c start" --> wmain
+  handler -- "serves" --> WEB
+  wmain --> app
+  wmain --> store
+  wmain --> lsp
+  app --> list & view & form
+  list --> search
+  view --> scaling
+  form --> model
+  list & view & form --> store
+  store --> model
+  store --> port
+  lsp -. implements .-> port
+  lsp --> codec
+  lsp --> ls
+  scaling --> model
+  search --> model

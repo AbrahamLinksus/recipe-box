@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireframe · recipe-view</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Arial, Helvetica, sans-serif; font-size: 15px; color: #222; background: #fff; }
+  .wf-label { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: #777; margin: 0 0 6px; }
+  header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 2px solid #999; background: #eee; }
+  header a { color: #222; }
+  .btn { display: inline-block; border: 2px solid #555; background: #ddd; padding: 8px 12px; font-size: 14px; font-weight: bold; }
+  .btn.light { background: #fff; font-weight: normal; }
+  .btn.disabled { color: #aaa; border-color: #bbb; background: #f2f2f2; }
+  .page { padding: 16px; }
+  .title-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  h1 { font-size: 24px; margin: 0 0 8px; }
+  .star { font-size: 28px; }
+  .tag { display: inline-block; border: 1px solid #888; background: #eee; padding: 1px 8px; font-size: 12px; margin-right: 4px; border-radius: 10px; }
+  .servings { display: flex; align-items: center; gap: 8px; border: 1px dashed #999; background: #f6f6f6; padding: 10px; margin: 16px 0; flex-wrap: wrap; }
+  .num { border: 2px solid #888; background: #fff; width: 56px; text-align: center; padding: 8px 0; font-weight: bold; }
+  .pm { border: 2px solid #555; background: #ddd; width: 40px; text-align: center; padding: 6px 0; font-weight: bold; font-size: 18px; }
+  .note { font-size: 12px; color: #666; }
+  .cols { display: block; }
+  section { border: 1px solid #999; padding: 12px; margin-bottom: 16px; }
+  h2 { font-size: 17px; margin: 0 0 10px; }
+  ul, ol { margin: 0; padding-left: 22px; }
+  li { margin-bottom: 8px; }
+  .amt { font-weight: bold; }
+  .actions { display: flex; gap: 8px; margin-top: 8px; }
+  .states { margin-top: 28px; border-top: 2px dashed #aaa; padding-top: 12px; }
+  .dialog-backdrop { background: #ccc; padding: 24px 12px; }
+  .dialog { background: #fff; border: 2px solid #555; padding: 16px; max-width: 360px; margin: 0 auto; }
+  .dialog p { margin: 0 0 16px; font-size: 16px; }
+  .dialog .actions { justify-content: flex-end; }
+  @media (min-width: 800px) {
+    .page { max-width: 1100px; margin: 0 auto; padding: 24px; }
+    .cols { display: flex; gap: 24px; align-items: flex-start; }
+    .cols .ing { width: 38%; }
+    .cols .steps { flex: 1; }
+    .states-grid { display: flex; gap: 16px; }
+    .states-grid > div { flex: 1; }
+  }
+</style>
+</head>
+<body>
+  <header>
+    <a>← All recipes</a>
+    <div class="actions" style="margin-top:0">
+      <span class="btn light">Edit</span>
+      <span class="btn light">Delete</span>
+    </div>
+  </header>
+
+  <div class="page">
+    <p class="wf-label">Screen: recipe-view · Pancakes scaled from 4 to 3 servings</p>
+    <div class="title-row">
+      <div>
+        <h1>Pancakes</h1>
+        <span class="tag">breakfast</span><span class="tag">sweet</span>
+      </div>
+      <span class="star" title="Mark as favourite">☆</span>
+    </div>
+
+    <div class="servings">
+      <strong>Servings</strong>
+      <span class="pm">−</span>
+      <span class="num">3</span>
+      <span class="pm">+</span>
+      <a>Reset (4)</a>
+      <span class="note">Recipe saved for 4 servings; scaling is not saved.</span>
+    </div>
+
+    <div class="cols">
+      <section class="ing">
+        <h2>Ingredients</h2>
+        <ul>
+          <li><span class="amt">150 g</span> flour</li>
+          <li><span class="amt">1½</span> eggs</li>
+          <li><span class="amt">225 ml</span> milk</li>
+          <li>a pinch of salt</li>
+        </ul>
+      </section>
+      <section class="steps">
+        <h2>Steps</h2>
+        <ol>
+          <li>Whisk flour and salt</li>
+          <li>Beat in eggs and milk</li>
+          <li>Rest 10 min</li>
+          <li>Fry in a hot pan</li>
+        </ol>
+      </section>
+    </div>
+
+    <div class="states">
+      <p class="wf-label">Other states of this screen</p>
+      <div class="states-grid">
+        <div>
+          <p class="wf-label">State: Delete pressed on Tomato Soup (confirm dialog)</p>
+          <div class="dialog-backdrop">
+            <div class="dialog">
+              <p>Delete 'Tomato Soup'? Are you sure?</p>
+              <div class="actions">
+                <span class="btn light">Cancel</span>
+                <span class="btn">Delete</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <p class="wf-label">State: Banana Bread at 1 serving (− disabled, favourite)</p>
+          <section>
+            <div class="title-row"><h1 style="font-size:18px">Banana Bread</h1><span class="star">★</span></div>
+            <div class="servings" style="margin:8px 0">
+              <strong>Servings</strong>
+              <span class="pm btn disabled" style="padding:6px 0">−</span>
+              <span class="num">1</span>
+              <span class="pm">+</span>
+              <a>Reset (8)</a>
+            </div>
+            <ul>
+              <li><span class="amt">½</span> banana</li>
+              <li><span class="amt">¼ tsp</span> baking soda</li>
+              <li><span class="amt">31¼ g</span> flour</li>
+            </ul>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
