@@ -4,10 +4,19 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Recipe Box</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="/css/app.css" />
   </head>
   <body>
-    <h1>Recipe Box</h1>
-    <p>Skeleton placeholder.</p>
-    <script type="module" src="js/main.js"></script>
+    <div id="banner" data-testid="banner" role="alert" hidden></div>
+    <div id="app"></div>
+    <dialog id="confirm-dialog" data-testid="confirm-dialog" aria-labelledby="confirm-message">
+      <p id="confirm-message" data-testid="confirm-message"></p>
+      <div class="dialog-actions">
+        <button type="button" data-testid="confirm-cancel"></button>
+        <button type="button" data-testid="confirm-ok"></button>
+      </div>
+    </dialog>
+    <script type="module" src="/js/main.js"></script>
   </body>
 </html>
