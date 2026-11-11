@@ -30,6 +30,11 @@
 - none
 
 ## How to run
+```bash
+npm ci
+npm start      # or start.cmd
+bash scripts/check.sh
+```
 
 ```bash
 uv sync            # python deps
@@ -46,5 +51,8 @@ Context gaps agents reported (`Context gap:` in a REPORT). The Orchestrator adds
 | ---- | --------- | --------------------- |
 
 ## Notes for the next session
+- Owner chose: T-16 (scaling, pure) starts as soon as T-03 is Done, in parallel with M2.
+- Main checkout needs `npm ci` after a fresh clone (pre-commit hook skips checks without node_modules).
+- No python on PATH: screenshots use `node scripts/screenshot.mjs` (Playwright via Edge), not capture.py.
 
 -
