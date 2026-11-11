@@ -15,3 +15,6 @@
 | A-04 | 2026-11-11 | Fixture values not in SPEC | Tomato Soup ingredients/steps and Banana Bread steps invented | backend-coder | T-03 |
 | A-05 | 2026-11-11 | Store copies loaded recipes | structuredClone before deep-freeze; reload() + watch wired in T-04 | backend-coder | T-04 |
 | A-06 | 2026-11-11 | Launcher structure | server/listen.js (createListen) for bound-address test; browser opener errors logged, never fatal | backend-coder | T-02 |
+| A-07 | 2026-11-11 | Listener errors in the store | isolated per listener, reported via globalThis.reportError (microtask fallback); never fail a saved write | backend debugger | T-05 |
+| A-08 | 2026-11-11 | Stored-data check | lenient shape check (types only) separate from write-side assertRecipeInput | backend debugger | T-06 |
+| A-09 | 2026-11-11 | Save over data it can't read | adapter refuses (PersistenceWriteError 'unavailable') if stored value is v2 / missing version / not JSON | backend debugger | T-06 |

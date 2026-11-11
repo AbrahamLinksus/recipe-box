@@ -53,9 +53,10 @@ Context gaps agents reported (`Context gap:` in a REPORT). The Orchestrator adds
 ## Notes for the next session
 - Owner chose: T-16 (scaling, pure) starts as soon as T-03 is Done, in parallel with M2.
 - T-02 must pass createLogger() to createRequestHandler (D-06) and catch ConfigError at startup.
-- M1 as-built LLD sync list: §1.1 createRequestHandler opts.log (D-06); createRequestHandler throws ConfigError("Web folder not found: <path>") (add to §1.1 @throws and §1.2 message table); FieldErrors empty → generic error (A-03).
+- T-08 brief: add a global error handler in ui/app.js (window error + unhandledrejection → banner) so reportError from the store surfaces (A-07).
+- M1 as-built LLD sync list: §1.1 createRequestHandler opts.log (D-06); createRequestHandler throws ConfigError("Web folder not found: <path>") (add to §1.1 @throws and §1.2 message table); FieldErrors empty → generic error (A-03).; §10.1 lenient stored-shape check (A-08) + save refuses foreign data (A-09); §9 listener isolation via reportError (A-07).
 - T-04/T-05 briefs: carry T-03 minors (assertRecipeInput: trim title/names/steps per §6.3; reject sparse arrays).
-- M1 tidy-up list (minors, owner-approved to defer): T-02 browser.js own URL guard; probe.js overall deadline + body size cap; createServer in listen.js vs CONVENTIONS (main-only); HEALTH_PATH defined twice.
+- M1 tidy-up list (minors, owner-approved to defer): T-02 browser.js own URL guard; probe.js overall deadline + body size cap; createServer in listen.js vs CONVENTIONS (main-only); HEALTH_PATH defined twice.; T-05 m2 a save that never settles stalls the queue; T-06 m-A isForeignData duplicates codec version check (base it on decodeCollection before any v2 format).
 - Main checkout needs `npm ci` after a fresh clone (pre-commit hook skips checks without node_modules).
 - No python on PATH: screenshots use `node scripts/screenshot.mjs` (Playwright via Edge), not capture.py.
 

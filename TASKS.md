@@ -73,27 +73,27 @@ Notes for every task
 - Owner: backend-coder
 - Depends on: T-04
 - Context: SPEC US-01, US-07, US-09, US-10 · LLD §9.1, §9.4, §9.5 · files: web/js/store/*, tests/unit/store/*, tests/helpers/memory-persistence.js
-- Status: Backlog
+- Status: Done
 - Acceptance criteria:
-  - [ ] `create` (new id, favourite false, createdAt = updatedAt = injected `now`), `update` (keeps id, favourite, createdAt), `remove`, `toggleFavourite` work per §9.1; unknown id → `RecipeNotFoundError`; invalid input → `ValidationError`
-  - [ ] Every write calls `persistence.save` before committing; a rejected save leaves `list()` unchanged and rejects with the `PersistenceWriteError` (rollback test for each write method)
-  - [ ] Writes while status is `unreadable` / `unavailable` reject with `StoreReadOnlyError` and never call `save`; concurrent writes are serialised (test fires two writes, both persisted in order)
-  - [ ] Subscribers are notified after each successful write and after `reload()`; a `watch` callback triggers `reload()`, and a reload that yields `unreadable` switches the store to read-only
-  - [ ] Checks pass
-- Result: —
+  - [x] `create` (new id, favourite false, createdAt = updatedAt = injected `now`), `update` (keeps id, favourite, createdAt), `remove`, `toggleFavourite` work per §9.1; unknown id → `RecipeNotFoundError`; invalid input → `ValidationError`
+  - [x] Every write calls `persistence.save` before committing; a rejected save leaves `list()` unchanged and rejects with the `PersistenceWriteError` (rollback test for each write method)
+  - [x] Writes while status is `unreadable` / `unavailable` reject with `StoreReadOnlyError` and never call `save`; concurrent writes are serialised (test fires two writes, both persisted in order)
+  - [x] Subscribers are notified after each successful write and after `reload()`; a `watch` callback triggers `reload()`, and a reload that yields `unreadable` switches the store to read-only
+  - [x] Checks pass
+- Result: ✅ 5/5 goals + carried fixes · 206 tests · 2 debugger rounds · 9e5d1dc
 
 ### T-06 · Local persistence: collection codec and localStorage adapter
 
 - Owner: backend-coder
 - Depends on: T-04
 - Context: SPEC US-08, §6 · LLD §10.1, §10.3, §10.5, §9.1 · files: web/js/persistence/*, tests/unit/persistence/*, tests/helpers/*
-- Status: Backlog
+- Status: Done
 - Acceptance criteria:
-  - [ ] `encodeCollection` / `decodeCollection` round-trip the Pancakes fixture exactly (amount `{ text, value }` kept, incl. "a pinch of salt" with `value: null`); stored shape matches §10.3 under key `recipe-box:collection`, version 1
-  - [ ] `decodeCollection` tests: `null` → empty; `"{oops"` → unreadable `not JSON`; version 2 / missing → unreadable `unknown version …`; a recipe with servings 0 → unreadable `invalid recipe at index 0`
-  - [ ] `LocalStoragePersistence` with `tests/helpers/fake-storage.js`: `SecurityError` on read → `unavailable`; `QuotaExceededError` on save → `PersistenceWriteError('quota')`; `watch` fires only for `recipe-box:collection` or `null` key; `requestDurability` returns false on errors
-  - [ ] No file in `web/js/persistence/` references `localStorage` directly (storage is injected); layer rule `persistence-only-ports` passes; checks pass
-- Result: —
+  - [x] `encodeCollection` / `decodeCollection` round-trip the Pancakes fixture exactly (amount `{ text, value }` kept, incl. "a pinch of salt" with `value: null`); stored shape matches §10.3 under key `recipe-box:collection`, version 1
+  - [x] `decodeCollection` tests: `null` → empty; `"{oops"` → unreadable `not JSON`; version 2 / missing → unreadable `unknown version …`; a recipe with servings 0 → unreadable `invalid recipe at index 0`
+  - [x] `LocalStoragePersistence` with `tests/helpers/fake-storage.js`: `SecurityError` on read → `unavailable`; `QuotaExceededError` on save → `PersistenceWriteError('quota')`; `watch` fires only for `recipe-box:collection` or `null` key; `requestDurability` returns false on errors
+  - [x] No file in `web/js/persistence/` references `localStorage` directly (storage is injected); layer rule `persistence-only-ports` passes; checks pass
+- Result: ✅ 4/4 goals · 226 tests · load never writes · 1 debugger round · 285e375
 
 ### T-07 · UI shell primitives: page, DOM helper, router, dialogs, banner, filter state
 
