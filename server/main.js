@@ -1,16 +1,50 @@
-import { createServer } from 'node:http';
-import { readFile } from 'node:fs/promises';
+import { spawn } from 'node:child_process';
+import { ConfigError, loadConfig } from './config.js';
+import { createLogger } from './log.js';
+import { createRequestHandler } from './static-handler.js';
+import { probeExistingInstance } from './probe.js';
+import { createBrowserOpener } from './browser.js';
+import { createListen } from './listen.js';
+import { exitCodeFor, startOrReuse } from './launcher.js';
 
-const port = Number(process.env.RECIPE_BOX_PORT || 47321);
-const root = new URL('../web/', import.meta.url);
+/** @param {import('node:http').Server} server */
+function stopOnSignal(server) {
+  const stop = () => server.close(() => process.exit(0));
+  process.on('SIGINT', stop);
+  process.on('SIGTERM', stop);
+}
 
-// Skeleton only: serves the placeholder page and a health route. Replaced by the launcher (LLD section 1).
-createServer(async (req, res) => {
-  if (req.url === '/__recipe-box/health') {
-    res.end('ok');
-    return;
+async function main() {
+  const log = createLogger();
+  try {
+    const config = loadConfig(process.env);
+    const handler = createRequestHandler({
+      webRoot: config.webRoot,
+      identity: { app: config.appId, version: config.version },
+      allowedHosts: [`127.0.0.1:${config.port}`, `localhost:${config.port}`],
+      log,
+    });
+    const openBrowser = createBrowserOpener({
+      platform: process.platform,
+      spawn,
+      onError: (err) =>
+        log.error('Could not open the browser; open the address by hand.', { error: err.message }),
+    });
+    const { outcome, server } = await startOrReuse({
+      config,
+      listen: createListen(handler),
+      probe: (origin) => probeExistingInstance(origin, { appId: config.appId }),
+      openBrowser,
+      log,
+    });
+    const code = exitCodeFor(outcome);
+    if (code === null && server) stopOnSignal(server);
+    else process.exitCode = code ?? 0;
+  } catch (err) {
+    if (err instanceof ConfigError) log.error(err.message);
+    else log.error('Recipe Box could not start.', { error: String(err) });
+    process.exitCode = 1;
   }
-  const file = req.url === '/js/main.js' ? 'js/main.js' : 'index.html';
-  res.setHeader('Content-Type', file.endsWith('.js') ? 'text/javascript' : 'text/html');
-  res.end(await readFile(new URL(file, root)));
-}).listen(port, '127.0.0.1');
+}
+
+await main();
