@@ -55,6 +55,7 @@ Context gaps agents reported (`Context gap:` in a REPORT). The Orchestrator adds
 - T-02 must pass createLogger() to createRequestHandler (D-06) and catch ConfigError at startup.
 - M1 as-built LLD sync list: §1.1 createRequestHandler opts.log (D-06); createRequestHandler throws ConfigError("Web folder not found: <path>") (add to §1.1 @throws and §1.2 message table); FieldErrors empty → generic error (A-03).
 - T-04/T-05 briefs: carry T-03 minors (assertRecipeInput: trim title/names/steps per §6.3; reject sparse arrays).
+- M1 tidy-up list (minors, owner-approved to defer): T-02 browser.js own URL guard; probe.js overall deadline + body size cap; createServer in listen.js vs CONVENTIONS (main-only); HEALTH_PATH defined twice.
 - Main checkout needs `npm ci` after a fresh clone (pre-commit hook skips checks without node_modules).
 - No python on PATH: screenshots use `node scripts/screenshot.mjs` (Playwright via Edge), not capture.py.
 

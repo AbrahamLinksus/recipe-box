@@ -14,3 +14,4 @@
 | A-03 | 2026-11-11 | Bad tags in assertRecipeInput | throw ValidationError({}) (no tags key in FieldErrors) | backend debugger | T-03 |
 | A-04 | 2026-11-11 | Fixture values not in SPEC | Tomato Soup ingredients/steps and Banana Bread steps invented | backend-coder | T-03 |
 | A-05 | 2026-11-11 | Store copies loaded recipes | structuredClone before deep-freeze; reload() + watch wired in T-04 | backend-coder | T-04 |
+| A-06 | 2026-11-11 | Launcher structure | server/listen.js (createListen) for bound-address test; browser opener errors logged, never fatal | backend-coder | T-02 |

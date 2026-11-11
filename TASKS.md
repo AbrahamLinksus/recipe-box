@@ -32,14 +32,14 @@ Notes for every task
 - Owner: backend-coder
 - Depends on: T-01
 - Context: SPEC US-11, US-08 · LLD §0.5, §1.1, §1.2, §1.4, §1.5 · files: server/*, start.cmd, package.json, tests/unit/server/*
-- Status: Backlog
+- Status: Done
 - Acceptance criteria:
-  - [ ] `server/probe.js`, `server/browser.js`, `server/launcher.js` implement §1.1; `server/main.js` (replacing the skeleton stub) wires them; `npm start` prints `Recipe Box is running at http://127.0.0.1:47321/ - opening your browser. Close this window to stop it.` and the default browser opens that address (terminal + browser screenshots in `.results/T-02/`)
-  - [ ] Unit tests with fake `listen` / `probe` / `openBrowser` cover all four outcomes and their exact §1.2 messages and exit codes: started (keeps running), already-running (opens browser, exit 0), port-conflict incl. probe `other`/timeout and `none`→retry-once (exit 1), port-forbidden on `EACCES` (exit 1)
-  - [ ] Running `npm start` a second time while the first runs prints the "already running" message and exits 0; `RECIPE_BOX_NO_OPEN=1` opens no browser
-  - [ ] Server listens on `127.0.0.1` only (test asserts the bound address); `start.cmd` matches §1.5 and keeps the window open on error
-  - [ ] Checks pass
-- Result: —
+  - [x] `server/probe.js`, `server/browser.js`, `server/launcher.js` implement §1.1; `server/main.js` (replacing the skeleton stub) wires them; `npm start` prints `Recipe Box is running at http://127.0.0.1:47321/ - opening your browser. Close this window to stop it.` and the default browser opens that address (terminal + browser screenshots in `.results/T-02/`)
+  - [x] Unit tests with fake `listen` / `probe` / `openBrowser` cover all four outcomes and their exact §1.2 messages and exit codes: started (keeps running), already-running (opens browser, exit 0), port-conflict incl. probe `other`/timeout and `none`→retry-once (exit 1), port-forbidden on `EACCES` (exit 1)
+  - [x] Running `npm start` a second time while the first runs prints the "already running" message and exits 0; `RECIPE_BOX_NO_OPEN=1` opens no browser
+  - [x] Server listens on `127.0.0.1` only (test asserts the bound address); `start.cmd` matches §1.5 and keeps the window open on error
+  - [x] Checks pass
+- Result: ✅ 5/5 goals · 182 tests · live npm start verified · accf1c3
 
 ### T-03 · Recipe model, amount parsing, tags and validation
 
