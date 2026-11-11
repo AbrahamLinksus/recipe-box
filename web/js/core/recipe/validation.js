@@ -65,11 +65,12 @@ export function validateDraft(draft) {
 }
 
 /**
+ * Normalised text (LLD 6.3): a non-empty string with no leading or trailing whitespace.
  * @param {unknown} text
  * @returns {boolean}
  */
-function isNonBlankString(text) {
-  return typeof text === 'string' && text.trim() !== '';
+function isTrimmedNonEmpty(text) {
+  return typeof text === 'string' && text !== '' && text === text.trim();
 }
 
 /**
@@ -81,7 +82,7 @@ function isValidIngredient(row) {
   const ing = /** @type {Partial<import('./types.js').Ingredient> | null | undefined} */ (row);
   const amount = ing?.amount;
   return (
-    isNonBlankString(ing?.name) &&
+    isTrimmedNonEmpty(ing?.name) &&
     typeof ing?.unit === 'string' &&
     typeof amount?.text === 'string' &&
     (amount.value === null || Number.isFinite(amount.value))
@@ -99,7 +100,7 @@ function checkIngredientRows(rows, errors) {
   }
   /** @type {Record<number, string>} */
   const rowErrors = {};
-  rows.forEach((row, index) => {
+  Array.from(rows).forEach((row, index) => {
     if (!isValidIngredient(row)) rowErrors[index] = MESSAGES.ingredientName;
   });
   if (Object.keys(rowErrors).length > 0) errors.ingredientRows = rowErrors;
@@ -111,7 +112,7 @@ function checkIngredientRows(rows, errors) {
  * @returns {boolean}
  */
 function isValidSteps(steps) {
-  return Array.isArray(steps) && steps.length > 0 && steps.every(isNonBlankString);
+  return Array.isArray(steps) && steps.length > 0 && Array.from(steps).every(isTrimmedNonEmpty);
 }
 
 /**
@@ -120,21 +121,25 @@ function isValidSteps(steps) {
  * @returns {boolean}
  */
 function isNormalisedTags(tags) {
-  if (!Array.isArray(tags) || !tags.every((tag) => typeof tag === 'string')) return false;
+  if (!Array.isArray(tags) || !Array.from(tags).every((tag) => typeof tag === 'string')) {
+    return false;
+  }
   const normalised = normaliseTags(tags);
   return normalised.length === tags.length && normalised.every((tag, i) => tag === tags[i]);
 }
 
 /**
  * Structural check of an already-normalised input.
- * Tags have no FieldErrors key, so bad tags alone throw `ValidationError({})`.
+ * Tags have no FieldErrors key, so bad tags alone throw `ValidationError({})`; so does a
+ * non-object input (null/undefined/primitive).
  * @param {import('./types.js').RecipeInput} input
  * @throws {ValidationError}
  */
 export function assertRecipeInput(input) {
+  if (input === null || typeof input !== 'object') throw new ValidationError({});
   /** @type {import('./types.js').FieldErrors} */
   const errors = {};
-  if (!isNonBlankString(input.title)) errors.title = MESSAGES.titleRequired;
+  if (!isTrimmedNonEmpty(input.title)) errors.title = MESSAGES.titleRequired;
   if (!isValidServings(input.servings)) errors.servings = MESSAGES.servingsMin;
   checkIngredientRows(input.ingredients, errors);
   if (!isValidSteps(input.steps)) errors.steps = MESSAGES.stepsMin;

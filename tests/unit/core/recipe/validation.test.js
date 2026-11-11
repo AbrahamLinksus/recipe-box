@@ -81,6 +81,11 @@ describe('validateDraft', () => {
 });
 
 describe('assertRecipeInput', () => {
+  it('null / undefined / primitive input -> ValidationError, not TypeError', () => {
+    for (const bad of [null, undefined, 'x', 3]) {
+      assert.throws(() => assertRecipeInput(/** @type {any} */ (bad)), ValidationError);
+    }
+  });
   it('accepts a valid input', () => {
     assert.doesNotThrow(() => assertRecipeInput(PANCAKES));
   });
@@ -193,5 +198,24 @@ describe('recipes fixture', () => {
     }, TypeError);
     assert.throws(() => /** @type {unknown[]} */ (ALL_RECIPES).push(PANCAKES), TypeError);
     assert.deepEqual(PANCAKES, pancakes);
+  });
+});
+
+describe('assertRecipeInput normalisation (LLD 6.3)', () => {
+  /** @param {Record<string, unknown>} over */
+  const bad = (over) =>
+    assert.throws(
+      () => assertRecipeInput(/** @type {any} */ ({ ...PANCAKES, ...over })),
+      ValidationError,
+    );
+  it('rejects untrimmed title, ingredient name and step', () => {
+    bad({ title: ' Pancakes' });
+    bad({ ingredients: [{ ...PANCAKES.ingredients[0], name: 'flour ' }] });
+    bad({ steps: ['Mix '] });
+  });
+  it('rejects sparse steps, ingredients and tags', () => {
+    bad({ steps: [,] }); // eslint-disable-line no-sparse-arrays
+    bad({ ingredients: [,] }); // eslint-disable-line no-sparse-arrays
+    bad({ tags: [,] }); // eslint-disable-line no-sparse-arrays
   });
 });
