@@ -6,9 +6,9 @@
 | ------------ | ------------------------------------------------------------------------------------------------------- |
 | Problem      | Single-user recipe box web app: add, search by title/tag, scale servings, favourite; data saved locally |
 | Repo         | AbrahamLinksus/recipe-box (public)                                                                      |
-| Stage        | 1 Spec interview                                                                                        |
-| Milestone    | — (planning)                                                                                            |
-| Next step    | Spec interview round 1 · planner                                                                        |
+| Stage | 7 Build |
+| Milestone | M2 · Add, list and open (0/5 tasks) — M1 done (8666dd4) |
+| Next step | Start M2: T-09 (search/filter logic) ∥ T-10 (form model), both need only T-03 ✅; then T-11, T-12, T-13 |
 | Last updated | 2026-11-12 |
 
 ## Config
