@@ -6,9 +6,9 @@
 |---|---|
 | Problem | Single-user recipe box web app: add, search by title/tag, scale servings, favourite; data saved locally |
 | Repo | AbrahamLinksus/recipe-box (public) |
-| Stage | 4 LLD (spec, HLD, team approved) |
+| Stage | 5 Env setup (LLD approved) |
 | Milestone | — (planning) |
-| Next step | LLD: researcher → architect on wip/plan |
+| Next step | env-setup phase 1 (install plan) on wip/plan |
 | Last updated | 2026-11-11 |
 
 ## Config
@@ -44,6 +44,7 @@ Context gaps agents reported (`Context gap:` in a REPORT). The Orchestrator adds
 `Read:` field for that role on top of the per-role defaults in brief-template.md.
 | Role | Also read | Why (from gap report) |
 |---|---|---|
+| architect | <plugin root>/skills/setup-project/scopes.json | needs the scopes override format when writing .devteam/scopes.json |
 
 ## Notes for the next session
 - 
