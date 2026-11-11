@@ -100,14 +100,14 @@ Notes for every task
 - Owner: frontend-coder
 - Depends on: —
 - Context: SPEC US-10, §4 F-1, §7 · LLD §2.1, §2.4, §2.5 · files: web/index.html, web/favicon.svg, web/js/ui/{dom,router,dialogs,banner,filter-state}.js, tests/unit/ui/*, docs/wireframes/*.html
-- Status: Backlog
+- Status: Done
 - Acceptance criteria:
-  - [ ] `web/index.html` has the app root, the banner region (`data-testid="banner"`, `role="alert"`) and the native `<dialog id="confirm-dialog">` with `confirm-ok` / `confirm-cancel`; loads only `/js/main.js` and `/css/app.css` (CSP-compatible: no inline script or style)
-  - [ ] `parseRoute` / `routeToHash` unit tests cover `''`, `#/`, `#/recipe/abc`, `#/recipe/abc/edit`, `#/new` and an unknown hash → `notFound`; `createRouter` honours `canLeave()` false by restoring the previous hash with `replaceState`
-  - [ ] `createFilterState` tests: default `{ query: '', tag: null, favouritesOnly: false }`, `set` patches, `reset` restores defaults
-  - [ ] `h()` sets text via `textContent` only (lint `no-restricted-syntax` passes); `confirmDialog` resolves false on Esc/backdrop and focuses the cancel button
-  - [ ] Checks pass
-- Result: —
+  - [x] `web/index.html` has the app root, the banner region (`data-testid="banner"`, `role="alert"`) and the native `<dialog id="confirm-dialog">` with `confirm-ok` / `confirm-cancel`; loads only `/js/main.js` and `/css/app.css` (CSP-compatible: no inline script or style)
+  - [x] `parseRoute` / `routeToHash` unit tests cover `''`, `#/`, `#/recipe/abc`, `#/recipe/abc/edit`, `#/new` and an unknown hash → `notFound`; `createRouter` honours `canLeave()` false by restoring the previous hash with `replaceState`
+  - [x] `createFilterState` tests: default `{ query: '', tag: null, favouritesOnly: false }`, `set` patches, `reset` restores defaults
+  - [x] `h()` sets text via `textContent` only (lint `no-restricted-syntax` passes); `confirmDialog` resolves false on Esc/backdrop and focuses the cancel button
+  - [x] Checks pass
+- Result: ✅ 5/5 goals · 36 tests · 1 debugger round (router re-entrancy) · c6fa362
 
 ### T-08 · Composition root, app wiring and empty recipe list
 
