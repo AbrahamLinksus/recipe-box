@@ -1,12 +1,33 @@
-import { describe, it } from 'node:test';
+import { before, describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
 import { createServer } from 'node:http';
 import { readFileSync } from 'node:fs';
 
 const MAIN = new URL('../../../server/main.js', import.meta.url).pathname.replace(/^\/(\w:)/, '$1');
-const PORT = '47398';
-const env = { ...process.env, RECIPE_BOX_PORT: PORT, RECIPE_BOX_NO_OPEN: '1' };
+// A fixed port collides when several worktrees run check.sh at once; ask the OS for a free one.
+let PORT = '';
+/** @type {NodeJS.ProcessEnv} */
+let env = {};
+
+/** @returns {Promise<string>} */
+function freePort() {
+  return new Promise((resolve, reject) => {
+    const probe = createServer();
+    probe.once('error', reject);
+    probe.listen(0, '127.0.0.1', () => {
+      const addr = probe.address();
+      const port = addr && typeof addr === 'object' ? String(addr.port) : '';
+      probe.close(() => resolve(port));
+    });
+  });
+}
+
+before(async () => {
+  do PORT = await freePort();
+  while (PORT === '47321'); // CONVENTIONS §5: tests never use the owner's port
+  env = { ...process.env, RECIPE_BOX_PORT: PORT, RECIPE_BOX_NO_OPEN: '1' };
+});
 
 /** @param {import('node:child_process').ChildProcess} child */
 function firstLine(child) {
@@ -16,6 +37,7 @@ function firstLine(child) {
       buf += d;
       if (buf.includes('\n')) resolve(buf.trim());
     });
+    child.once('exit', () => resolve(buf.trim()));
   });
 }
 
