@@ -1,96 +1,25 @@
 import { h } from '../dom.js';
-import { emptyDraft, isDirty, addTag } from '../form-model.js';
-import { errorLine, valueOf } from '../form-widgets.js';
+import { emptyDraft, draftFromRecipe, isDirty, addTag } from '../form-model.js';
+import { topFields } from '../form-top.js';
 import { ingredientsSection } from '../form-ingredients.js';
 import { stepsSection } from '../form-steps.js';
 import { tagsSection } from '../form-tags.js';
-import { validateDraft } from '../../core/recipe/validation.js';
-import { ValidationError } from '../../core/recipe/errors.js';
-import { PersistenceWriteError, StoreReadOnlyError } from '../../store/errors.js';
+import { createSave, createSaveSync } from '../form-save.js';
+import { mountNotFoundScreen } from './not-found-screen.js';
 
 /**
  * @typedef {import('../../core/recipe/types.js').RecipeDraft} RecipeDraft
  * @typedef {import('../../core/recipe/types.js').FieldErrors} FieldErrors
- * @typedef {import('../form-widgets.js').DraftAccess} DraftAccess
- * @typedef {{ draft: RecipeDraft, saving: boolean, saved: boolean }} FormState
+ * @typedef {import('../form-save.js').FormState} FormState
  */
-
-/**
- * @param {string} label
- * @param {Record<string, unknown>} attrs
- * @param {string | undefined} error
- * @param {string} errorId
- * @returns {HTMLElement}
- */
-function textField(label, attrs, error, errorId) {
-  const id = `${errorId}-field`;
-  return h(
-    'div',
-    { class: 'field' },
-    h('label', { for: id, text: label }),
-    h('input', {
-      class: 'input',
-      type: 'text',
-      id,
-      'aria-invalid': error ? 'true' : null,
-      'aria-describedby': error ? errorId : null,
-      ...attrs,
-    }),
-    errorLine(errorId, error, errorId),
-  );
-}
-
-/**
- * @param {DraftAccess} access
- * @param {FieldErrors} errors
- * @returns {HTMLElement}
- */
-function topFields(access, errors) {
-  const draft = access.get();
-  /** @param {'title'|'servings'} key */
-  const onInput = (key) => (/** @type {Event} */ e) =>
-    access.set({ ...access.get(), [key]: valueOf(e) });
-  return h(
-    'div',
-    { class: 'top' },
-    textField(
-      'Title',
-      { 'data-testid': 'title-input', value: draft.title, oninput: onInput('title') },
-      errors.title,
-      'error-title',
-    ),
-    textField(
-      'Servings',
-      {
-        'data-testid': 'servings-input',
-        inputmode: 'numeric',
-        value: draft.servings,
-        oninput: onInput('servings'),
-      },
-      errors.servings,
-      'error-servings',
-    ),
-  );
-}
-
-/**
- * @param {unknown} err
- * @returns {string | null} banner text, or null when the status banner already says it
- */
-function saveFailureMessage(err) {
-  if (err instanceof StoreReadOnlyError) return null;
-  if (err instanceof PersistenceWriteError) {
-    return `Could not save: ${err.message}. Your last change was not stored.`;
-  }
-  return 'Could not save. Your last change was not stored.';
-}
 
 /**
  * @param {import('../router.js').Router} router
+ * @param {import('../router.js').Route} cancelTo
  * @param {HTMLElement} saveButton
  * @returns {HTMLElement}
  */
-function footer(router, saveButton) {
+function footer(router, cancelTo, saveButton) {
   return h(
     'div',
     { class: 'footer' },
@@ -98,7 +27,7 @@ function footer(router, saveButton) {
       type: 'button',
       class: 'btn',
       'data-testid': 'cancel-edit',
-      onclick: () => router.navigate({ name: 'list' }),
+      onclick: () => router.navigate(cancelTo),
       text: 'Cancel',
     }),
     saveButton,
@@ -107,9 +36,10 @@ function footer(router, saveButton) {
 
 /**
  * @param {import('../router.js').Router} router
+ * @param {import('../router.js').Route} cancelTo
  * @param {FormState} state
  */
-function createFormView(router, state) {
+function createFormView(router, cancelTo, state) {
   const access = {
     get: () => state.draft,
     set: (/** @type {RecipeDraft} */ d) => (state.draft = d),
@@ -136,7 +66,7 @@ function createFormView(router, state) {
       topFields(access, errors),
       h('div', { class: 'cols' }, ingredientsSection(access, errors), stepsSection(access, errors)),
       tagsSection(access),
-      footer(router, saveButton),
+      footer(router, cancelTo, saveButton),
     );
     /** @type {HTMLElement | null} */ (form.querySelector('[aria-invalid="true"]'))?.focus();
   };
@@ -144,78 +74,56 @@ function createFormView(router, state) {
 }
 
 /**
- * @param {import('../router.js').ScreenContext} ctx
- * @param {FormState} state
- * @param {ReturnType<typeof createFormView>} view
- * @returns {() => Promise<void>}
+ * @param {import('../dialogs.js').Dialogs} dialogs
+ * @param {() => boolean} dirty
+ * @returns {() => Promise<boolean>}
  */
-function createSave({ store, router, banner }, state, view) {
-  let bannerShown = false;
-  /** @param {unknown} err */
-  function showFailure(err) {
-    if (err instanceof ValidationError && Object.keys(err.fieldErrors).length > 0) {
-      view.render(err.fieldErrors);
-      return;
-    }
-    const message = saveFailureMessage(err);
-    if (message) banner.show('error', message);
-    bannerShown = Boolean(message);
-  }
-  return async () => {
-    if (state.saving) return;
-    state.draft = view.currentDraft();
-    const result = validateDraft(state.draft);
-    if (!result.ok) return view.render(result.errors);
-    state.saving = true;
-    view.saveButton.disabled = true;
-    try {
-      const recipe = await store.create(result.value);
-      state.saved = true;
-      if (bannerShown) banner.clear();
-      router.navigate({ name: 'view', id: recipe.id }, { replace: true });
-    } catch (err) {
-      showFailure(err);
-    } finally {
-      state.saving = false;
-      view.saveButton.disabled = false;
-    }
-  };
-}
+const confirmDiscard = (dialogs, dirty) => async () =>
+  !dirty() ||
+  dialogs.confirm({
+    message: 'Discard changes?',
+    confirmLabel: 'Discard',
+    cancelLabel: 'Keep editing',
+  });
 
 /** @type {import('../router.js').MountScreen} */
-export function mountFormScreen(container, ctx) {
-  const initial = emptyDraft();
+export function mountFormScreen(container, ctx, route) {
+  const id = route.name === 'edit' ? route.id : null;
+  const recipe = id === null ? undefined : ctx.store.get(id);
+  if (id !== null && !recipe) return mountNotFoundScreen(container, ctx, route);
+  const initial = recipe ? draftFromRecipe(recipe) : emptyDraft();
   /** @type {FormState} */
   const state = { draft: initial, saving: false, saved: false };
-  const view = createFormView(ctx.router, state);
-  const save = createSave(ctx, state, view);
+  const cancelTo = id === null ? { name: 'list' } : { name: 'view', id };
+  const view = createFormView(
+    ctx.router,
+    /** @type {import('../router.js').Route} */ (cancelTo),
+    state,
+  );
+  const syncSave = createSaveSync(ctx.store, state, view.saveButton);
+  const save = createSave(ctx, id, state, view, syncSave);
   const dirty = () => !state.saved && isDirty(initial, view.currentDraft());
   view.form.addEventListener('submit', (e) => {
     e.preventDefault();
     void save();
   });
-  /** @param {BeforeUnloadEvent} e */
-  const onBeforeUnload = (e) => {
-    if (dirty()) e.preventDefault();
-  };
-  window.addEventListener('beforeunload', onBeforeUnload);
+  const stops = [
+    ctx.store.subscribe(syncSave),
+    ctx.onBeforeUnload((e) => {
+      if (dirty()) e.preventDefault();
+    }),
+  ];
   view.render({});
   container.append(
     h(
       'main',
       { class: 'page', 'data-testid': 'recipe-form' },
-      h('h1', { text: 'Add recipe' }),
+      h('h1', { text: id === null ? 'Add recipe' : 'Edit recipe' }),
       view.form,
     ),
   );
   return {
-    unmount: () => window.removeEventListener('beforeunload', onBeforeUnload),
-    canLeave: async () =>
-      !dirty() ||
-      ctx.dialogs.confirm({
-        message: 'Discard changes?',
-        confirmLabel: 'Discard',
-        cancelLabel: 'Keep editing',
-      }),
+    unmount: () => stops.forEach((stop) => stop()),
+    canLeave: confirmDiscard(ctx.dialogs, dirty),
   };
 }
