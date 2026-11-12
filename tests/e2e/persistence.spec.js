@@ -64,6 +64,8 @@ test('cross-tab corrupt write on the list: rows stay, controls disabled, then re
   await page.getByTestId('search-input').fill('b');
   await expect(page.getByTestId('recipe-row-title')).toHaveText(['Banana Bread']);
   expect(await readRaw(page)).toBe('{oops');
+  await page.getByTestId('search-input').fill('');
+  await expect(page.getByTestId('recipe-row-title')).toHaveCount(3);
   await writeRaw(other, JSON.stringify({ version: 1, recipes: SPEC_RECIPES }));
   await expect(page.getByTestId('banner')).toBeHidden();
   await expect(page.getByTestId('add-recipe')).toBeEnabled();

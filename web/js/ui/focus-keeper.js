@@ -69,3 +69,17 @@ export function renderKeepingFocus(region, render, targets) {
   next.value = before.text;
   if (before.caret !== null) next.setSelectionRange(before.caret, before.caret);
 }
+
+/**
+ * Puts focus on the enabled control with `testid` when focus was lost to the page body (e.g. a
+ * dialog closed while the control that opened it was rebuilt). Focus elsewhere is left alone.
+ * @param {HTMLElement} region
+ * @param {string} testid
+ */
+export function restoreFocus(region, testid) {
+  const doc = region.ownerDocument;
+  const active = doc.activeElement;
+  // a just-closed dialog can still be the active element until the next style update
+  if (active && active !== doc.body && !active.closest('dialog')) return;
+  findEnabled(region, testid, undefined)?.focus();
+}

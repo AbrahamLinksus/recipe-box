@@ -1,7 +1,7 @@
 import { h, clear } from '../dom.js';
 import { favouriteToggle, TOGGLE_FOCUS } from '../favourite-toggle.js';
 import { servingsControl, SERVINGS_FOCUS } from '../servings-control.js';
-import { renderKeepingFocus } from '../focus-keeper.js';
+import { renderKeepingFocus, restoreFocus } from '../focus-keeper.js';
 import { saveFailureMessage } from '../save-failure.js';
 import { formatIngredientLine } from '../../core/scaling/scaling.js';
 
@@ -122,7 +122,7 @@ function notFound() {
   return h(
     'div',
     { class: 'state', 'data-testid': 'not-found' },
-    h('p', { text: 'Recipe not found' }),
+    h('h1', { text: 'Recipe not found' }),
     h('a', { class: 'btn', href: '#/', 'data-testid': 'not-found-back', text: 'All recipes' }),
   );
 }
@@ -134,9 +134,10 @@ function notFound() {
  * @param {import('../router.js').ScreenContext} ctx
  * @param {string} id
  * @param {() => boolean} isMounted true while the view's DOM is on the page (app clears it on unmount)
+ * @param {HTMLElement} content the view's region, to put focus back on Delete after the dialog
  * @returns {() => Promise<void>}
  */
-function deleteHandler({ store, banner, dialogs, router }, id, isMounted) {
+function deleteHandler({ store, banner, dialogs, router }, id, isMounted, content) {
   let busy = false;
   return async () => {
     const recipe = store.get(id);
@@ -146,6 +147,8 @@ function deleteHandler({ store, banner, dialogs, router }, id, isMounted) {
       confirmLabel: 'Delete',
       cancelLabel: 'Cancel',
     });
+    // a store notification may have rebuilt the Delete button while the dialog was open
+    restoreFocus(content, 'delete-recipe');
     if (!confirmed || busy || !isMounted() || store.status !== 'ready') return;
     busy = true;
     try {
@@ -173,7 +176,7 @@ export function mountViewScreen(container, ctx, route) {
   const { store, banner } = ctx;
   const id = route.name === 'view' ? route.id : '';
   const content = h('div', { class: 'view-content' });
-  const onDelete = deleteHandler(ctx, id, () => content.isConnected);
+  const onDelete = deleteHandler(ctx, id, () => content.isConnected, content);
   let servings = 0;
   let shownRecipe = '';
 

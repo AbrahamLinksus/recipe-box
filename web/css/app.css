@@ -63,6 +63,7 @@ body {
   text-align: center;
   background: #f6f6f6;
 }
+.state h1,
 .state p {
   margin: 0 0 12px;
   font-size: 16px;
@@ -86,7 +87,9 @@ body {
   border-bottom: none;
 }
 .recipe-title {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
   margin-bottom: 4px;
   font-weight: bold;
   font-size: 16px;
@@ -414,4 +417,16 @@ button.star:disabled {
 .bar-actions {
   display: flex;
   gap: 8px;
+}
+
+/* ---- touch targets and links (T-20) ---- */
+.view-bar > a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+}
+.filters .check input {
+  width: 24px;
+  height: 40px;
+  margin: 0;
 }
