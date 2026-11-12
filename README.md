@@ -2,7 +2,15 @@
 
 A small personal recipe box that runs on your own computer. It keeps your recipes in your browser, and nothing is sent anywhere.
 
-> **Status: milestone M5 (edit, delete and finish).** You can add, edit and delete recipes, see all your recipes A–Z, open one to read it, scale its servings, search by title, filter by tag, show only favourites, and mark recipes as favourites. The layout works on a phone-sized window (390 px). Every flow in the spec is built and covered by automated browser tests. The final check of the spec's definition of done on your own computer, after a restart, is still to do.
+> **Status: handover.** Every flow in the spec is built and covered by automated unit and browser tests. The layout works on a phone-sized window (390 px). The final check of the spec's definition of done on your own computer, after a restart, is still for the owner to do.
+
+![Recipe list on a desktop window](docs/images/list-desktop.png)
+
+![Pancakes scaled to 3 servings on a desktop window](docs/images/view-desktop.png)
+
+![Recipe list on a phone-sized window](docs/images/list-phone.png)
+
+![Pancakes recipe on a phone-sized window](docs/images/view-phone.png)
 
 ## Architecture
 
@@ -29,7 +37,7 @@ flowchart LR
 - **Pure logic (`web/js/core/`):** recipe rules and validation, the kitchen-fraction scaling (nearest ¼) and the search and filter. No DOM and no storage.
 - **Local persistence (`web/js/persistence/`):** reads and writes the recipe list in your browser's storage. If the stored data cannot be read, the app switches to read-only and never overwrites it.
 
-The full design is in [`docs/LLD.md`](docs/LLD.md) (section 0 is the overview and section 1 to 11 are the modules), with the product spec in [`docs/SPEC.md`](docs/SPEC.md) and the coding rules in [`docs/CONVENTIONS.md`](docs/CONVENTIONS.md).
+The architecture as built is in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). The full design is in [`docs/LLD.md`](docs/LLD.md) (section 0 is the overview and sections 1 to 11 are the modules), with the product spec in [`docs/SPEC.md`](docs/SPEC.md) and the coding rules in [`docs/CONVENTIONS.md`](docs/CONVENTIONS.md). A guided code tour is in [`docs/WALKTHROUGH.md`](docs/WALKTHROUGH.md).
 
 ## Features
 
@@ -47,27 +55,72 @@ The full design is in [`docs/LLD.md`](docs/LLD.md) (section 0 is the overview an
 - **Types:** JSDoc comments checked by TypeScript (`tsc --noEmit`, strict).
 - **Storage:** your browser's `localStorage`, one entry for the whole recipe list.
 - **Unit tests:** `node:test`, with coverage.
-- **Browser tests:** Playwright (a development dependency), run in Microsoft Edge.
+- **Browser tests:** Playwright (a development dependency). It uses Microsoft Edge when Edge is installed, and otherwise a Chromium browser (see How to test).
 - **Checks:** ESLint, Prettier and dependency-cruiser (layer rules).
+- **Continuous integration:** GitHub Actions (`.github/workflows/ci.yml`).
 
 ## Requirements
 
 - Windows 10 or 11
 - Node.js 24 or newer (from https://nodejs.org)
-- Microsoft Edge, only needed for the browser tests
+- Git, to clone the project (Git Bash is used to run `scripts/check.sh`)
+- Microsoft Edge or a Chromium browser, only needed for the browser tests
+
+The app itself needs no other install.
 
 ## How to run
 
-1. Open a terminal in the project folder (the folder that contains this README).
-2. Run `npm ci` once. It installs the development tools used by the checks. The app itself needs no install.
-3. Start the app, either by running `npm start` or by double-clicking `start.cmd`.
-4. Your browser opens `http://127.0.0.1:47321/` on the recipe list. The window shows:
+These steps take you from a fresh clone to the running app.
+
+1. Clone the project and open a terminal in its folder (the folder that contains this README):
+
+   ```
+   git clone <URL of this repository> recipe-box
+   cd recipe-box
+   ```
+
+2. Check that Node.js is version 24 or newer:
+
+   ```
+   node --version
+   ```
+
+3. Install the development tools (once). This runs `npm ci`, which installs only the tools used by the checks and tests. The app itself needs no install.
+
+   ```
+   npm ci
+   ```
+
+   `npm ci` also runs the `prepare` script, which sets the git hooks folder to `.githooks` (see the pre-commit hook below).
+
+4. Optional: create a `.env` file by copying `.env.example`. The file lists two settings, and the defaults are right for most people:
+   - `RECIPE_BOX_PORT` is `47321`. Leave it as it is. Your recipes are tied to the address `http://127.0.0.1:47321/`, so a different port opens an empty recipe box. There is no external account or service to get this from.
+   - `RECIPE_BOX_NO_OPEN` is blank. Set it to `1` if you do not want the browser to open when the app starts. There is no external source for this value either.
+
+   The start command does not read `.env`. To use a setting, set it in the terminal before starting, for example in Command Prompt: `set RECIPE_BOX_NO_OPEN=1`. The app needs no secrets, so no key has to be obtained from anywhere.
+
+5. Start the app with either command:
+   - `npm start` in the terminal, or
+   - double-click `start.cmd` in the project folder.
+
+6. Your browser opens `http://127.0.0.1:47321/` on the recipe list. The window shows:
    `Recipe Box is running at http://127.0.0.1:47321/ - opening your browser. Close this window to stop it.`
-5. To stop the app, close that window (or press Ctrl+C in a terminal).
+
+7. To stop the app, close that window (or press Ctrl+C in the terminal).
 
 If the app is already running and you start it again, the browser simply opens the running copy.
 
 Always use the address `http://127.0.0.1:47321/`. The browser treats `localhost:47321` as a different address with its own empty storage.
+
+### Optional: the pre-commit hook
+
+`.githooks/pre-commit` runs the fast checks (lint, format, types and layer rules; no tests) before each commit. `npm ci` points git at the `.githooks` folder, but the hook file is not executable in a fresh clone, so it does not run automatically. To turn it on, make it executable once, in Git Bash:
+
+```
+chmod +x .githooks/pre-commit
+```
+
+The hook skips its checks when `node_modules` is missing, so run `npm ci` first.
 
 ## Using Recipe Box
 
@@ -122,24 +175,72 @@ If you see this message:
 
 Windows reserves some port ranges for itself. To list them, run `netsh interface ipv4 show excludedportrange protocol=tcp` in Command Prompt. If 47321 falls inside a listed range, Recipe Box cannot run on this computer until that range changes.
 
-The port can be changed with the `RECIPE_BOX_PORT` environment variable (a number from 1024 to 65535). Do not do this lightly: the new address is a different origin, so it opens an empty recipe box, and your existing recipes stay at the old address. `.env.example` lists this setting and `RECIPE_BOX_NO_OPEN` (set it to `1` to stop the browser from opening). The start command does not read a `.env` file, so set them in the environment.
+The port can be changed with the `RECIPE_BOX_PORT` environment variable (a number from 1024 to 65535). Do not do this lightly: the new address is a different origin, so it opens an empty recipe box, and your existing recipes stay at the old address.
 
 ## How to test
 
-Run these from the project folder in Git Bash, after `npm ci`:
+Run these from the project folder in Git Bash, after `npm ci`.
 
-- `bash scripts/check.sh` runs lint, formatting, type checks, layer rules, and the unit tests with coverage. It must pass.
-- `bash scripts/check.sh --e2e` also runs the browser tests in Microsoft Edge: eight spec files covering every flow (add, list, view and scale, favourites, edit, delete, persistence, and layout and accessibility). The layout tests run at 390 px and at a desktop size. Run `npm run test:e2e` to run only the browser tests.
-- `CHECK_NO_COVERAGE=1 bash scripts/check.sh` is the same as the first command but skips only the coverage thresholds.
+- `bash scripts/check.sh` runs lint, formatting, type checks, layer rules, and the unit tests with coverage. It must pass. It stops at the first failing step.
+- `CHECK_NO_COVERAGE=1 bash scripts/check.sh` is the same, but skips only the coverage thresholds.
+- `bash scripts/check.sh --e2e` runs all of the above and then the browser tests. `npm run test:e2e` runs only the browser tests.
+
+The browser tests are eight spec files in `tests/e2e/`, one per flow: add, list, view and scale, favourites, edit, delete, persistence, and layout. The layout tests run at 390 px and at a 1280 px desktop size.
+
+The browser used for the browser tests is chosen in this order (`tests/e2e/playwright.config.js`):
+
+1. Microsoft Edge, if it is installed.
+2. Otherwise a Chromium browser in the folder named by the `PLAYWRIGHT_BROWSERS_PATH` environment variable, if `<that folder>/chromium` exists.
+3. Otherwise Playwright's own Chromium. Install it once with `npx playwright install chromium`.
+
+Run single files while you work:
+
+- `node --test tests/unit/store/recipe-store.test.js` runs one unit test file.
+- `npm run test:e2e -- delete.spec.js` runs one browser test file. Add `--project=narrow` to run only the 390 px project.
 
 The browser tests start their own copy of the app on port 47399 with a temporary, empty recipe box. They never touch your recipes on port 47321.
 
-## Project layout
+## Continuous integration
+
+`.github/workflows/ci.yml` runs on every push and every pull request:
+
+- **check** job: `npm ci`, then `bash scripts/check.sh`.
+- **e2e** job: `npm ci`, then `npx playwright install --with-deps chromium`, then `bash scripts/check.sh --e2e`. On the CI runner the browser tests use Playwright's Chromium, because Edge is not installed there.
+
+## Project structure
 
 - `server/`: the start-up program. It serves the app on 127.0.0.1 and opens the browser.
 - `web/`: the app itself, which runs in the browser (HTML, CSS and JavaScript). `web/js/` holds `core/`, `store/`, `persistence/` and `ui/`.
 - `tests/`: the automated tests. `tests/unit/` (unit tests), `tests/e2e/` (browser tests, with `helpers/`) and `tests/helpers/` (shared fakes and sample recipes).
 - `scripts/`: `check.sh` (runs all checks) and `screenshot.mjs` (takes screenshots of the running app).
-- `docs/`: the spec (`SPEC.md`), the design (`LLD.md`, `HLD.md`), the coding conventions (`CONVENTIONS.md`) and the wireframes. Start with `docs/SPEC.md`.
-- `.githooks/`: the git pre-commit hook, which runs the lint, format, type and layer checks before each commit.
+- `docs/`: the spec (`SPEC.md`), the design (`HLD.md`, `LLD.md`), the as-built architecture (`ARCHITECTURE.md`), the code tour (`WALKTHROUGH.md`), the coding conventions (`CONVENTIONS.md`) and the research notes (`research.md`). Start with `docs/SPEC.md`, or with `docs/WALKTHROUGH.md` to read the code.
+- `docs/images/`: the screenshots shown at the top of this README.
+- `.github/workflows/`: the CI workflow (`ci.yml`).
+- `.githooks/`: the git pre-commit hook (see above).
+- `start.cmd`: double-click start for Windows, the same as `npm start`.
 - `.devteam/`: settings for the AI team tooling. You do not need it to run the app.
+
+## How to extend
+
+Read these first:
+
+- [`docs/WALKTHROUGH.md`](docs/WALKTHROUGH.md) is a guided tour of one request from the browser to storage, the layer rules, and the tests.
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) is the as-built component table, the key flows, the data model and the known limitations.
+- [`docs/CONVENTIONS.md`](docs/CONVENTIONS.md) lists the layer rules and size limits that `scripts/check.sh` enforces.
+
+The walkthrough's "How to extend it" table lists the files for each change. Three common changes:
+
+- **Add a pure rule (for example a servings cap).** Edit `web/js/core/scaling/servings.js` and add a test in `tests/unit/core/scaling/`. Copy the style of the existing `parseServingsInput` and `stepServings` tests. Pure code cannot touch the DOM or storage, so this stays easy to test.
+- **Add a recipe field.** This is a data change. Update `web/js/core/recipe/types.js` and `web/js/core/recipe/validation.js` (strict check on writes), `web/js/persistence/collection-codec.js` (lenient check on reads, so old data stays readable), `web/js/ui/form-model.js` and a form section (`web/js/ui/form-top.js` or a new `form-*.js`), and `web/js/ui/screens/view-screen.js` to show it. Do not change `SCHEMA_VERSION` without an upgrade path (see `docs/LLD.md` §10.5). Add unit tests under `tests/unit/core/` and `tests/unit/persistence/`, and an e2e check in the matching `tests/e2e/*.spec.js`.
+- **Add a screen.** Add a member to `Route` and to `parseRoute` / `routeToHash` in `web/js/ui/router.js`. Create `web/js/ui/screens/<name>-screen.js` that exports one mount function, following `not-found-screen.js` (the smallest). Register it in the `SCREENS` map in `web/js/ui/app.js`. Add router tests in `tests/unit/ui/router.test.js` and a browser test in `tests/e2e/<name>.spec.js`, using `data-testid` selectors and the seed helpers in `tests/e2e/helpers/`.
+
+Keep the layer rules in mind: `ui` uses `store`, `store` uses `core`, and only `web/js/persistence/` talks to `localStorage`. `npm run deps` fails if an import breaks them. Before you commit, run `bash scripts/check.sh`.
+
+## Known limitations
+
+The full list is in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) §9. The most important ones:
+
+- There is no backup and no export. Clearing the site data for `127.0.0.1:47321` deletes all recipes (SPEC §11).
+- The browser tests use the fixed port 47399, so two browser test runs at the same time clash.
+- `scripts/screenshot.mjs` still uses Microsoft Edge only.
+- The pre-commit hook is not executable in a fresh clone (see above).
