@@ -7,8 +7,8 @@
 | Problem      | Single-user recipe box web app: add, search by title/tag, scale servings, favourite; data saved locally |
 | Repo         | AbrahamLinksus/recipe-box (public)                                                                      |
 | Stage | 7 Build |
-| Milestone | M4 · Scale — T-16, T-17 done; M4-docs (as-built sync) next. T-18 (M5) done early. M1 done (8666dd4), M2 (04137c2), M3 (44e6b69) |
-| Next step | M4-docs: architect as-built LLD sync since 44e6b69 (incl. T-17 + T-18) → docs README → milestone card; then M5: T-19 → T-20 |
+| Milestone | M5 · Edit, delete and finish (T-18 done; T-19, T-20 next) — M1 done (8666dd4), M2 (04137c2), M3 (44e6b69), M4 done (f215bcd) |
+| Next step | Fresh session: `/setup-project resume recipe-box` → start T-19 (delete with confirm, frontend-coder; reuse focus-keeper.js + save-failure.js per CONVENTIONS "Shared UI helpers"), then T-20 (incl. D-12 test fix); run `npm ci` in every new worktree first |
 | Last updated | 2026-11-12 |
 
 ## Config
@@ -60,8 +60,12 @@ Context gaps agents reported (`Context gap:` in a REPORT). The Orchestrator adds
 | debugger | docs/CONVENTIONS.md logging rules | T-05 debug needed them |
 | reviewer (UI) | web/js/ui/dom.js; TASKS.md rows of later tasks touching the same screen | T-12 review needed them to judge coverage |
 | architect, docs | a file with `git diff <since>..main --stat` (Orchestrator writes it) | no shell tool to run git (M2-docs gap reports) |
+| architect (as-built) | test titles in tests/e2e/*.spec.js and tests/unit/ui/* for the milestone's tasks | M4-docs: §11.6 needed real test names |
 
 ## Notes for the next session
+- M4 approved 2026-11-12 (milestone card, f215bcd). Owner chose: continue M5 in a fresh session. M4 deferred minors are in docs/LLD.md "Known deferred minors (M4 tidy-up list)". Merged leftovers on origin: wip/T-14, wip/T-15, wip/M3-docs (and wip/T-17, wip/T-18, wip/M4-docs if listed) — ignore on resume.
+- Scope check reverts TASK_PROGRESS.md edits made while an agent runs: run `scope` BEFORE editing TASK_PROGRESS.md after an agent returns, and re-apply the Agents: line.
+- git-pr agents cannot write report files and the scope hook blocks extra shell (e.g. `; echo $?`): give them the bare taskgit command.
 - Session 2026-11-12 (4): T-18 approved (3cbe826). T-18 reviewer minors (M4 tidy-up): edit.spec Back-after-save check is weak; RecipeNotFound test does not assert dirty/stored value; no unit test for form-save.js; `cancelTo` type cast. LLD as-built sync needed for §2.1/§2.5/§5.1/§5.4/§5.5 (form-save.js, form-top.js, save-failure.js, ctx.onBeforeUnload). M2 "doubled Could not save", M3 duplicated failureMessage and M2 m-8 are closed by T-18. Parallel e2e runs in two worktrees clash on port 47399: use a temp config with another port.
 - T-17 approved (2958941). M4 tidy-up minors (T-17): LLD §4.1 lacks servings-control.js + focus-keeper.js (as-built sync); an unscaled view shows "Reset (6)" if another tab changes base servings 4→6 (literal §4.5); no upper bound on servings (huge value → Infinity amounts; core). tsconfig.node.json (tests/**) lacks DOM.Iterable: avoid iterating NodeLists in UI code covered by unit tests.
 - M3 approved 2026-11-12 (milestone card, 44e6b69). Owner chose: continue M4 in a fresh session. M3 deferred minors are in docs/LLD.md "Known deferred minors". Merged leftovers on origin: wip/T-14, wip/T-15, wip/M3-docs (ignore; owner deletes in GitHub UI). M3-docs approve first failed exit 5 only because node_modules was missing in the worktree.
