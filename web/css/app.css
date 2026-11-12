@@ -198,3 +198,136 @@ dialog {
     align-items: flex-start;
   }
 }
+
+/* ---- recipe form (T-13) ---- */
+.recipe-form label {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: bold;
+}
+.field {
+  margin-bottom: 14px;
+}
+.input {
+  width: 100%;
+  min-height: 40px;
+  padding: 8px;
+  border: 2px solid #888;
+  background: #fff;
+  font: inherit;
+}
+.input[aria-invalid='true'] {
+  border: 3px dashed #333;
+}
+.err {
+  margin: 4px 0;
+  font-size: 13px;
+  font-weight: bold;
+}
+.err::before {
+  content: '\26a0  ';
+}
+.help {
+  margin: 4px 0 8px;
+  font-size: 12px;
+  color: #666;
+}
+.btn.small {
+  min-width: 40px;
+  padding: 4px 8px;
+  font-size: 13px;
+}
+.colhead {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 4px;
+  font-size: 12px;
+  color: #666;
+}
+.colhead span:nth-child(1),
+.colhead span:nth-child(2) {
+  width: 58px;
+}
+.ing-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.ing-row .input {
+  min-width: 0;
+}
+.ing-row .amount,
+.ing-row .unit {
+  width: 58px;
+}
+.ing-row .name {
+  flex: 1;
+}
+.ing-row .err {
+  flex-basis: 100%;
+  margin: 0;
+}
+.step-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.step-row .n {
+  width: 20px;
+  font-weight: bold;
+}
+.step-row .input {
+  flex: 1;
+  min-width: 0;
+}
+.tag-box {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.tag-box .tag-input {
+  flex: 1;
+  min-width: 140px;
+  width: auto;
+}
+.chip-remove {
+  min-width: 40px;
+  min-height: 40px;
+  border: none;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 2px solid #999;
+}
+@media (min-width: 800px) {
+  .top {
+    display: flex;
+    gap: 16px;
+  }
+  .top .field:first-child {
+    flex: 1;
+  }
+  .top .field:last-child {
+    width: 160px;
+  }
+  .cols .panel {
+    flex: 1;
+    width: auto;
+  }
+  .ing-row .amount,
+  .ing-row .unit,
+  .colhead span:nth-child(1),
+  .colhead span:nth-child(2) {
+    width: 80px;
+  }
+}
