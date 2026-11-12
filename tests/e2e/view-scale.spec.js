@@ -191,6 +191,67 @@ test.describe('servings control', () => {
   });
 });
 
+test.describe('servings control: store notifications and blur', () => {
+  test.beforeEach(async ({ page }) => {
+    await seedPancakes(page);
+    await page.goto(`/#/recipe/${PANCAKES_ID}`);
+  });
+
+  test('cross-tab storage event while scaled keeps 3 servings', async ({ page, context }) => {
+    await page.getByTestId('servings-input').fill('3');
+    const other = await context.newPage();
+    await other.goto('/');
+    const raw = await page.evaluate((k) => globalThis.localStorage.getItem(k), STORAGE_KEY);
+    expect(raw).not.toBeNull();
+    const data = JSON.parse(String(raw));
+    data.recipes[0].favourite = true;
+    await other.evaluate(({ k, v }) => globalThis.localStorage.setItem(k, v), {
+      k: STORAGE_KEY,
+      v: JSON.stringify(data),
+    });
+    await expect(page.getByTestId('favourite-toggle')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByTestId('servings-input')).toHaveValue('3');
+    await expect(page.getByTestId('ingredient-line')).toHaveText([
+      '150 g flour',
+      '1½ eggs',
+      '225 ml milk',
+      'a pinch of salt',
+    ]);
+    await expect(page.getByTestId('servings-reset')).toHaveText('Reset (4)');
+  });
+
+  test('blur after invalid text restores the kept value in the input', async ({ page }) => {
+    const input = page.getByTestId('servings-input');
+    await input.fill('3');
+    await input.fill('abc');
+    await expect(input).toHaveValue('abc');
+    await input.blur();
+    await expect(input).toHaveValue('3');
+    await input.fill('');
+    await input.blur();
+    await expect(input).toHaveValue('3');
+    await expect(page.getByTestId('ingredient-line').first()).toHaveText('150 g flour');
+  });
+
+  test('minus steps down to 1 and stops; Reset returns to base', async ({ page }) => {
+    const dec = page.getByTestId('servings-dec');
+    for (let i = 0; i < 3; i++) await dec.click();
+    await expect(page.getByTestId('servings-input')).toHaveValue('1');
+    await expect(dec).toBeDisabled();
+    await page.getByTestId('servings-reset').click();
+    await expect(page.getByTestId('servings-input')).toHaveValue('4');
+    await expect(page.getByTestId('ingredient-line').first()).toHaveText('200 g flour');
+  });
+
+  test('reopening the recipe shows base servings', async ({ page }) => {
+    await page.getByTestId('servings-input').fill('3');
+    await page.getByTestId('back-to-list').click();
+    await page.getByTestId('recipe-row-title').click();
+    await expect(page.getByTestId('servings-input')).toHaveValue('4');
+    await expect(page.getByTestId('servings-reset')).toHaveCount(0);
+  });
+});
+
 test.describe('Banana Bread scaling', () => {
   test('8 -> 2 and 8 -> 1', async ({ page }) => {
     await seedRaw(page, JSON.stringify({ version: 1, recipes: [BANANA] }));
