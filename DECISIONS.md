@@ -27,3 +27,5 @@
 | A-08 | 2026-11-11 | Stored-data check | lenient shape check (types only) separate from write-side assertRecipeInput | backend debugger | T-06 |
 | A-09 | 2026-11-11 | Save over data it can't read | adapter refuses (PersistenceWriteError 'unavailable') if stored value is v2 / missing version / not JSON | backend debugger | T-06 |
 | A-10 | 2026-11-11 | Not-yet-built routes | #/new, view, edit show Page not found until M2 | frontend-coder | T-08 |
+| A-11 | 2026-11-12 | Tie-break compare in sortByTitle | plain string < on ISO createdAt then id | frontend-coder | T-09 |
+| A-12 | 2026-11-12 | isDirty | trimmed JSON fingerprint of both drafts; no-op ops return a fresh draft sharing untouched arrays | frontend-coder | T-10 |

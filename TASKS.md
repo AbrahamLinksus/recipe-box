@@ -130,26 +130,26 @@ Notes for every task
 - Owner: frontend-coder
 - Depends on: T-03
 - Context: SPEC US-02, US-03, US-04, US-07, §5 F-2 · LLD §8.1, §8.2 · files: web/js/core/search/*, tests/unit/core/search/*, tests/helpers/recipes.fixture.js
-- Status: Backlog
+- Status: Done
 - Acceptance criteria:
-  - [ ] `filterRecipes`, `sortByTitle`, `listTags`, `hasActiveFilters` match §8.1; `core/search` imports only `core/recipe` (layer rules pass)
-  - [ ] Unit tests cover every §8.2 row with the SPEC §5 fixture: none → Banana Bread, Pancakes, Tomato Soup; `b` → Banana Bread; `PAN` → Pancakes; tag `breakfast` → Banana Bread, Pancakes; `xyz` → []; favouritesOnly (Banana Bread starred) → Banana Bread; `breakfast` + `pan` + favouritesOnly → []
-  - [ ] Sort is case-insensitive with ties by createdAt then id (two "Pancakes" test); `listTags` returns unique tags A–Z; input arrays are not mutated
-  - [ ] Checks pass
-- Result: —
+  - [x] `filterRecipes`, `sortByTitle`, `listTags`, `hasActiveFilters` match §8.1; `core/search` imports only `core/recipe` (layer rules pass)
+  - [x] Unit tests cover every §8.2 row with the SPEC §5 fixture: none → Banana Bread, Pancakes, Tomato Soup; `b` → Banana Bread; `PAN` → Pancakes; tag `breakfast` → Banana Bread, Pancakes; `xyz` → []; favouritesOnly (Banana Bread starred) → Banana Bread; `breakfast` + `pan` + favouritesOnly → []
+  - [x] Sort is case-insensitive with ties by createdAt then id (two "Pancakes" test); `listTags` returns unique tags A–Z; input arrays are not mutated
+  - [x] Checks pass
+- Result: ✅ 4/4 goals · checks pass · 99.93% cov · 0 major, 1 minor (listTags default sort; tags stored lowercase) · 95c79c2
 
 ### T-10 · Recipe form model (pure draft operations)
 
 - Owner: frontend-coder
 - Depends on: T-03
 - Context: SPEC US-01, US-09, §4 F-1 · LLD §5.1, §6.1 · files: web/js/ui/form-model.js, tests/unit/ui/form-model.test.js, tests/helpers/recipes.fixture.js
-- Status: Backlog
+- Status: Done
 - Acceptance criteria:
-  - [ ] Every §5.1 function exists and returns a new draft (immutability test on each)
-  - [ ] `emptyDraft()` has one empty ingredient row and one empty step row; removing the last ingredient/step row leaves one empty row; `moveStep` is a no-op at the ends and swaps otherwise
-  - [ ] `addTag(d, 'Breakfast ')` adds `breakfast`; adding it again is ignored; `draftFromRecipe(Pancakes)` keeps amount texts as typed and servings `'4'`
-  - [ ] `isDirty` is false for an untouched draft and for whitespace-only changes, true after any field change; checks pass
-- Result: —
+  - [x] Every §5.1 function exists and returns a new draft (immutability test on each)
+  - [x] `emptyDraft()` has one empty ingredient row and one empty step row; removing the last ingredient/step row leaves one empty row; `moveStep` is a no-op at the ends and swaps otherwise
+  - [x] `addTag(d, 'Breakfast ')` adds `breakfast`; adding it again is ignored; `draftFromRecipe(Pancakes)` keeps amount texts as typed and servings `'4'`
+  - [x] `isDirty` is false for an untouched draft and for whitespace-only changes, true after any field change; checks pass
+- Result: ✅ 4/4 goals · checks pass · 99.94% cov · 0 major, 2 minors (redundant tag trim; duplicate immutability tests) · 5e10737
 
 ### T-11 · Recipe list rows, A–Z order and count
 
