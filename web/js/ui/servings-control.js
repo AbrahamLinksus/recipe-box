@@ -2,6 +2,9 @@ import { h } from './dom.js';
 import { MIN_SERVINGS, parseServingsInput, stepServings } from '../core/scaling/servings.js';
 
 const INPUT = 'servings-input';
+const DEC = 'servings-dec';
+const INC = 'servings-inc';
+const RESET = 'servings-reset';
 
 /**
  * @param {{ getServings: () => number, onChange: (next: number) => void }} options
@@ -59,7 +62,7 @@ function scaledExtras(base, onChange) {
     h('button', {
       type: 'button',
       class: 'btn',
-      'data-testid': 'servings-reset',
+      'data-testid': RESET,
       onclick: () => onChange(base),
       text: `Reset (${base})`,
     }),
@@ -82,7 +85,7 @@ export function servingsControl({ base, getServings, onChange }) {
     h('strong', { text: 'Servings' }),
     stepButton({
       label: 'Fewer servings',
-      testid: 'servings-dec',
+      testid: DEC,
       text: '\u2212',
       disabled: servings <= MIN_SERVINGS,
       onclick: step(-1),
@@ -90,7 +93,7 @@ export function servingsControl({ base, getServings, onChange }) {
     servingsInput({ getServings, onChange }),
     stepButton({
       label: 'More servings',
-      testid: 'servings-inc',
+      testid: INC,
       text: '+',
       disabled: false,
       onclick: step(1),
@@ -100,23 +103,12 @@ export function servingsControl({ base, getServings, onChange }) {
 }
 
 /**
- * Runs a re-render and, if the servings input had focus, restores focus, text and caret.
- * @param {HTMLElement} region
- * @param {() => void} render
+ * Focus rules for the servings control: each control keeps focus; a step button that becomes
+ * disabled (− at 1) and Reset once it disappears hand focus to the input.
  */
-export function renderKeepingServingsFocus(region, render) {
-  const active = region.ownerDocument.activeElement;
-  const had =
-    active instanceof HTMLInputElement &&
-    active.dataset.testid === INPUT &&
-    region.contains(active);
-  const text = had ? active.value : '';
-  const caret = had ? active.selectionStart : null;
-  render();
-  if (!had) return;
-  const next = region.querySelector(`[data-testid="${INPUT}"]`);
-  if (!(next instanceof HTMLInputElement)) return;
-  next.focus();
-  next.value = text;
-  if (caret !== null) next.setSelectionRange(caret, caret);
-}
+export const SERVINGS_FOCUS = Object.freeze({
+  [DEC]: INPUT,
+  [INC]: INPUT,
+  [RESET]: INPUT,
+  [INPUT]: null,
+});

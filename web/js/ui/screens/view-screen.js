@@ -1,6 +1,7 @@
 import { h, clear } from '../dom.js';
-import { favouriteToggle, renderKeepingToggleFocus } from '../favourite-toggle.js';
-import { servingsControl, renderKeepingServingsFocus } from '../servings-control.js';
+import { favouriteToggle, TOGGLE_FOCUS } from '../favourite-toggle.js';
+import { servingsControl, SERVINGS_FOCUS } from '../servings-control.js';
+import { renderKeepingFocus } from '../focus-keeper.js';
 import { formatIngredientLine } from '../../core/scaling/scaling.js';
 
 /**
@@ -112,6 +113,8 @@ function notFound() {
   );
 }
 
+const VIEW_FOCUS = Object.freeze({ ...TOGGLE_FOCUS, ...SERVINGS_FOCUS });
+
 /** @type {import('../router.js').MountScreen} */
 export function mountViewScreen(container, { store, banner }, route) {
   const id = route.name === 'view' ? route.id : '';
@@ -122,7 +125,7 @@ export function mountViewScreen(container, { store, banner }, route) {
   /** @param {number} next */
   function setServings(next) {
     servings = next;
-    renderKeepingServingsFocus(content, render);
+    rerender();
   }
 
   function render() {
@@ -148,8 +151,11 @@ export function mountViewScreen(container, { store, banner }, route) {
     );
   }
 
+  function rerender() {
+    renderKeepingFocus(content, render, VIEW_FOCUS);
+  }
+
   render();
-  const onChange = () => renderKeepingToggleFocus(content, render);
   container.append(h('main', { class: 'page' }, content));
-  return { unmount: store.subscribe(onChange) };
+  return { unmount: store.subscribe(rerender) };
 }

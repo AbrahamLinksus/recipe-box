@@ -243,6 +243,31 @@ test.describe('servings control: store notifications and blur', () => {
     await expect(page.getByTestId('ingredient-line').first()).toHaveText('200 g flour');
   });
 
+  test('keyboard + / − / Reset keep focus, or fall back to the input', async ({ page }) => {
+    const input = page.getByTestId('servings-input');
+    const inc = page.getByTestId('servings-inc');
+    const dec = page.getByTestId('servings-dec');
+    await inc.focus();
+    await page.keyboard.press('Enter');
+    await page.keyboard.press('Space');
+    await expect(input).toHaveValue('6');
+    await expect(inc).toBeFocused();
+    await dec.focus();
+    for (let i = 0; i < 4; i++) await page.keyboard.press('Enter');
+    await expect(input).toHaveValue('2');
+    await expect(dec).toBeFocused();
+    await page.keyboard.press('Space');
+    await expect(input).toHaveValue('1');
+    await expect(dec).toBeDisabled();
+    await expect(input).toBeFocused();
+    const reset = page.getByTestId('servings-reset');
+    await reset.focus();
+    await page.keyboard.press('Enter');
+    await expect(input).toHaveValue('4');
+    await expect(reset).toHaveCount(0);
+    await expect(input).toBeFocused();
+  });
+
   test('reopening the recipe shows base servings', async ({ page }) => {
     await page.getByTestId('servings-input').fill('3');
     await page.getByTestId('back-to-list').click();
