@@ -129,39 +129,51 @@ function notFound() {
 
 /**
  * Confirm, then remove; a rejected remove shows the banner and stays on the view (LLD 4.4).
+ * After the dialog it bails out if the view is gone or the store turned read-only, and it
+ * ignores a second Delete while a remove is still pending.
  * @param {import('../router.js').ScreenContext} ctx
  * @param {string} id
+ * @param {() => boolean} isMounted true while the view's DOM is on the page (app clears it on unmount)
  * @returns {() => Promise<void>}
  */
-function deleteHandler({ store, banner, dialogs, router }, id) {
+function deleteHandler({ store, banner, dialogs, router }, id, isMounted) {
+  let busy = false;
   return async () => {
     const recipe = store.get(id);
-    if (!recipe) return;
+    if (!recipe || busy) return;
     const confirmed = await dialogs.confirm({
       message: `Delete '${recipe.title}'? Are you sure?`,
       confirmLabel: 'Delete',
       cancelLabel: 'Cancel',
     });
-    if (!confirmed) return;
+    if (!confirmed || busy || !isMounted() || store.status !== 'ready') return;
+    busy = true;
     try {
       await store.remove(id);
     } catch (err) {
       const message = saveFailureMessage(err);
       if (message) banner.show('error', message);
       return;
+    } finally {
+      busy = false;
     }
-    router.navigate({ name: 'list' }, { replace: true });
+    if (isMounted()) router.navigate({ name: 'list' }, { replace: true });
   };
 }
 
-const VIEW_FOCUS = Object.freeze({ ...TOGGLE_FOCUS, ...SERVINGS_FOCUS });
+const VIEW_FOCUS = Object.freeze({
+  ...TOGGLE_FOCUS,
+  ...SERVINGS_FOCUS,
+  'edit-recipe': 'back-to-list',
+  'delete-recipe': 'back-to-list',
+});
 
 /** @type {import('../router.js').MountScreen} */
 export function mountViewScreen(container, ctx, route) {
   const { store, banner } = ctx;
   const id = route.name === 'view' ? route.id : '';
-  const onDelete = deleteHandler(ctx, id);
   const content = h('div', { class: 'view-content' });
+  const onDelete = deleteHandler(ctx, id, () => content.isConnected);
   let servings = 0;
   let shownRecipe = '';
 
