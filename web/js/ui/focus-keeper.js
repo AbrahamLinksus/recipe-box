@@ -12,7 +12,7 @@
  * @returns {HTMLElement | null} the first enabled match
  */
 function findEnabled(region, testid, recipeId) {
-  for (const el of region.querySelectorAll(`[data-testid="${testid}"]`)) {
+  for (const el of Array.from(region.querySelectorAll(`[data-testid="${testid}"]`))) {
     if (
       el instanceof HTMLElement &&
       el.dataset.recipeId === recipeId &&
