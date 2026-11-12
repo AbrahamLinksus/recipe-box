@@ -13,6 +13,7 @@
 | D-07 | 2026-11-11 | Leftover review minors | Carry T-03 minors into T-05 and T-04 m1/m2 into T-05 (owner: "fix in T-05"); defer other minors to the M1 tidy-up list | Fix in each task before approval | T-03, T-04 |
 | D-08 | 2026-11-11 | Browser for e2e (amends D-03) | Edge (channel msedge) when installed, else the Playwright Chromium already on the machine; same Chromium engine. Implemented in T-12 | Always Chromium; skip e2e in the cloud | T-12 |
 | D-09 | 2026-11-12 | Unreadable data after a cross-tab reload (LLD §9.5 vs §3.5/§4.5) | Keep the last loaded recipes visible, read-only, with banner → CR-1 | Show nothing and amend §3.5/§4.5; decide later | T-12 |
+| D-10 | 2026-11-12 | CR-1 · keep last recipes visible on unreadable reload | LLD §9.5 load-path table (+§2.5/§3.5/§4.5/§5.5); new T-05b in M2; T-15/T-17/T-18/T-19 criteria updated | Cancel CR | CR-1 |
 
 ## Tier 2 — decided by agents (overrule any time)
 

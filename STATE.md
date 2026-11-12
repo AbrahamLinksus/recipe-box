@@ -7,8 +7,8 @@
 | Problem      | Single-user recipe box web app: add, search by title/tag, scale servings, favourite; data saved locally |
 | Repo         | AbrahamLinksus/recipe-box (public)                                                                      |
 | Stage | 7 Build |
-| Milestone | M2 · Add, list and open (4/5 tasks) — M1 done (8666dd4) |
-| Next step | CR-1 (keep last recipes visible when a cross-tab reload is unreadable): planner/architect update docs + re-plan; then T-13 |
+| Milestone | M2 · Add, list and open (4/6 tasks) — M1 done (8666dd4) |
+| Next step | T-13 (add form) ∥ T-05b (store keeps last recipes, CR-1); then M2 milestone docs |
 | Last updated | 2026-11-12 |
 
 ## Config
@@ -71,8 +71,9 @@ Context gaps agents reported (`Context gap:` in a REPORT). The Orchestrator adds
 - M2 tidy-up minors: T-12 n1 e2e helper duplicates Pancakes fixture; T-12 m3 hardcoded Edge paths; T-11 list.spec asserts href on one row only (star aria-label folds into T-15 brief); T-09 listTags default sort (no comparator); T-10 redundant tag trim in form-model, duplicated immutability tests. scripts/screenshot.mjs still hardcodes msedge (D-08 not applied there). .githooks/pre-commit not executable in fresh clones.
 - M2 as-built LLD sync list: §4.4 new view testids (recipe-serves, recipe-tag, ingredients-panel, steps-panel, not-found-back); §4.5 Edit is a disabled <button> when store not ready; D-08 Playwright browser selection.
 - taskgit approve may print a getcwd error (exit 1) after removing the worktree; check origin/main before treating it as a failure. Merged wip/T-09..T-12 branches still exist on origin.
+- Run `npm ci` in every new worktree before any check or approve (CR-1 approve failed without it).
 - Debuggers cannot run git; the Orchestrator runs merges (git merge in the worktree), the debugger only edits files.
-- M1 tidy-up list (minors, owner-approved to defer): T-02 browser.js own URL guard; probe.js overall deadline + body size cap; createServer in listen.js vs CONVENTIONS (main-only); HEALTH_PATH defined twice.; T-05 m2 a save that never settles stalls the queue; T-06 m-A isForeignData duplicates codec version check (base it on decodeCollection before any v2 format).; T-08: Add button disabled computed once at mount (stale after cross-tab status change); pre-start errors miss the banner (listeners installed in start()); status-sync banner.clear() can wipe a generic error banner.
+- M1 tidy-up list (minors, owner-approved to defer): T-02 browser.js own URL guard; probe.js overall deadline + body size cap; createServer in listen.js vs CONVENTIONS (main-only); HEALTH_PATH defined twice.; T-05 m2 a save that never settles stalls the queue; T-06 m-A isForeignData duplicates codec version check (base it on decodeCollection before any v2 format).; T-08: Add button disabled computed once at mount (stale after cross-tab status change); pre-start errors miss the banner (Add-button-at-mount minor → T-15, CR-1) (listeners installed in start()); status-sync banner.clear() can wipe a generic error banner.
 - Main checkout needs `npm ci` after a fresh clone (pre-commit hook skips checks without node_modules).
 - No python on PATH: screenshots use `node scripts/screenshot.mjs` (Playwright via Edge), not capture.py.
 - Cloud sessions: clone to /home/user/recipe-box (taskgit takes that path; worktrees in /home/user/recipe-box-wt). No Edge there; D-08 falls back to /opt/pw-browsers Chromium.
