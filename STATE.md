@@ -7,8 +7,8 @@
 | Problem      | Single-user recipe box web app: add, search by title/tag, scale servings, favourite; data saved locally |
 | Repo         | AbrahamLinksus/recipe-box (public)                                                                      |
 | Stage | 7 Build |
-| Milestone | M5 · Edit, delete and finish (T-18 done; T-19, T-20 next) — M1 done (8666dd4), M2 (04137c2), M3 (44e6b69), M4 done (f215bcd) |
-| Next step | Fresh session: `/setup-project resume recipe-box` → start T-19 (delete with confirm, frontend-coder; reuse focus-keeper.js + save-failure.js per CONVENTIONS "Shared UI helpers"), then T-20 (incl. D-12 test fix); run `npm ci` in every new worktree first |
+| Milestone | M5 · Edit, delete and finish (T-18, T-19 done; T-20 next) — M1 done (8666dd4), M2 (04137c2), M3 (44e6b69), M4 done (f215bcd) |
+| Next step | Start T-20 (frontend-coder): layout/a11y pass + D-12 test fix + T-19 m-7 focus-after-dialog; run `npm ci` in the new worktree first; then M5-docs (as-built sync incl. T-19 m-5/m-6) |
 | Last updated | 2026-11-12 |
 
 ## Config
@@ -58,11 +58,12 @@ Context gaps agents reported (`Context gap:` in a REPORT). The Orchestrator adds
 | architect | <plugin root>/skills/setup-project/scopes.json; package.json; .prettierignore; web/js/ui (grep) + affected screen files for CR impact | scopes override format; §0.4 package pins (gap reports: plan lld, M1-docs); CR-1 needed screens to judge task impact |
 | reviewer | DECISIONS.md (rows relevant to the task); docs/SPEC.md §5 when fixtures are involved | T-02 / T-03 reviews needed decisions + spec examples |
 | debugger | docs/CONVENTIONS.md logging rules | T-05 debug needed them |
-| reviewer (UI) | web/js/ui/dom.js; TASKS.md rows of later tasks touching the same screen | T-12 review needed them to judge coverage |
+| reviewer (UI) | web/js/ui/dom.js; web/js/ui/focus-keeper.js, web/js/ui/dialogs.js, web/js/store/recipe-store.js (grep) for races; TASKS.md rows of later tasks touching the same screen | T-12 review needed them to judge coverage |
 | architect, docs | a file with `git diff <since>..main --stat` (Orchestrator writes it) | no shell tool to run git (M2-docs gap reports) |
 | architect (as-built) | test titles in tests/e2e/*.spec.js and tests/unit/ui/* for the milestone's tasks | M4-docs: §11.6 needed real test names |
 
 ## Notes for the next session
+- T-19 approved (a50003f). T-19 minors: m-5 RecipeNotFoundError after confirm shows generic "Could not save" (needs Architect; M5 sync); m-6 LLD §4.1/§4.5 still say Delete not built + document that confirm after read-only/unmount removes nothing (M5 as-built); m-7 focus drops to body when the dialog closes after a re-render (T-20 a11y); m-8 no test for Back-with-dialog-open then confirm. tests/unit/server/main-process.test.js now uses an OS-assigned port (was fixed 47398 → sync failures); e2e still uses fixed 47399. Leftover merged wip/T-19 on origin: ignore.
 - M4 approved 2026-11-12 (milestone card, f215bcd). Owner chose: continue M5 in a fresh session. M4 deferred minors are in docs/LLD.md "Known deferred minors (M4 tidy-up list)". Merged leftovers on origin: wip/T-14, wip/T-15, wip/M3-docs (and wip/T-17, wip/T-18, wip/M4-docs if listed) — ignore on resume.
 - Scope check reverts TASK_PROGRESS.md edits made while an agent runs: run `scope` BEFORE editing TASK_PROGRESS.md after an agent returns, and re-apply the Agents: line.
 - git-pr agents cannot write report files and the scope hook blocks extra shell (e.g. `; echo $?`): give them the bare taskgit command.

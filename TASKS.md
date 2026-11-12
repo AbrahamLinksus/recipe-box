@@ -284,13 +284,13 @@ Notes for every task
 - Owner: frontend-coder
 - Depends on: T-17
 - Context: SPEC US-10, §4 F-6, §5 F-6 · LLD §4.4, §4.5, §2.1, §2.5 · files: web/js/ui/screens/view-screen.js, web/css/app.css, tests/e2e/delete.spec.js, tests/e2e/helpers/*
-- Status: Backlog
+- Status: Done
 - Acceptance criteria:
-  - [ ] "Delete" (`delete-recipe`) on Tomato Soup opens `confirm-dialog` with "Delete 'Tomato Soup'? Are you sure?" and Cancel / Delete; focus starts on Cancel
-  - [ ] Cancel (and Esc) keeps the recipe and stays on the view; Delete removes it and lands on the list showing Banana Bread, Pancakes; after `page.reload()` it is still gone; Back does not reopen the deleted recipe
-  - [ ] Delete is disabled while `store.status !== 'ready'` and recomputed on every store notification. With the view open, a second page writing `{oops` → recipe still shown, Delete disabled; valid data written again → Delete enabled. A rejected `remove` shows the banner and stays on the view
-  - [ ] `tests/e2e/delete.spec.js` passes in both projects; screenshot of the dialog in `.results/T-19/`
-- Result: —
+  - [x] "Delete" (`delete-recipe`) on Tomato Soup opens `confirm-dialog` with "Delete 'Tomato Soup'? Are you sure?" and Cancel / Delete; focus starts on Cancel
+  - [x] Cancel (and Esc) keeps the recipe and stays on the view; Delete removes it and lands on the list showing Banana Bread, Pancakes; after `page.reload()` it is still gone; Back does not reopen the deleted recipe
+  - [x] Delete is disabled while `store.status !== 'ready'` and recomputed on every store notification. With the view open, a second page writing `{oops` → recipe still shown, Delete disabled; valid data written again → Delete enabled. A rejected `remove` shows the banner and stays on the view
+  - [x] `tests/e2e/delete.spec.js` passes in both projects; screenshot of the dialog in `.results/T-19/`
+- Result: ✅ 4/4 goals · 2 debugger rounds (M-1 vacuous Back test fixed; fixed-port server process test → OS port) · 3 minors (M5 sync / T-20) · a50003f
 
 ### T-20 · Responsive layout, accessibility pass and full e2e run
 
