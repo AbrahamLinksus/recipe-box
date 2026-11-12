@@ -206,13 +206,16 @@ test('filters survive list -> view -> list', async ({ page }) => {
   await seedThree(page);
   await page.goto('/');
   await page.getByTestId('tag-filter').selectOption('breakfast');
-  await page.getByTestId('search-input').fill('pan');
+  await page.getByTestId('search-input').fill('b');
+  await page.getByTestId('favourites-only').check();
+  await expect(page.getByTestId('recipe-row-title')).toHaveText(['Banana Bread']);
   await page.getByTestId('recipe-row-title').click();
   await expect(page.getByTestId('back-to-list')).toBeVisible();
   await page.getByTestId('back-to-list').click();
-  await expect(page.getByTestId('search-input')).toHaveValue('pan');
+  await expect(page.getByTestId('search-input')).toHaveValue('b');
   await expect(page.getByTestId('tag-filter')).toHaveValue('breakfast');
-  await expect(page.getByTestId('recipe-row-title')).toHaveText(['Pancakes']);
+  await expect(page.getByTestId('favourites-only')).toBeChecked();
+  await expect(page.getByTestId('recipe-row-title')).toHaveText(['Banana Bread']);
 });
 
 test('filters are a sidebar from 800 px and stacked below', async ({ page }) => {
