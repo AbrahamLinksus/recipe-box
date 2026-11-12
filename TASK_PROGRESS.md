@@ -3,9 +3,9 @@ Owner: architect · Started: 2026-11-12
 
 | Step | Agent | Status | Note |
 |---|---|---|---|
-| 1 LLD as-built sync | architect | ⏳ | |
-| 2 README pass | docs | ⬜ | |
+| 1 LLD as-built sync | architect | ✅ | 8 change rows · 8 deferred minors · 0 owner items |
+| 2 README pass | docs | ⏳ | |
 | 3 Milestone card | orchestrator | ⬜ | |
 
-Agents: none
+Agents: architect=aaa8c274f0417fb88
 Open decision: none
