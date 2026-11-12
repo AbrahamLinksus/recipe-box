@@ -4,6 +4,7 @@ import { createFilterState } from './filter-state.js';
 import { createRouter } from './router.js';
 import { clear } from './dom.js';
 import { mountListScreen } from './screens/list-screen.js';
+import { mountViewScreen } from './screens/view-screen.js';
 import { mountNotFoundScreen } from './screens/not-found-screen.js';
 
 const STATUS_MESSAGES = {
@@ -15,7 +16,7 @@ const STATUS_MESSAGES = {
 const GENERIC_ERROR = 'Something went wrong. Reload the page to continue.';
 
 /** Screens by route name; routes without a screen yet fall back to "Page not found". */
-const SCREENS = { list: mountListScreen };
+const SCREENS = { list: mountListScreen, view: mountViewScreen };
 
 /**
  * Mirrors the store status (unreadable / unavailable) in the banner.
@@ -70,7 +71,7 @@ export function createApp({ root, store, window }) {
   function mount(route) {
     current?.unmount();
     clear(root);
-    const mountScreen = SCREENS[/** @type {'list'} */ (route.name)] ?? mountNotFoundScreen;
+    const mountScreen = SCREENS[/** @type {'list' | 'view'} */ (route.name)] ?? mountNotFoundScreen;
     current = mountScreen(root, { store, router, dialogs, banner, filterState }, route);
   }
 

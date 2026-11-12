@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from '@playwright/test';
 
@@ -10,12 +10,14 @@ const EDGE_PATHS = [
   '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
   '/opt/microsoft/msedge/msedge',
 ];
-// D-08: Edge when installed, else the machine's Chromium (build may differ from Playwright's pin).
+// D-08: Edge when installed; else a Chromium already on the machine, only if
+// PLAYWRIGHT_BROWSERS_PATH is set and <path>/chromium exists; else Playwright's defaults.
 const hasEdge = EDGE_PATHS.some((p) => existsSync(p));
-const local = join(process.env.PLAYWRIGHT_BROWSERS_PATH ?? '', 'chromium');
+const browsersDir = process.env.PLAYWRIGHT_BROWSERS_PATH;
+const local = browsersDir ? resolve(browsersDir, 'chromium') : '';
 const browser = hasEdge
   ? { channel: 'msedge' }
-  : existsSync(local)
+  : local && existsSync(local)
     ? { launchOptions: { executablePath: local } }
     : {};
 const BASE = `http://127.0.0.1:${PORT}`;
