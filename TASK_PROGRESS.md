@@ -11,7 +11,7 @@ Owner: frontend-coder · Started: 2026-11-12
 | 4 Visual | orchestrator | ⬜ | |
 | 5 Result card | orchestrator | ⬜ | |
 
-Agents: frontend-coder=a3ed62dd81382a951 (continued 0×), tester=ae65007452eec3a92, reviewer=a98ad5f6b3dc746bc, debugger=a062653fe1b0de76c
+Agents: frontend-coder=a3ed62dd81382a951 (continued 0×), tester=ae65007452eec3a92, reviewer=a98ad5f6b3dc746bc, debugger=a062653fe1b0de76c (continued 1×)
 Debugger rounds: 1/2
 Open decision: none
 the owner's change requests: none
