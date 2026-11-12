@@ -331,3 +331,36 @@ dialog {
     width: 80px;
   }
 }
+
+/* ---- list filters (T-14) ---- */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.filters {
+  border: 1px dashed #999;
+  padding: 12px;
+  margin-bottom: 16px;
+  background: #f6f6f6;
+}
+.filters .input {
+  margin-bottom: 10px;
+}
+.filters .check {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-height: 40px;
+  font-weight: normal;
+}
+@media (min-width: 800px) {
+  .filters {
+    width: 280px;
+    flex-shrink: 0;
+    margin-bottom: 0;
+  }
+}

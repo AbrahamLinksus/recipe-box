@@ -1,5 +1,6 @@
-import { sortByTitle } from '../../core/search/search.js';
+import { filterRecipes } from '../../core/search/search.js';
 import { h, clear } from '../dom.js';
+import { createFilterPanel } from '../list-filters.js';
 
 /**
  * @param {import('../../core/recipe/types.js').Recipe} recipe
@@ -25,6 +26,25 @@ function recipeRow(recipe) {
       'data-testid': 'recipe-row-star',
       title: recipe.favourite ? 'Favourite' : 'Not favourite',
       text: recipe.favourite ? '★' : '☆',
+    }),
+  );
+}
+
+/**
+ * @param {() => void} onClear
+ * @returns {HTMLElement}
+ */
+function noMatchState(onClear) {
+  return h(
+    'div',
+    { class: 'state', 'data-testid': 'no-match-state' },
+    h('p', { text: 'No recipes match your search' }),
+    h('button', {
+      type: 'button',
+      class: 'btn',
+      'data-testid': 'clear-filters',
+      onclick: onClear,
+      text: 'Clear filters',
     }),
   );
 }
@@ -84,22 +104,39 @@ function listHeader(router, disabled) {
 }
 
 /** @type {import('../router.js').MountScreen} */
-export function mountListScreen(container, { store, router }) {
+export function mountListScreen(container, { store, router, filterState }) {
   const disabled = store.status !== 'ready';
   const results = h('div', { class: 'results' });
+  const panel = createFilterPanel(filterState, renderResults);
+
+  function clearFilters() {
+    filterState.reset();
+    panel.syncFromState();
+    renderResults();
+    panel.focusSearch();
+  }
 
   function renderResults() {
     clear(results);
-    const recipes = sortByTitle(store.list());
-    results.append(
-      ...(recipes.length === 0 ? [emptyState(router, disabled)] : recipeList(recipes)),
-    );
+    if (store.list().length === 0) {
+      results.append(emptyState(router, disabled));
+      return;
+    }
+    const recipes = filterRecipes(store.list(), filterState.get());
+    results.append(...(recipes.length === 0 ? [noMatchState(clearFilters)] : recipeList(recipes)));
   }
 
+  function onStoreChange() {
+    panel.refreshTags(store.list());
+    renderResults();
+  }
+
+  panel.refreshTags(store.list());
+  panel.syncFromState();
   renderResults();
-  // Filter controls (later task) go in a sibling of `results`, so re-rendering results
-  // never replaces the controls or steals their focus.
-  const layout = h('div', { class: 'list-layout' }, results);
+  // The filter panel is a sibling of results, so re-rendering results never replaces the
+  // controls or steals their focus.
+  const layout = h('div', { class: 'list-layout' }, panel.element, results);
   container.append(h('main', { class: 'page' }, listHeader(router, disabled), layout));
-  return { unmount: store.subscribe(renderResults) };
+  return { unmount: store.subscribe(onStoreChange) };
 }
