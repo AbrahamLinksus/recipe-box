@@ -98,14 +98,14 @@ describe('store errors', () => {
 });
 
 describe('RecipeStore reload edge cases', () => {
-  it('reload to unreadable clears list, sets reason, notifies, writes nothing', async () => {
+  it('reload to unreadable keeps list, sets reason, notifies, writes nothing', async () => {
     const { p, store } = make({ kind: 'ok', recipes: [PANCAKES] });
     await store.init();
     let calls = 0;
     store.subscribe(() => calls++);
     p.result = { kind: 'unreadable', reason: 'corrupt' };
     await store.reload();
-    assert.deepEqual(store.list(), []);
+    assert.deepEqual(store.list(), [PANCAKES]);
     assert.equal(store.statusReason, 'corrupt');
     assert.equal(calls, 1);
     assert.equal(p.saves.length, 0);

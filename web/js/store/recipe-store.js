@@ -269,8 +269,8 @@ export class RecipeStore {
       this.#status = 'ready';
       this.#recipes = Object.freeze([]);
     } else {
+      // unreadable / unavailable: keep the last loaded recipes (read-only); first load has none.
       this.#status = result.kind;
-      this.#recipes = Object.freeze([]);
     }
   }
 
