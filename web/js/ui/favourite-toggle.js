@@ -1,4 +1,5 @@
 import { h } from './dom.js';
+import { renderKeepingFocus } from './focus-keeper.js';
 import { saveFailureMessage } from './save-failure.js';
 
 const TOGGLE = 'favourite-toggle';
@@ -34,6 +35,9 @@ export function favouriteToggle(recipe, store, banner) {
   });
 }
 
+/** Focus rule for the star: back to the star of the same recipe, no fallback. */
+export const TOGGLE_FOCUS = Object.freeze({ [TOGGLE]: null });
+
 /**
  * Runs a re-render and gives focus back to the star of the same recipe if it had focus,
  * so keyboard users can keep toggling.
@@ -41,20 +45,5 @@ export function favouriteToggle(recipe, store, banner) {
  * @param {() => void} render
  */
 export function renderKeepingToggleFocus(region, render) {
-  const active = region.ownerDocument.activeElement;
-  const focusedId =
-    active instanceof HTMLElement && active.dataset.testid === TOGGLE && region.contains(active)
-      ? active.dataset.recipeId
-      : null;
-  render();
-  if (focusedId === null) return;
-  for (const el of region.querySelectorAll(`[data-testid="${TOGGLE}"]`)) {
-    if (
-      el instanceof HTMLElement &&
-      el.dataset.recipeId === focusedId &&
-      !el.hasAttribute('disabled')
-    ) {
-      el.focus();
-    }
-  }
+  renderKeepingFocus(region, render, TOGGLE_FOCUS);
 }

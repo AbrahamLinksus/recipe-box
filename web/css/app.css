@@ -383,3 +383,31 @@ button.star:disabled {
     margin-bottom: 0;
   }
 }
+
+/* ---- servings control (T-17) ---- */
+.servings {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 16px 0;
+  padding: 10px;
+  border: 1px dashed #999;
+  background: #f6f6f6;
+}
+.servings .pm {
+  min-width: 40px;
+  padding: 8px 10px;
+}
+.servings-input {
+  width: 64px;
+  min-height: 40px;
+  padding: 6px;
+  border: 2px solid #555;
+  font: inherit;
+  text-align: center;
+}
+.servings .note {
+  color: #555;
+  font-size: 13px;
+}
