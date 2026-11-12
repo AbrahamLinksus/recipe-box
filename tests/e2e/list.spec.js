@@ -33,6 +33,12 @@ test('Add recipe button is keyboard-focusable', async ({ page }) => {
   await add.focus();
   await expect(add).toBeFocused();
   await page.keyboard.press('Tab');
+  await expect(page.getByTestId('search-input')).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(page.getByTestId('tag-filter')).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(page.getByTestId('favourites-only')).toBeFocused();
+  await page.keyboard.press('Tab');
   await expect(page.getByTestId('add-first-recipe')).toBeFocused();
 });
 
@@ -120,4 +126,101 @@ test('rows re-render on store change; results region is separate from header', a
     return results !== null && addButton !== null && !results.contains(addButton);
   });
   expect(separate).toBe(true);
+});
+
+/** @param {string} message @returns {never} */
+function fail(message) {
+  throw new Error(message);
+}
+
+/** @param {import('@playwright/test').Page} page */
+async function seedThree(page) {
+  await seedRecipes(page, [
+    recipe('r-pancakes', 'Pancakes', ['breakfast', 'sweet'], false),
+    recipe('r-soup', 'Tomato Soup', ['lunch', 'vegetarian'], false),
+    recipe('r-banana', 'Banana Bread', ['breakfast', 'baking'], true),
+  ]);
+}
+
+test('search filters as you type and keeps focus and caret', async ({ page }) => {
+  await seedThree(page);
+  await page.goto('/');
+  const search = page.getByTestId('search-input');
+  const titles = page.getByTestId('recipe-row-title');
+  await search.click();
+  await page.keyboard.type('pan');
+  await expect(titles).toHaveText(['Pancakes']);
+  await expect(page.getByTestId('recipe-count')).toHaveText('1 recipe');
+  await expect(search).toBeFocused();
+  await page.keyboard.press('ArrowLeft');
+  await page.keyboard.type('X');
+  await expect(search).toHaveValue('paXn');
+  await expect(search).toBeFocused();
+  await expect(page.getByTestId('no-match-state')).toBeVisible();
+  await search.fill('b');
+  await expect(titles).toHaveText(['Banana Bread']);
+});
+
+test('tag filter lists tags A-Z and combines with search and favourites', async ({ page }) => {
+  await seedThree(page);
+  await page.goto('/');
+  const tag = page.getByTestId('tag-filter');
+  const titles = page.getByTestId('recipe-row-title');
+  await expect(tag.locator('option')).toHaveText([
+    'All tags',
+    'baking',
+    'breakfast',
+    'lunch',
+    'sweet',
+    'vegetarian',
+  ]);
+  await tag.selectOption('breakfast');
+  await expect(titles).toHaveText(['Banana Bread', 'Pancakes']);
+  await page.getByTestId('favourites-only').check();
+  await expect(titles).toHaveText(['Banana Bread']);
+  await page.getByTestId('search-input').fill('pan');
+  await expect(page.getByTestId('no-match-state')).toBeVisible();
+  await page.getByTestId('search-input').fill('');
+  await page.getByTestId('favourites-only').uncheck();
+  await tag.selectOption('');
+  await expect(titles).toHaveText(['Banana Bread', 'Pancakes', 'Tomato Soup']);
+});
+
+test('no-match state; Clear filters resets controls and focuses search', async ({ page }) => {
+  await seedThree(page);
+  await page.goto('/');
+  await page.getByTestId('tag-filter').selectOption('lunch');
+  await page.getByTestId('favourites-only').check();
+  await page.getByTestId('search-input').fill('xyz');
+  await expect(page.getByTestId('no-match-state')).toContainText('No recipes match your search');
+  await expect(page.getByTestId('recipe-row')).toHaveCount(0);
+  await page.getByTestId('clear-filters').click();
+  await expect(page.getByTestId('search-input')).toHaveValue('');
+  await expect(page.getByTestId('search-input')).toBeFocused();
+  await expect(page.getByTestId('tag-filter')).toHaveValue('');
+  await expect(page.getByTestId('favourites-only')).not.toBeChecked();
+  await expect(page.getByTestId('recipe-row')).toHaveCount(3);
+});
+
+test('filters survive list -> view -> list', async ({ page }) => {
+  await seedThree(page);
+  await page.goto('/');
+  await page.getByTestId('tag-filter').selectOption('breakfast');
+  await page.getByTestId('search-input').fill('pan');
+  await page.getByTestId('recipe-row-title').click();
+  await expect(page.getByTestId('back-to-list')).toBeVisible();
+  await page.getByTestId('back-to-list').click();
+  await expect(page.getByTestId('search-input')).toHaveValue('pan');
+  await expect(page.getByTestId('tag-filter')).toHaveValue('breakfast');
+  await expect(page.getByTestId('recipe-row-title')).toHaveText(['Pancakes']);
+});
+
+test('filters are a sidebar from 800 px and stacked below', async ({ page }) => {
+  await seedThree(page);
+  await page.goto('/');
+  const filters = (await page.locator('.filters').boundingBox()) ?? fail('no filters box');
+  const results = (await page.locator('.results').boundingBox()) ?? fail('no results box');
+  const wide = (page.viewportSize()?.width ?? 0) >= 800;
+  if (wide) expect(filters.x + filters.width).toBeLessThanOrEqual(results.x);
+  else expect(filters.y + filters.height).toBeLessThanOrEqual(results.y);
 });
