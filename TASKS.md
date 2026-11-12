@@ -211,14 +211,14 @@ Notes for every task
 - Owner: frontend-coder
 - Depends on: T-11
 - Context: SPEC US-03, US-04, US-07, §4 F-2, §5 F-2 · LLD §2.1, §3.1, §3.4, §8.1 · files: web/js/ui/screens/list-screen.js, web/css/app.css, tests/e2e/list.spec.js, tests/e2e/helpers/*, docs/wireframes/recipe-list.html
-- Status: Backlog
+- Status: Done
 - Acceptance criteria:
-  - [ ] Typing "pan" shows Pancakes and hides Tomato Soup as you type; "b" → Banana Bread only; search box keeps focus and caret while typing
-  - [ ] Tag select (`tag-filter`) offers "All tags" + tags from saved recipes A–Z; `breakfast` → Banana Bread, Pancakes; back to "All tags" shows all three; search, tag and "Favourites only" combine
-  - [ ] "xyz" → "No recipes match your search" (`no-match-state`) + "Clear filters" (`clear-filters`) which resets all controls and focuses the search box
-  - [ ] Filters survive list → view → list (filter-state); sidebar filters at ≥ 800 px, stacked at 390 px
-  - [ ] `tests/e2e/list.spec.js` covers search "pan", "b", "xyz" and tag `breakfast`, passing in both projects; screenshots in `.results/T-14/`
-- Result: —
+  - [x] Typing "pan" shows Pancakes and hides Tomato Soup as you type; "b" → Banana Bread only; search box keeps focus and caret while typing
+  - [x] Tag select (`tag-filter`) offers "All tags" + tags from saved recipes A–Z; `breakfast` → Banana Bread, Pancakes; back to "All tags" shows all three; search, tag and "Favourites only" combine
+  - [x] "xyz" → "No recipes match your search" (`no-match-state`) + "Clear filters" (`clear-filters`) which resets all controls and focuses the search box
+  - [x] Filters survive list → view → list (filter-state); sidebar filters at ≥ 800 px, stacked at 390 px
+  - [x] `tests/e2e/list.spec.js` covers search "pan", "b", "xyz" and tag `breakfast`, passing in both projects; screenshots in `.results/T-14/`
+- Result: ✅ 5/5 goals · 62 e2e · coverage 99.94% · review 0 major, 3 minor · 170a8eb
 
 ### T-15 · Favourite star on list and view
 
