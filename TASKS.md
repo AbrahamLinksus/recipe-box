@@ -156,13 +156,13 @@ Notes for every task
 - Owner: frontend-coder
 - Depends on: T-08, T-09
 - Context: SPEC US-02, §5 F-2 · LLD §3.1, §3.4, §3.5 · files: web/js/ui/screens/list-screen.js, web/css/app.css, tests/e2e/list.spec.js, tests/e2e/helpers/*, docs/wireframes/recipe-list.html
-- Status: Backlog
+- Status: Done
 - Acceptance criteria:
-  - [ ] Seeded with the SPEC §5 recipes, the list shows Banana Bread, Pancakes, Tomato Soup in that order with tag chips and a star (☆/★ from stored state), and `recipe-count` reads "3 recipes" ("1 recipe" for one)
-  - [ ] Each row title is a link to `#/recipe/<id>`; rows re-render on store change via `subscribe`
-  - [ ] Results region is separate from the (future) filter panel per §3.1, so later filter controls keep focus
-  - [ ] `tests/e2e/list.spec.js` extended for A–Z order and count passes in both projects; screenshots 1280/390 px in `.results/T-11/`
-- Result: —
+  - [x] Seeded with the SPEC §5 recipes, the list shows Banana Bread, Pancakes, Tomato Soup in that order with tag chips and a star (☆/★ from stored state), and `recipe-count` reads "3 recipes" ("1 recipe" for one)
+  - [x] Each row title is a link to `#/recipe/<id>`; rows re-render on store change via `subscribe`
+  - [x] Results region is separate from the (future) filter panel per §3.1, so later filter controls keep focus
+  - [x] `tests/e2e/list.spec.js` extended for A–Z order and count passes in both projects; screenshots 1280/390 px in `.results/T-11/`
+- Result: ✅ 4/4 goals · check.sh --e2e pass (20 e2e) · 0 major, 2 minors (star aria-label → T-15; href on one row) · 8b1a191
 
 ### T-12 · Recipe view (read-only, base servings)
 

@@ -29,3 +29,4 @@
 | A-10 | 2026-11-11 | Not-yet-built routes | #/new, view, edit show Page not found until M2 | frontend-coder | T-08 |
 | A-11 | 2026-11-12 | Tie-break compare in sortByTitle | plain string < on ISO createdAt then id | frontend-coder | T-09 |
 | A-12 | 2026-11-12 | isDirty | trimmed JSON fingerprint of both drafts; no-op ops return a fresh draft sharing untouched arrays | frontend-coder | T-10 |
+| A-13 | 2026-11-12 | List star before T-15 | non-interactive span (★/☆ from stored state); becomes the labelled toggle button in T-15 | frontend-coder | T-11 |
