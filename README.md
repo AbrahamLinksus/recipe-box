@@ -2,7 +2,7 @@
 
 A small personal recipe box that runs on your own computer. It keeps your recipes in your browser, and nothing is sent anywhere.
 
-> **Status: milestone M1 (skeleton).** The app opens to an empty recipe list. Adding, searching, scaling and favouriting recipes come in later milestones. For now the "Add recipe" buttons lead to a "Page not found" page.
+> **Status: milestone M2 (add, list and open).** You can add a recipe, see all your recipes A–Z, and open one to read it. Search, tag filter, favourites, scaling, edit and delete come in later milestones. Until then the Edit link on a recipe leads to a "Page not found" page.
 
 ## Requirements
 
@@ -22,6 +22,18 @@ A small personal recipe box that runs on your own computer. It keeps your recipe
 If the app is already running and you start it again, the browser simply opens the running copy.
 
 Always use the address `http://127.0.0.1:47321/`. The browser treats `localhost:47321` as a different address with its own empty storage.
+
+## Using Recipe Box
+
+- **Add a recipe:** click **+ Add recipe** (or **Add your first recipe** when the list is empty). Enter a title, the number of servings (a whole number, 1 or more), ingredient rows, step rows and tags, then click **Save**. The new recipe opens in its view.
+  - A title, at least one ingredient and at least one step are required.
+  - Tags are saved in lower case, and a tag repeated in the same recipe is ignored.
+  - If you leave the form with unsaved text, Recipe Box asks "Discard changes?".
+- **List:** the front page shows all your recipes sorted A–Z by title, with their tags and a count (for example "3 recipes").
+- **Open:** click a recipe's title to read its servings, ingredients and numbered steps. Use **← All recipes** to go back.
+- **Not yet available:** search, the tag filter, favourites, scaling the servings, editing and deleting.
+
+**Read-only banner.** If Recipe Box cannot read your saved recipes, a banner at the top says that they could not be read, so Recipe Box will not change them, and that nothing has been deleted. Recipe Box keeps showing the recipes it had last. While the banner is shown, a new recipe cannot be saved. A second banner, "This browser is blocking storage for Recipe Box", means the browser will not let the app use its storage at all.
 
 ## Where your recipes are stored
 

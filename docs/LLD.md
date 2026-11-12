@@ -15,6 +15,11 @@
 > **Change request CR-1 (2026-11-12, owner decision D-09):** after a good load, a reload that yields
 > `unreadable`/`unavailable` keeps the last loaded recipes visible, read-only. Changed text is marked "(CR-1)"
 > in §2.5, §3.5, §4.5, §5.5, §9.1, §9.5, §10.5 and listed in "Changes since last milestone".
+> **As-built sync M2 (2026-11-12):** §0, §2, §3, §4, §5, §8, §9.5, §11 checked against the code at the end of
+> milestone M2 (T-05b, T-09..T-13). Changes are marked "As built (M2)" in place and listed in "Changes since
+> last milestone". §5.5 is aligned to owner decision **D-11** (Save disabled live while the store is read-only);
+> that part is **not built yet** (T-18). Parts of §3/§4/§5 still belong to later tasks (T-14, T-15, T-17, T-18, T-19);
+> each "As built (M2)" note says what is missing.
 
 ## §0 Overview
 
@@ -27,7 +32,7 @@
 | Pure logic (M6–M8) | Hand-written functions, no libraries | Rounding to ¼ is ~20 lines; `fraction.js` would still need the rounding written by hand | `fraction.js` (extra dep, does not remove code) |
 | Persistence (M10) | Browser `localStorage`, one JSON document under one key, behind the `CollectionPersistence` port (§9.1) | Matches approved SPEC §6 ("inside one browser"); simplest; data volume < 1 MB vs ~5 MiB limit | (c) JSON file on disk via the local server, designed in §10.6, built only if the owner picks it (D1); IndexedDB (async complexity, no gain at this size) |
 | Unit tests | `node:test` + built-in coverage (`--experimental-test-coverage` with thresholds) | Built into Node; zero install; ideal for pure ESM logic | Vitest (pulls in Vite) |
-| E2E tests | `@playwright/test` driving the **installed Edge** (`channel: 'msedge'`), dev-only | Real-browser checks of SPEC §5 flows, 390 px layout, screenshots; no browser download | none / manual only (see §0.6 item P1) |
+| E2E tests | `@playwright/test` driving the **installed Edge** (`channel: 'msedge'`), dev-only; as built (M2, D-08): falls back to a Chromium already on the machine when Edge is missing (§11.6) | Real-browser checks of SPEC §5 flows, 390 px layout, screenshots; no browser download | none / manual only (see §0.6 item P1) |
 | Lint / format / layers | ESLint (flat config, core rules) + Prettier + dependency-cruiser | Enforce CONVENTIONS limits and the layer map (§0.3) | typescript-eslint (not needed: sources are JS) |
 
 ### §0.2 Folder structure
@@ -57,11 +62,12 @@ recipe-box/
 │     ├─ store/                 # §9 M9  recipe-store.js ports.js errors.js
 │     ├─ persistence/           # §10 M10 collection-codec.js local-storage-persistence.js
 │     └─ ui/                    # §2–§5 app.js router.js dialogs.js dom.js banner.js filter-state.js form-model.js
+│        │                      #        form-widgets.js form-ingredients.js form-steps.js form-tags.js (as built M2, §5.1)
 │        └─ screens/            #        list-screen.js view-screen.js form-screen.js not-found-screen.js (as built M1)
 └─ tests/
    ├─ helpers/                  # fake-storage.js, memory-persistence.js, recipes.fixture.js (SPEC §5 data)
    ├─ unit/                     # node:test, mirrors source: server/ core/ store/ persistence/ ui/
-   └─ e2e/                      # Playwright: playwright.config.js, *.spec.js, helpers/seed.js (as built M1)
+   └─ e2e/                      # Playwright: playwright.config.js, *.spec.js, helpers/seed.js (as built M1), helpers/recipes.js (as built M2)
 ```
 
 ### §0.3 Layer map and module dependencies
@@ -169,6 +175,7 @@ flowchart TB
 Version caveat: these majors are from the research and general knowledge, not verified with `npm view` in this session. Whoever runs `npm install` pins the latest patch inside the listed major with `--save-exact`; the as-built sync records the exact versions. Copy of this table: `.results/lld/packages.md`.
 
 **As built (M1), exact pins in `package.json` `devDependencies`:** `eslint` 9.39.5 · `@eslint/js` 9.39.5 · `globals` 16.5.0 · `prettier` 3.9.10 · `typescript` 5.9.3 · `@types/node` 24.19.2 · `dependency-cruiser` 17.4.3 · `@playwright/test` 1.59.1 (P1 in use: e2e runs in M1). All inside the listed majors; no packages added or removed. Runtime dependencies: still none.
+**As built (M2):** pins unchanged; no packages added or removed in M2.
 
 ### §0.5 Config and secrets
 No secrets, no `.env` needed. Environment variables (documented in README, all optional):
@@ -341,6 +348,7 @@ sequenceDiagram
   UI->>UI: filterRecipes(recipes, filter) (§8), render A-Z or "No recipes yet"
 ```
 As built (M1): the last step is not built yet; M1's list screen renders `store.list()` in insertion order with no filter (see §3).
+As built (M2): the list screen renders `sortByTitle(store.list())` (A–Z, §8); `filterRecipes` with the filter panel arrives in T-14.
 
 ### §1.5 Errors and edge cases
 - `listen` rejects with `EADDRINUSE` → probe. Probe outcomes: `ours` → open + exit 0; `other` (non-200, wrong JSON, timeout 1500 ms) → port-conflict; `none` (`ECONNREFUSED`: the other instance exited meanwhile) → retry `listen` once, then port-conflict.
@@ -411,7 +419,9 @@ export function h(tag, attrs, ...children) {}  // sets textContent only, never i
 /** @param {{ root: HTMLElement, store: RecipeStore, window: Window }} deps @returns {{ start(): void }} */
 export function createApp(deps) {}  // builds router, dialogs, banner, filterState; mounts screens
 // As built (M1): screens are looked up in a route-name map (M1: { list: mountListScreen }); any route without a
-//   screen mounts mountNotFoundScreen (A-10). start() installs, in order: window 'error' + 'unhandledrejection'
+//   screen mounts mountNotFoundScreen (A-10). As built (M2): SCREENS = { list: mountListScreen,
+//   view: mountViewScreen, new: mountFormScreen }; 'edit' still falls back to not-found until T-18 adds it.
+//   start() installs, in order: window 'error' + 'unhandledrejection'
 //   listeners → console.error + banner GENERIC_ERROR (this is where store listener errors reported through
 //   reportError surface, §9.5 / A-07); a store subscriber that mirrors status unreadable/unavailable into the
 //   banner (and clears it once the status returns to ready); then router.start().
@@ -432,13 +442,17 @@ export function createApp(deps) {}  // builds router, dialogs, banner, filterSta
 
 ### §2.5 Errors and edge cases
 - Routes: `#/` or empty → list; `#/recipe/<id>` → view; `#/recipe/<id>/edit` → edit; `#/new` → add; anything else → `notFound` screen ("Page not found" + "All recipes" link).
-- As built (M1, A-10): only the list screen exists, so `#/new`, `#/recipe/<id>` and `#/recipe/<id>/edit` parse correctly but show "Page not found" until M2 adds their screens (the "Add recipe" / "Add your first recipe" buttons therefore lead there for now).
+- As built (M1, A-10): only the list screen exists, so `#/new`, `#/recipe/<id>` and `#/recipe/<id>/edit` parse correctly but show "Page not found" until M2 adds their screens (the "Add recipe" / "Add your first recipe" buttons therefore lead there for now). As built (M2): `#/new` (§5, add only) and `#/recipe/<id>` (§4) have screens; `#/recipe/<id>/edit` still shows "Page not found" until T-18.
 - As built (M1): the generic-error banner and the status banner share one region; a status change back to `ready` calls `banner.clear()`, which can also clear a generic error (deferred minor, see "Known deferred minors").
 - After a successful save or delete, navigate with `{ replace: true }` so Back does not return to the form/deleted recipe.
 - Store status banner (shown on every screen, `role="alert"`):
   - `unreadable`: "Your saved recipes could not be read, so Recipe Box will not change them. Nothing has been deleted." All write controls disabled (Add, star, Edit, Delete, Save).
   - `unavailable`: "This browser is blocking storage for Recipe Box, so recipes cannot be loaded or saved." Same disabling.
   - write failure (§9.5): "Could not save: <reason>. Your last change was not stored." (info persists until next success).
+    As built (M2, form only): `<reason>` is filled from `err.message` of the `PersistenceWriteError`, and the §10 adapter
+    passes no message, so the text reads "Could not save: Could not save (quota). Your last change was not stored."
+    (deferred minor, see "Known deferred minors"). Any other non-field error → "Could not save. Your last change was not stored."
+    The form clears its own banner after the next successful save.
   - (CR-1) The status can change **while a screen is mounted** (cross-tab `reload()`, §9.5), in both directions. The banner and every screen's write controls follow `store.status` on every store notification, not only at mount. The two status texts above stay as they are for both cases (nothing loaded, or the last loaded recipes still shown): both say that nothing will be changed.
 - Unhandled promise rejections in UI → `banner.show('error', 'Something went wrong. Reload the page to continue.')` and `console.error` (the only console call in web code, in `app.js`).
 - Layout (`app.css`): mobile-first single column; `@media (min-width: 800px)` → filters sidebar 280 px on list, two-column ingredients/steps on view and form, page max-width 1100 px (matches wireframes). At 390 px nothing overflows horizontally; tap targets ≥ 40 px.
@@ -461,6 +475,8 @@ Internal structure: the filter panel (search input, tag `<select>`, favourites c
 
 **As built (M1, T-08 walking skeleton), the rest is M2 (T-09/T-10):** the screen renders a header (`<h1>Recipe Box</h1>` + `add-recipe` "+ Add recipe") and a separate results region (`div.results`) that re-renders on every store change via `store.subscribe` (the unsubscribe is the handle's `unmount`). Results: `store.list().length === 0` → `empty-state` "No recipes yet" + `add-first-recipe`; otherwise `recipe-count` + `<ul>` of `recipe-row` (title link `recipe-row-title` to `#/recipe/<encoded id>`, tag chips). Not yet built: filter panel, A–Z sort (rows are in store insertion order), stars, no-match state. Both add buttons navigate to `#/new`, which shows "Page not found" until M2 (A-10). Write controls are disabled when `store.status !== 'ready'`, computed once at mount (deferred minor; (CR-1) must be recomputed on every store notification, see §3.5).
 
+**As built (M2, T-11):** rows are now `sortByTitle(store.list())` (A–Z, §8.1). Each row ends with a **non-interactive** star `<span class="star" data-testid="recipe-row-star">` showing `★`/`☆` from the stored `favourite` (`title` "Favourite"/"Not favourite"); it becomes the labelled `favourite-toggle` button of §3.4 in T-15 (A-13). Row tag chips are plain `<span class="tag">` (no test id). The results region sits in `div.list-layout`, so the T-14 filter panel can be a sibling that never re-renders. Still not built: filter panel, no-match state, "Clear filters" (T-14); star toggle and the per-notification recompute of `disabled` (T-15).
+
 ### §3.4 Behaviour
 | Trigger | Effect |
 |---|---|
@@ -475,7 +491,7 @@ Internal structure: the filter panel (search input, tag `<select>`, favourites c
 
 States (exact texts): count line `"1 recipe"` / `"N recipes"` (count of shown rows); `store.list().length === 0` → "No recipes yet" + button "Add your first recipe" (`#/new`); else 0 matches → "No recipes match your search" + button "Clear filters". Row: title, tag chips in stored order (A–Z), star `★` (favourite, `aria-label="Remove from favourites"`) / `☆` (`aria-label="Mark as favourite"`).
 
-Test ids: `search-input`, `tag-filter`, `favourites-only`, `recipe-count`, `recipe-row` (with `data-recipe-id`), `recipe-row-title`, `favourite-toggle`, `empty-state`, `add-first-recipe`, `no-match-state`, `clear-filters`.
+Test ids: `search-input`, `tag-filter`, `favourites-only`, `recipe-count`, `recipe-row` (with `data-recipe-id`), `recipe-row-title`, `favourite-toggle`, `empty-state`, `add-first-recipe`, `no-match-state`, `clear-filters`. As built (M2): also `recipe-row-star` (the read-only star span until T-15, A-13). In T-15 the span is replaced by the `favourite-toggle` `<button aria-pressed>` above and `recipe-row-star` is retired (its `list.spec.js` assertions move to `favourite-toggle`).
 
 ### §3.5 Errors and edge cases
 - Read-only store status → stars and add buttons disabled (`disabled` attribute), list still readable.
@@ -499,6 +515,15 @@ export function mountViewScreen(container, ctx, route) {}  // route.name === 'vi
 ```
 Screen-local state: `servings` (starts at `recipe.servings`, never saved; a new mount always starts at base).
 
+**As built (M2, T-12):** the view is read-only display. Structure: `<main class="page">` → `div.view-content`, which `render()` rebuilds on mount and on **every** store notification (`store.subscribe(render)`; the unsubscribe is `unmount`):
+- `header.view-bar`: `back-to-list` link "← All recipes" (`#/`) + the Edit control. Edit is an `<a class="btn" href="#/recipe/<encoded id>/edit">` while `store.status === 'ready'`, else a **disabled `<button>`** with the same `edit-recipe` test id (A-14). Recomputed on every notification, so it follows the status in both directions (CR-1).
+- `div.view-head`: `<h1 data-testid="recipe-title">`, `<p class="serves" data-testid="recipe-serves">Serves N</p>`, `div[data-testid=recipe-tags]` of `<span class="tag" data-testid="recipe-tag">` in stored order.
+- `div.cols` → `section.panel.ing[data-testid=ingredients-panel]` (`<h2>Ingredients</h2>` + `<ul>` of `ingredient-line`) and `section.panel.steps[data-testid=steps-panel]` (`<h2>Steps</h2>` + `<ol>` of `step-line`).
+- Ingredient line = `formatIngredientLine(ing, recipe.servings, recipe.servings)` (base = target, so amounts are shown as typed): `<strong data-testid="ingredient-amount">` + a space, **only when the amount text is non-empty**, then the name.
+- Unknown id (or recipe gone after a notification): `div.state[data-testid=not-found]` "Recipe not found" + `<a class="btn" data-testid="not-found-back" href="#/">All recipes</a>`.
+
+Not built yet: servings control, Reset and the scaling note (T-17); star (T-15); Delete (T-19).
+
 ### §4.4 Behaviour
 | Trigger | Effect |
 |---|---|
@@ -513,11 +538,11 @@ Screen-local state: `servings` (starts at `recipe.servings`, never saved; a new 
 | Delete | `confirmDialog({ message: "Delete '<title>'? Are you sure?", confirmLabel: 'Delete', cancelLabel: 'Cancel' })` → true: `await store.remove(id)`, `navigate({ name: 'list' }, { replace: true })`; false: nothing |
 | store change | re-read `store.get(id)`; if gone (other tab deleted it) → not-found state |
 
-Test ids: `recipe-title`, `recipe-tags`, `servings-input`, `servings-dec`, `servings-inc`, `servings-reset`, `ingredient-line`, `ingredient-amount`, `step-line`, `favourite-toggle`, `edit-recipe`, `delete-recipe`, `not-found`.
+Test ids: `recipe-title`, `recipe-tags`, `servings-input`, `servings-dec`, `servings-inc`, `servings-reset`, `ingredient-line`, `ingredient-amount`, `step-line`, `favourite-toggle`, `edit-recipe`, `delete-recipe`, `not-found`. As built (M2): also `recipe-serves` ("Serves N"), `recipe-tag` (one chip), `ingredients-panel`, `steps-panel`, `not-found-back` (the "All recipes" link of the not-found state) and `back-to-list` (§2.5). `not-found` is used both by the not-found screen's `<main>` (§2) and by the view's not-found state `<div>`; only one is ever on screen.
 
 ### §4.5 Errors and edge cases
 - Unknown id → "Recipe not found" + "All recipes" link (no crash).
-- Read-only store → star, Edit, Delete disabled; scaling still works.
+- Read-only store → star, Edit, Delete disabled; scaling still works. As built (M2, A-14): "disabled Edit" is a `<button type="button" disabled>` with test id `edit-recipe` (never an `<a>` without `href`); while `ready` it is the `<a href>` link. Star and Delete follow the same rule when T-15 / T-19 add them.
 - (CR-1) Reachable when a cross-tab reload fails after a good load (§9.5): `store.get(id)` still returns the recipe from the last loaded snapshot, so the view stays on screen with the banner (§2.5). Star, Edit and Delete are recomputed on every store notification (disabled while `store.status !== 'ready'`, enabled again when a reload returns `ready`). The re-render on a store notification **keeps the current screen-local `servings`** (it is not reset to base), so scaling keeps working across status changes.
 - (CR-1) Read-only **at start** (nothing loaded): `store.get(id)` is `undefined` → "Recipe not found" + "All recipes" link, with the status banner explaining why.
 - (CR-1) A reload that returns `ready` with fresh data where the recipe no longer exists → not-found state (same as "store change" in §4.4).
@@ -527,7 +552,7 @@ Test ids: `recipe-title`, `recipe-tags`, `servings-input`, `servings-dec`, `serv
 
 ## §5 M5 Recipe form screen
 - **Responsibility:** Add and edit a recipe: editable draft, row operations, inline validation, save, cancel with discard guard.
-- **Path(s):** `web/js/ui/screens/form-screen.js` (DOM), `web/js/ui/form-model.js` (pure draft operations, unit-tested)
+- **Path(s):** `web/js/ui/screens/form-screen.js` (DOM), `web/js/ui/form-model.js` (pure draft operations, unit-tested); as built (M2, T-13): the DOM sections are split out into `web/js/ui/form-widgets.js`, `form-ingredients.js`, `form-steps.js`, `form-tags.js` (each under the 300-line / 40-line-function limits)
 - **Depends on:** §6 (`validateDraft`, `normaliseTag`, `RecipeDraft`), §9 (`get`, `create`, `update`), §2 (dialogs, router, `canLeave`).
 
 ### §5.1 Interfaces / signatures
@@ -547,10 +572,42 @@ export function setStep(d, i, text) {}
 /** @param {string} raw adds normaliseTag(raw) if non-empty and not present */ export function addTag(d, raw) {}
 export function removeTag(d, tag) {}
 /** deep-equal of the two drafts (after trimming) */ export function isDirty(initial, current) {}
+// As built (M2, T-10, A-12): isDirty compares a JSON fingerprint of both drafts with every string trimmed
+//   (title, servings, each ingredient field, steps, tags). Every function returns a new draft object even when it is a
+//   no-op (moveStep at an end, addTag of '' or a duplicate); untouched arrays may be shared with the input.
+//   addTag appends (chip order = order typed); validateDraft's normaliseTags sorts A–Z on save.
+
+// web/js/ui/form-widgets.js (as built M2) — shared DOM helpers for the form sections
+/** @typedef {{ get(): RecipeDraft, set(next: RecipeDraft): void }} DraftAccess   // the screen's live draft */
+/** @typedef {(next: RecipeDraft, focusTestid: string, index: number) => void} ChangeFn */
+/** <p class="err" id={id} data-testid={testid}> or null when no message */
+export function errorLine(testid, message, id) {}
+/** <button type="button" class="btn small">; label → aria-label (symbol buttons) */
+export function smallButton(text, testid, onclick, label, disabled = false) {}
+/** @param {Event} e @returns {string} (e.target).value */ export function valueOf(e) {}
+/** Fills el with build(errs, change); change(next, focusTestid, i) stores next, drops the errors (row indexes
+ *  would be stale), rebuilds el, then focuses the i-th (clamped) element with focusTestid. @returns {HTMLElement} el */
+export function createSection(el, draft, errors, build) {}
+
+// web/js/ui/form-ingredients.js (as built M2)
+export const INGREDIENT_HELP;   // the §5.4 help text
+/** <section class="panel ing" data-testid="ingredients-panel"> @param {DraftAccess} draft @param {FieldErrors} errors */
+export function ingredientsSection(draft, errors) {}
+
+// web/js/ui/form-steps.js (as built M2)
+/** <section class="panel steps" data-testid="steps-panel"> */ export function stepsSection(draft, errors) {}
+
+// web/js/ui/form-tags.js (as built M2)
+export const TAGS_HELP = 'Tags are saved in lower case.';
+/** label + chips + tag input; Enter / comma commit (§5.4) */ export function tagsSection(draft) {}
 
 // web/js/ui/screens/form-screen.js
 /** @type {import('../router.js').MountScreen} */
 export function mountFormScreen(container, ctx, route) {}  // route.name 'new' | 'edit'
+// As built (M2, T-13): add only — ignores route, starts from emptyDraft(); app.js maps only 'new' to it (§2.1).
+//   Internal pieces: createFormView(router, state) → { form, saveButton, currentDraft, render(errors) };
+//   createSave(ctx, state, view) → async save(); FormState = { draft, saving, saved }.
+//   currentDraft() = addTag(state.draft, <tag box text>) so uncommitted tag text counts for save and isDirty.
 ```
 
 ### §5.4 Behaviour
@@ -561,13 +618,35 @@ export function mountFormScreen(container, ctx, route) {}  // route.name 'new' |
 - Cancel / any navigation away: `canLeave()` = `!isDirty(initial, draft)` or `confirmDialog({ message: 'Discard changes?', confirmLabel: 'Discard', cancelLabel: 'Keep editing' })`. Cancel target: edit → view of that recipe; add → list.
 - Re-render strategy: re-render the affected section (ingredients / steps / tags) on row operations; keep focus on the row's input after add/move.
 
-Test ids: `title-input`, `servings-input`, `ingredient-row`, `ingredient-amount-input`, `ingredient-unit-input`, `ingredient-name-input`, `remove-ingredient`, `add-ingredient`, `step-row`, `step-input`, `step-up`, `step-down`, `remove-step`, `add-step`, `tag-input`, `tag-chip`, `remove-tag`, `save-recipe`, `cancel-edit`, `error-title`, `error-servings`, `error-ingredients`, `error-steps`, `error-ingredient-row`.
+**As built (M2, T-13; add form only, edit is T-18):**
+- Layout: `<main class="page" data-testid="recipe-form">` → `<h1>Add recipe</h1>` → `<form class="recipe-form" novalidate>` holding `div.top` (Title, Servings), `div.cols` (ingredients section, steps section), tags field, `div.footer` (Cancel, Save). Submitting the form (Save button or Enter in a text field) runs save.
+- Labels: Title and Servings use `<label for>` bound to input ids `error-title-field` / `error-servings-field`; Tags uses `<label for="tag-input-field">`. Ingredient cells have `aria-label` Amount / Unit / Name; step inputs `aria-label="Step N"`; symbol buttons have `aria-label` ("Remove ingredient", "Move step up", "Move step down", "Remove step", "Remove tag <tag>"). Servings input has `inputmode="numeric"`.
+- Inline errors (one `<p class="err">` each; the invalid input gets `aria-invalid="true"` + `aria-describedby` = the error's id):
+
+  | Error | `data-testid` | element `id` | input marked invalid |
+  |---|---|---|---|
+  | title | `error-title` | `error-title` | title input |
+  | servings | `error-servings` | `error-servings` | servings input |
+  | no ingredients | `error-ingredients` | `error-ingredients-msg` | name input of row 0 |
+  | ingredient row i without a name | `error-ingredient-row` | `error-ingredient-row-<i>` | name input of row i |
+  | no steps | `error-steps` | `error-steps-msg` | step input 0 |
+
+  After rendering errors, focus moves to the first `[aria-invalid="true"]` element. The first row operation in a section drops that section's errors (indexes would be stale); the next Save re-validates everything.
+- Row operations and focus: add ingredient → focus the new row's amount input; add step → the new step input; ↑/↓ → the moved step's input at its new position; remove ingredient / remove step → the section's add button. `step-up` is **disabled on the first step** and `step-down` **on the last** (a single step has both disabled).
+- Tags: Enter (ignored while an IME is composing) commits the box text; typing a comma commits every part before the last comma and keeps the rest in the box. Chip `✕` (`button.chip-remove`, ≥ 40×40 px) removes the tag and focuses the tag input. Text left in the box is added on Save (`currentDraft`).
+- Save: re-entry blocked by `state.saving`; Save is `disabled` while the `create` promise is pending. Success → `saved = true` (turns the dirty guard off), clears a banner the form showed earlier, `navigate({ name: 'view', id }, { replace: true })`. Failure messages: §5.5.
+- Cancel → `navigate({ name: 'list' })`, which goes through `canLeave()` (discard dialog when dirty). `beforeunload` is registered on the global `window` while mounted and removed on `unmount` (deferred minor m-8: should come through `ScreenContext`).
+
+Test ids: `title-input`, `servings-input`, `ingredient-row`, `ingredient-amount-input`, `ingredient-unit-input`, `ingredient-name-input`, `remove-ingredient`, `add-ingredient`, `step-row`, `step-input`, `step-up`, `step-down`, `remove-step`, `add-step`, `tag-input`, `tag-chip`, `remove-tag`, `save-recipe`, `cancel-edit`, `error-title`, `error-servings`, `error-ingredients`, `error-steps`, `error-ingredient-row`. As built (M2): also `recipe-form` (the form screen's `<main>`), `ingredients-panel` / `steps-panel` (the two form sections; the same ids as the view's panels, §4.4, never on screen together).
 
 ### §5.5 Errors and edge cases
-- Save rejected by the store (`StoreReadOnlyError`, `PersistenceWriteError`, `RecipeNotFoundError` when another tab deleted the recipe) → banner with the reason, form stays dirty and open.
+- Save rejected by the store (`PersistenceWriteError`, `RecipeNotFoundError` when another tab deleted the recipe) → banner with the reason (texts in §2.5), form stays dirty and open. As built (M2): `StoreReadOnlyError` shows **no** extra form banner, because the status banner (§2.5) already says why; the form stays dirty and open.
 - Double-click on Save: button disabled while the save promise is pending.
-- (CR-1) The status can leave `ready` while the form is open (cross-tab reload, §9.5); the edit form can also be reached by typing the hash while read-only (its data comes from the kept snapshot). The form stays editable so typed text is not lost, but Save rejects with `StoreReadOnlyError` → status banner text from §2.5, form stays dirty and open. If a later reload returns `ready`, Save works again against the fresh data (`RecipeNotFoundError` if the recipe is gone there).
-- (M1 sync, A-03) A `ValidationError` from the store with an empty `fieldErrors` (`{}`: non-object input or bad tags) has no field to mark → show a generic "Could not save" banner and keep the form open; a non-empty `fieldErrors` is rendered inline like `validateDraft` errors.
+- **(D-11, replaces the CR-1 "Save rejects" rule) Save follows `store.status` live.** The status can leave `ready` while the form is open (cross-tab reload, §9.5); the edit form can also be reached by typing the hash while read-only (its data comes from the kept snapshot). The form stays **editable** so typed text is not lost, but the `save-recipe` button is `disabled` whenever `store.status !== 'ready'`, exactly like the other write controls (§2.5). The form screen subscribes to the store (`store.subscribe`, unsubscribed in `unmount`) and on every notification sets `saveButton.disabled = state.saving || store.status !== 'ready'`; the `finally` after a save uses the same expression instead of re-enabling unconditionally. Save is set the same way at mount. When a later reload returns `ready`, Save is enabled again and works against the fresh data (`RecipeNotFoundError` if the recipe is gone there). Applies to add (`#/new`) and edit (`#/recipe/<id>/edit`) alike: one shared form screen.
+  - The store's `StoreReadOnlyError` guard (§9.4) stays as the safety net for the gap between a status change and a click; the form handles it as above (no extra banner, form stays open). The form no longer relies on it as the normal path.
+  - Submitting with Enter while Save is disabled must not save either: `save()` returns early when `store.status !== 'ready'` (same check).
+  - **Not built yet — to be implemented in T-18.** As built (M2), the add form's Save is enabled regardless of `store.status` (disabled only while saving), and a read-only store answers with `StoreReadOnlyError`, which the form absorbs silently as described in the first bullet.
+- (M1 sync, A-03) A `ValidationError` from the store with an empty `fieldErrors` (`{}`: non-object input or bad tags) has no field to mark → show a generic "Could not save" banner and keep the form open; a non-empty `fieldErrors` is rendered inline like `validateDraft` errors. As built (M2): the generic text is "Could not save. Your last change was not stored." (same text for any other unexpected error).
 
 ---
 
@@ -745,6 +824,8 @@ export function sortByTitle(recipes) {}
 ```
 Matching: `title.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())`; empty query matches all; `tag` exact match against `recipe.tags`.
 
+As built (M2, T-09): `web/js/core/search/search.js` matches these signatures (inputs typed `readonly Recipe[]`; `RecipeFilter` typedef repeated here, same shape as §2.1). Details: the `sortByTitle` tie-break compares `createdAt` and then `id` with plain `<` (ISO strings sort correctly as text, A-11); `filterRecipes` checks favourites, then tag, then title; `listTags` sorts with the default `Array.prototype.sort()` (UTF-16 code-unit order, not `localeCompare`). Stored tags are lower-case, so this equals A–Z for ASCII tags; accented tags may sort after `z` (deferred minor). Not yet used by the UI except `sortByTitle` (§3, T-14 wires the rest).
+
 ### §8.2 Contract examples (unit tests, SPEC §5 F-2 data)
 | Filter | Result |
 |---|---|
@@ -837,6 +918,7 @@ As built (M1), in detail:
 - Returned recipes are deep-frozen; UI never mutates them.
 - As built (M1): loaded recipes are `structuredClone`d before deep-freezing, so objects owned by the persistence layer are never frozen (A-05).
 - As built (M1): `persistence.load()` **rejecting** (instead of returning a `LoadResult`) maps to status `unavailable` with reason `load failed: <message>`; the store never stays stuck in `loading`. `statusReason` is the `LoadResult.reason` (or `null` for ok/empty). A reload that returns `ok`/`empty` after `unreadable` makes the store `ready` again.
+- As built (M2, T-05b): **done.** `#load()` in `web/js/store/recipe-store.js` sets `#reason` from the result (`null` for ok/empty), then: `ok` → `ready` + `structuredClone`d, deep-frozen recipes; `empty` → `ready` + frozen `[]`; otherwise only `#status = result.kind` — `#recipes` is left as it was (the last good snapshot; first load still has the initial frozen `[]`). `reload()` runs `#load()` then `#notify()` once, on the write chain. Tests: `tests/unit/store/recipe-store-reload-failure.test.js`. The text below is the original CR-1 instruction, kept for reference.
 - (CR-1) Code change needed: as built (M1), `#load()` in `web/js/store/recipe-store.js` sets `#recipes = []` in its non-ready branch. CR-1 removes that assignment, so a non-ready result leaves `#recipes` as it is. The initial `#recipes = Object.freeze([])` gives the "first load → `[]`" rows of the table above. Required unit tests (in `tests/unit/store/`), one per table row: first-load unreadable/unavailable/rejecting → `[]`; good load then reload unreadable → same frozen recipes, `get(id)` works, status `unreadable`, reason set, one notification, `create`/`update`/`remove`/`toggleFavourite` reject `StoreReadOnlyError` with no `save` call; then reload `ok` → `ready`, fresh data, reason `null`, notified; reload `empty` → `ready`, `[]`; a successful write followed by a failing reload keeps the written data.
 - As built (M1, A-07): listener isolation. `#notify()` calls each subscriber in a `try`; a throwing listener does not stop the others and never fails the write or reload that triggered it (the data is already saved). The error is passed to `globalThis.reportError` (browser: fires the window `error` event, which §2's `app.js` turns into the generic-error banner); where `reportError` is missing (Node) it is rethrown on a fresh microtask.
 
@@ -935,6 +1017,8 @@ DOM-bound files excluded from unit coverage are covered by e2e (§11.6) or, with
 
 As built (M1): `package.json` also has `"test:nocov": "node --test \"tests/unit/**/*.test.js\""` (fast run without coverage thresholds) and `"prepare": "git config core.hooksPath .githooks || true"` (installs the repo's pre-commit hook on `npm ci`; the hook skips checks when `node_modules` is missing). `web/js/ui/screens/not-found-screen.js` falls under the existing `screens/**` coverage exclusion.
 
+As built (M2): scripts unchanged. The DOM-bound form modules `web/js/ui/form-{widgets,ingredients,steps,tags}.js` are **not** in the exclusion list; they stay out of the unit coverage numbers only because no unit test imports them (Node reports loaded files only). They are covered by `tests/e2e/add.spec.js`. If a unit test ever imports one, add `--test-coverage-exclude="web/js/ui/form-{widgets,ingredients,steps,tags}.js"` (pure `form-model.js` stays included).
+
 ### §11.2 ESLint (`eslint.config.js`, flat config)
 - `@eslint/js` recommended for all `**/*.js`; `ignores`: `node_modules`, `.results`, `docs`, `test-results`, `playwright-report`.
 - Globals: `web/js/**` → `globals.browser`; **`web/js/core/**` → no browser globals** (ES2023 only, so `window`/`document`/`localStorage` fail `no-undef`); `server/**`, `tests/**`, config files → `globals.node`.
@@ -992,6 +1076,12 @@ echo "check.sh: all checks passed"
 - Required unit coverage: every row of §7.2, §8.2, §6.2; codec (empty, ok, bad JSON, unknown version, invalid recipe); store write rollback; launcher outcomes and messages of §1.2; static handler 200/404/405/403 + traversal.
 - E2E (only if P1 approved) `tests/e2e/playwright.config.js`: `use: { channel: 'msedge', baseURL: 'http://127.0.0.1:47399' }`, `webServer: { command: 'node server/main.js', env: { RECIPE_BOX_PORT: '47399', RECIPE_BOX_NO_OPEN: '1' }, url: 'http://127.0.0.1:47399/__recipe-box/health' }`, projects `desktop` (1280×800) and `narrow` (390×844). Specs per flow: `list.spec.js` (F-2), `add.spec.js` (F-1), `view-scale.spec.js` (F-3), `favourite.spec.js` (F-4), `edit.spec.js` (F-5), `delete.spec.js` (F-6), `persistence.spec.js` (reload keeps data; corrupt value → banner, value untouched). Seed data with `page.addInitScript` writing `recipe-box:collection`. Port 47399 ≠ 47321, so e2e never touches the owner's recipes.
 - As built (M1): P1 is in use. `playwright.config.js` matches the above (plus `testDir: '.'` and `webServer.cwd` = repo root). Seeding lives in `tests/e2e/helpers/seed.js`. Specs so far: `list.spec.js` (empty state) and `persistence.spec.js` (corrupt value → banner, Add disabled, value byte-identical); the other specs arrive with their screens. Extra unit suites beyond the mirror layout: `tests/unit/server/main-process.test.js` (spawns `server/main.js`), `tests/unit/persistence/{no-write-on-load,form-path-roundtrip}.test.js`, `tests/unit/store/recipe-store-{writes,races,listeners}.test.js`, `tests/unit/core/scaling/scaling.edge.test.js`, `tests/unit/ui/index-html.test.js`.
+- As built (M2, D-08): browser selection in `tests/e2e/playwright.config.js`, evaluated at config load:
+  1. **Edge** (`channel: 'msedge'`) when `msedge` exists at one of the known install paths (Windows x86/x64 Program Files, macOS app bundle, `/opt/microsoft/msedge/msedge`);
+  2. else, when `PLAYWRIGHT_BROWSERS_PATH` is set and `<that path>/chromium` exists, `launchOptions.executablePath` = that path (cloud sessions: the pre-installed Chromium under `/opt/pw-browsers`);
+  3. else Playwright's default browser settings.
+  Same Chromium engine in every case; no browser is downloaded. `scripts/screenshot.mjs` still hard-codes `msedge` (deferred minor). The rest of the config is unchanged (port 47399, projects `desktop` 1280×800 and `narrow` 390×844).
+- As built (M2): e2e specs now `list.spec.js` (empty state, A–Z rows, count, read-only star), `add.spec.js` (F-1 add flow, validation errors, discard confirm, tag chips, ingredient/step row operations), `view-scale.spec.js` (the view part of F-3 only: header, serves, ingredients/steps panels, tags, not-found, Edit disabled while read-only; scaling assertions arrive with T-17), `persistence.spec.js`. New helper `tests/e2e/helpers/recipes.js` (`seedPancakes(page)`, `PANCAKES_ID`; built on `seedRaw` from `seed.js`, which seeds once per tab via a `sessionStorage` marker so reloads do not re-seed). New unit suites: `tests/unit/core/search/search.test.js` (§8.2), `tests/unit/ui/form-model.test.js` (§5.1), `tests/unit/store/recipe-store-reload-failure.test.js` (§9.5 table).
 
 ---
 
@@ -1016,6 +1106,20 @@ echo "check.sh: all checks passed"
 | CR-1 | §9.1, §9.5 | One load-result rule for `init()`/`reload()`: `unreadable`/`unavailable` never change the in-memory snapshot (first load → `[]`; failed reload after a good load → last loaded recipes kept, read-only); `ok`/`empty` → `ready` with fresh data. Per-path table, write guard on fresh data only, A-09 at store + adapter level, notify once per reload. Code fix: drop `#recipes = []` from the non-ready branch of `#load()` | §9.5 contradicted §3.5/§4.5; owner chose to keep the last recipes visible | D-09 |
 | CR-1 | §2.5, §3.1, §3.5, §4.5, §5.5 | Read-only UI rules made reachable and precise: start-up read-only vs read-only after a good load; write controls recomputed on every store notification; view keeps screen-local servings across re-renders; form stays editable but Save rejects | follows from the §9.5 change | D-09 |
 | CR-1 | §10.5 | Note only: the adapter is unchanged | — | D-09 |
+| M2 | §9.5 | CR-1 store change is built: a failed reload keeps the last snapshot (status/reason change, `#recipes` untouched, one notify); text checked against `recipe-store.js` | CR-1 implementation | T-05b, D-09 |
+| M2 | §8.1 | Search built as specified; tie-break uses plain `<` on `createdAt` then `id`; `listTags` uses default code-unit `sort()` | describe code as built | T-09, A-11 |
+| M2 | §3.1, §3.4, §1.4 | List renders `sortByTitle(store.list())`; read-only star `<span data-testid="recipe-row-star">` until T-15 (then replaced by `favourite-toggle`); filter panel still T-14 | walking-skeleton list grown A–Z | T-11, A-13 |
+| M2 | §4.1, §4.4 | View built as read-only display: view-bar (back link + Edit), header (title, "Serves N", tags), ingredients/steps panels, not-found state; new test ids `recipe-serves`, `recipe-tag`, `ingredients-panel`, `steps-panel`, `not-found-back`; re-renders on every store notification. Servings control, star, Delete still T-17/T-15/T-19 | describe code as built | T-12 |
+| M2 | §4.5 | Disabled Edit is a disabled `<button>` with the same `edit-recipe` test id; an `<a href>` only while `ready` | an `<a>` without `href` is not a real disabled control | A-14 |
+| M2 | §0.2, §5, §5.1 | Form DOM split into `form-widgets.js`, `form-ingredients.js`, `form-steps.js`, `form-tags.js` + `screens/form-screen.js`; signatures recorded | file/function size limits | T-13 |
+| M2 | §5.4 | Add form as built: `<label for>` binding, aria-labels, error ids `error-<field>` (+ `-msg` / `-row-<i>`) linked by `aria-describedby`, focus rules, ↑ disabled on first / ↓ on last step, chip remove ≥ 40 px, comma/Enter tag rules, new test id `recipe-form` | accessibility + describe code as built | T-13 |
+| M2 | §5.1 | `isDirty` = trimmed JSON fingerprint; no-op draft operations still return a fresh draft | describe code as built | T-10, A-12 |
+| M2 | §5.5, §2.5 | `StoreReadOnlyError` on Save shows no extra banner (status banner covers it); generic text "Could not save. Your last change was not stored."; `PersistenceWriteError` banner uses `err.message` (gives a doubled "Could not save" text, deferred minor) | describe code as built | T-13 |
+| M2 | §5.5 | **D-11:** Save is disabled live while `store.status !== 'ready'` (subscribe, mount, after save, Enter-submit guard), add and edit alike; replaces the CR-1 "Save rejects" rule. **Not built yet: to be implemented in T-18** (as built, Save is enabled in read-only and the store's `StoreReadOnlyError` is absorbed) | §5.5 contradicted §2.5 | D-11 |
+| M2 | §2.1, §2.5 | `app.js` screens map now has `list`, `view`, `new`; `edit` route still "Page not found" until T-18 | M2 scope | A-10 |
+| M2 | §0.1, §11.6 | e2e browser: Edge if installed, else `$PLAYWRIGHT_BROWSERS_PATH/chromium` (cloud: `/opt/pw-browsers`), else Playwright default | e2e must run in cloud sessions without Edge | D-08 |
+| M2 | §11.1, §11.6 | New specs/suites (`add`, `view-scale` view part, list A–Z; `search`, `form-model`, `recipe-store-reload-failure`); `helpers/recipes.js`; note on form modules and coverage. No script or package changes | as-built record | T-05b, T-09..T-13 |
+| M2 | CONVENTIONS §1 | New "Accessible form fields" rule (label/for, aria-label, error id + aria-describedby, ≥ 40 px, disabled button over href-less link) | the form made the pattern concrete | T-13, A-14 |
 
 ### Known deferred minors (M1 tidy-up list, owner-approved to defer)
 - T-02: `browser.js` has no URL guard of its own (relies on the URL coming from config).
@@ -1027,3 +1131,17 @@ echo "check.sh: all checks passed"
 - T-08: the list screen's Add buttons are enabled/disabled once at mount, so they go stale after a cross-tab status change. (CR-1: no longer deferrable; §3.5 now requires recomputing them on every store notification.)
 - T-08: errors thrown before `createApp(...).start()` miss the banner (the global listeners are installed in `start()`).
 - T-08: the status-sync `banner.clear()` can wipe a generic error banner.
+
+### Known deferred minors (M2 tidy-up list)
+- T-13 m-8: the form registers `beforeunload` on the global `window` instead of one passed through `ScreenContext` (§5.4).
+- T-13 n-1: `tests/e2e/add.spec.js` test "step up on the first row is disabled and focus stays put" checks that focus moves; the title is wrong.
+- T-13 m-4, m-9: fixes have no automated test.
+- M2 sync: `PersistenceWriteError` banner text doubles "Could not save" because the form uses `err.message` and the adapter sets none; use a reason→text map (`quota` → "browser storage is full", `unavailable` → "browser storage is not available", `io` → "write failed") in the form (§2.5, §5.5). Fold into T-18 (same file).
+- T-09: `listTags` uses default `sort()` (code-unit order), not `localeCompare` (§8.1).
+- T-10: redundant tag trim in `form-model.js` fingerprint; duplicated immutability tests.
+- T-11: `list.spec.js` asserts the row `href` on one row only.
+- T-12 n1: the e2e helper `tests/e2e/helpers/recipes.js` duplicates the Pancakes fixture of `tests/helpers/recipes.fixture.js`; T-12 m3: hard-coded Edge paths in `playwright.config.js`.
+- D-08 not applied to `scripts/screenshot.mjs` (still `channel: 'msedge'` only).
+- `.githooks/pre-commit` is not executable in fresh clones.
+- T-05b: two test-strength notes on the reload-failure suite.
+- Still open from M1 and owned by T-15: list Add buttons / stars `disabled` computed once at mount (§3.5).
