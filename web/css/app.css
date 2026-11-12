@@ -118,3 +118,32 @@ dialog {
     padding: 24px;
   }
 }
+
+/* ---- list screen (T-11) ---- */
+.list-layout {
+  display: block;
+}
+.list-layout .results {
+  flex: 1;
+  min-width: 0;
+}
+.recipe-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.recipe-main {
+  min-width: 0;
+}
+.recipe-row .star {
+  font-size: 22px;
+  padding: 4px 8px;
+}
+@media (min-width: 800px) {
+  .list-layout {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+  }
+}

@@ -1,3 +1,4 @@
+import { sortByTitle } from '../../core/search/search.js';
 import { h, clear } from '../dom.js';
 
 /**
@@ -8,13 +9,23 @@ function recipeRow(recipe) {
   return h(
     'li',
     { class: 'recipe-row', 'data-testid': 'recipe-row', 'data-recipe-id': recipe.id },
-    h('a', {
-      class: 'recipe-title',
-      href: `#/recipe/${encodeURIComponent(recipe.id)}`,
-      'data-testid': 'recipe-row-title',
-      text: recipe.title,
+    h(
+      'div',
+      { class: 'recipe-main' },
+      h('a', {
+        class: 'recipe-title',
+        href: `#/recipe/${encodeURIComponent(recipe.id)}`,
+        'data-testid': 'recipe-row-title',
+        text: recipe.title,
+      }),
+      h('div', {}, ...recipe.tags.map((tag) => h('span', { class: 'tag', text: tag }))),
+    ),
+    h('span', {
+      class: 'star',
+      'data-testid': 'recipe-row-star',
+      title: recipe.favourite ? 'Favourite' : 'Not favourite',
+      text: recipe.favourite ? '★' : '☆',
     }),
-    h('div', {}, ...recipe.tags.map((tag) => h('span', { class: 'tag', text: tag }))),
   );
 }
 
@@ -79,13 +90,16 @@ export function mountListScreen(container, { store, router }) {
 
   function renderResults() {
     clear(results);
-    const recipes = store.list();
+    const recipes = sortByTitle(store.list());
     results.append(
       ...(recipes.length === 0 ? [emptyState(router, disabled)] : recipeList(recipes)),
     );
   }
 
   renderResults();
-  container.append(h('main', { class: 'page' }, listHeader(router, disabled), results));
+  // Filter controls (later task) go in a sibling of `results`, so re-rendering results
+  // never replaces the controls or steals their focus.
+  const layout = h('div', { class: 'list-layout' }, results);
+  container.append(h('main', { class: 'page' }, listHeader(router, disabled), layout));
   return { unmount: store.subscribe(renderResults) };
 }
