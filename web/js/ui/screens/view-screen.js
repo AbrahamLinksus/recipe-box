@@ -1,4 +1,5 @@
 import { h, clear } from '../dom.js';
+import { favouriteToggle, renderKeepingToggleFocus } from '../favourite-toggle.js';
 import { formatIngredientLine } from '../../core/scaling/scaling.js';
 
 /**
@@ -42,13 +43,19 @@ function recipeBody(recipe) {
 
 /**
  * @param {import('../../core/recipe/types.js').Recipe} recipe
+ * @param {HTMLElement} star
  * @returns {HTMLElement}
  */
-function recipeHeader(recipe) {
+function recipeHeader(recipe, star) {
   return h(
     'div',
     { class: 'view-head' },
-    h('h1', { 'data-testid': 'recipe-title', text: recipe.title }),
+    h(
+      'div',
+      { class: 'title-row' },
+      h('h1', { 'data-testid': 'recipe-title', text: recipe.title }),
+      star,
+    ),
     h('p', { class: 'serves', 'data-testid': 'recipe-serves', text: `Serves ${recipe.servings}` }),
     h(
       'div',
@@ -103,7 +110,7 @@ function notFound() {
 }
 
 /** @type {import('../router.js').MountScreen} */
-export function mountViewScreen(container, { store }, route) {
+export function mountViewScreen(container, { store, banner }, route) {
   const id = route.name === 'view' ? route.id : '';
   const content = h('div', { class: 'view-content' });
 
@@ -112,12 +119,17 @@ export function mountViewScreen(container, { store }, route) {
     const recipe = store.get(id);
     content.append(
       ...(recipe
-        ? [topBar(id, store.status === 'ready'), recipeHeader(recipe), recipeBody(recipe)]
+        ? [
+            topBar(id, store.status === 'ready'),
+            recipeHeader(recipe, favouriteToggle(recipe, store, banner)),
+            recipeBody(recipe),
+          ]
         : [notFound()]),
     );
   }
 
   render();
+  const onChange = () => renderKeepingToggleFocus(content, render);
   container.append(h('main', { class: 'page' }, content));
-  return { unmount: store.subscribe(render) };
+  return { unmount: store.subscribe(onChange) };
 }

@@ -80,7 +80,7 @@ test('seeded list is A-Z with tags, stars, count and links', async ({ page }) =>
   ]);
   await expect(rows.nth(0)).toContainText('baking');
   await expect(rows.nth(0)).toContainText('breakfast');
-  await expect(page.getByTestId('recipe-row-star')).toHaveText(['★', '☆', '☆']);
+  await expect(page.getByTestId('favourite-toggle')).toHaveText(['★', '☆', '☆']);
   await expect(page.getByTestId('recipe-row-title').nth(1)).toHaveAttribute(
     'href',
     '#/recipe/r-pancakes',
@@ -117,7 +117,7 @@ test('rows re-render on store change; results region is separate from header', a
   );
   await expect(page.getByTestId('recipe-count')).toHaveText('2 recipes');
   await expect(page.getByTestId('recipe-row-title')).toHaveText(['Pancakes', 'Zucchini Bake']);
-  await expect(page.getByTestId('recipe-row-star')).toHaveText(['☆', '★']);
+  await expect(page.getByTestId('favourite-toggle')).toHaveText(['☆', '★']);
   await expect(add).toBeFocused();
   const separate = await page.evaluate(() => {
     const doc = globalThis.document;

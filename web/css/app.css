@@ -187,9 +187,28 @@ dialog {
 .recipe-main {
   min-width: 0;
 }
-.recipe-row .star {
-  font-size: 22px;
-  padding: 4px 8px;
+button.star {
+  min-width: 44px;
+  min-height: 44px;
+  font-size: 24px;
+  line-height: 1;
+  background: none;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  color: #8a5a00;
+  cursor: pointer;
+}
+button.star:disabled {
+  color: #888;
+  cursor: not-allowed;
+}
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.title-row h1 {
+  margin: 0;
 }
 @media (min-width: 800px) {
   .list-layout {
