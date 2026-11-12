@@ -311,7 +311,7 @@ Notes for every task
 - Owner: frontend-coder
 - Depends on: T-19
 - Context: DECISIONS D-13 · LLD §2.5, §4.5 · files: web/js/ui/screens/view-screen.js, tests/e2e/delete.spec.js
-- Status: Backlog
+- Status: Dropped (owner, 2026-11-12: app works; current behaviour stays)
 - Acceptance criteria:
   - [ ] With the delete dialog open on Tomato Soup, a second page removes Tomato Soup; confirming Delete shows no "Could not save" banner and lands on the list (Banana Bread, Pancakes) via replace; Back does not reopen it
   - [ ] Other rejected removes (read-only store, write failure) keep the existing banner behaviour

@@ -16,7 +16,7 @@
 | D-10 | 2026-11-12 | CR-1 · keep last recipes visible on unreadable reload | LLD §9.5 load-path table (+§2.5/§3.5/§4.5/§5.5); new T-05b in M2; T-15/T-17/T-18/T-19 criteria updated | Cancel CR | CR-1 |
 | D-11 | 2026-11-12 | Save on the recipe form while the store is read-only (LLD §2.5 vs §5.5) | Disable Save live, following store.status (§2.5 / CR-1); architect aligns §5.5 at M2 as-built sync; add form gets it in T-15/T-18 | Keep Save enabled, store rejects with StoreReadOnlyError (§5.5) | T-13 |
 | D-12 | 2026-11-12 | Pre-existing failing e2e test (persistence.spec.js cross-tab list recover: search filter left active) | Fix in T-20 (full e2e pass) | Fix now / fold into T-19 | T-17, T-18 |
-| D-13 | 2026-11-12 | RecipeNotFoundError from remove after confirm (another tab deleted the recipe first) | Treat as already deleted: no banner, navigate to the list with replace; new T-21; LLD §2.5/§4.5 updated at handover sync | Keep generic "Could not save" / new "Could not delete" text | M5-docs (T-19 m-5) |
+| D-13 | 2026-11-12 | RecipeNotFoundError from remove after confirm (another tab deleted the recipe first) | Owner first chose "treat as already deleted" (T-21), then dropped T-21: keep generic "Could not save" as documented in LLD §2.5; stays on the M5 tidy-up list | Keep generic "Could not save" / new "Could not delete" text | M5-docs (T-19 m-5) |
 
 ## Tier 2 — decided by agents (overrule any time)
 
