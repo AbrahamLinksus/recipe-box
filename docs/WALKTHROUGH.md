@@ -85,7 +85,9 @@ Trace: **the owner adds a recipe and clicks Save** (F-1). The same path serves e
   - one unit file: `node --test tests/unit/store/recipe-store.test.js`;
   - one unit test by name: `node --test --test-name-pattern="init ok" tests/unit/store/recipe-store.test.js`;
   - one e2e file: `npm run test:e2e -- delete.spec.js`; one project only: add `--project=narrow`.
-- CI (`.github/workflows/ci.yml`, added at handover) runs `bash scripts/check.sh` on every push and pull request.
+- CI (`.github/workflows/ci.yml`, added at handover) runs two jobs on every push and pull request: `check`
+  (`npm ci`, then `bash scripts/check.sh`) and `e2e` (`npm ci`, `npx playwright install --with-deps chromium`,
+  then `bash scripts/check.sh --e2e`).
 
 ## 6. Talking points
 **The 3 most interesting design decisions**

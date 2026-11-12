@@ -300,7 +300,7 @@ erDiagram
 
 | Step | npm script | Enforces |
 |---|---|---|
-| Lint | `npm run lint` (`eslint.config.js`) | Complexity ≤ 10, function ≤ 40 lines, file ≤ 300 lines, ≤ 5 params, depth ≤ 4, no `console` outside `server/log.js` / `web/js/ui/app.js`, no `innerHTML`/`eval`, no storage globals outside `web/js/main.js`, no browser globals in `web/js/core/` |
+| Lint | `npm run lint` (`eslint.config.js`) | Complexity ≤ 10, function ≤ 40 lines, file ≤ 300 lines, ≤ 5 params, depth ≤ 4, no `console` outside `server/log.js` / `web/js/ui/app.js` / `scripts/**/*.mjs`, no `innerHTML`/`outerHTML`/`eval`, no storage globals (`localStorage`, `sessionStorage`, `indexedDB`) in `web/js/{ui,store,persistence}/`, no browser globals in `web/js/core/` |
 | Format | `npm run format:check` | Prettier (`.prettierrc.json`) |
 | Types | `npm run typecheck` | `tsc` strict over `tsconfig.web.json` and `tsconfig.node.json` |
 | Layers | `npm run deps` | `.dependency-cruiser.cjs`: no cycles, no runtime npm imports, no Node built-ins in `web/`, `server/` ↔ `web/` separate, `core` pure, store not importing ui/persistence, persistence only via `store/ports.js` + `store/errors.js`, ui never imports persistence |
@@ -308,9 +308,13 @@ erDiagram
 | E2E (optional) | `bash scripts/check.sh --e2e` → `npm run test:e2e` | 8 Playwright specs, `desktop` 1280×800 and `narrow` 390×844 projects, app on port 47399 |
 
 - `CHECK_NO_COVERAGE=1 bash scripts/check.sh` skips only the coverage thresholds.
-- `.githooks/pre-commit` (enabled by the `prepare` script, `git config core.hooksPath .githooks`) runs the fast
-  checks (lint, format, typecheck, deps; no tests) before each commit, and skips them when `node_modules` is missing.
-- CI: `.github/workflows/ci.yml` (added at handover) runs `bash scripts/check.sh` on every push and pull request.
+- `.githooks/pre-commit` (hooked up by the `prepare` script, `git config core.hooksPath .githooks`) runs the fast
+  checks (lint, format, typecheck, deps; no tests) before each commit once made executable
+  (`chmod +x .githooks/pre-commit`; it is not executable in a fresh clone, see §9), and skips them when
+  `node_modules` is missing.
+- CI: `.github/workflows/ci.yml` (added at handover) runs two jobs on every push and pull request: `check`
+  (`npm ci`, then `bash scripts/check.sh`) and `e2e` (`npm ci`, `npx playwright install --with-deps chromium`,
+  then `bash scripts/check.sh --e2e`).
 - Current coverage: the thresholds above are enforced on every run; this document does not quote a measured
   percentage (read the `npm test` summary). DOM-heavy modules that no unit test imports (`list-filters.js`,
   `favourite-toggle.js`, `servings-control.js`, `form-*.js` except `form-model.js`) are outside the numbers and

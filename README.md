@@ -205,7 +205,7 @@ The browser tests start their own copy of the app on port 47399 with a temporary
 `.github/workflows/ci.yml` runs on every push and every pull request:
 
 - **check** job: `npm ci`, then `bash scripts/check.sh`.
-- **e2e** job: `npm ci`, then `npx playwright install --with-deps chromium`, then `bash scripts/check.sh --e2e`. On the CI runner the browser tests use Playwright's Chromium, because Edge is not installed there.
+- **e2e** job: `npm ci`, then `npx playwright install --with-deps chromium`, then `bash scripts/check.sh --e2e`. The browser tests use Edge if it is present, otherwise Playwright's Chromium (D-08).
 
 ## Project structure
 
