@@ -12,6 +12,7 @@
 | D-06 | 2026-11-11 | 500 errors in the static server | Log them: optional `log` in createRequestHandler opts (LLD §1.1, synced at M1 as-built); main.js passes createLogger() | Keep §1.1, silent 500 | T-01 |
 | D-07 | 2026-11-11 | Leftover review minors | Carry T-03 minors into T-05 and T-04 m1/m2 into T-05 (owner: "fix in T-05"); defer other minors to the M1 tidy-up list | Fix in each task before approval | T-03, T-04 |
 | D-08 | 2026-11-11 | Browser for e2e (amends D-03) | Edge (channel msedge) when installed, else the Playwright Chromium already on the machine; same Chromium engine. Implemented in T-12 | Always Chromium; skip e2e in the cloud | T-12 |
+| D-09 | 2026-11-12 | Unreadable data after a cross-tab reload (LLD §9.5 vs §3.5/§4.5) | Keep the last loaded recipes visible, read-only, with banner → CR-1 | Show nothing and amend §3.5/§4.5; decide later | T-12 |
 
 ## Tier 2 — decided by agents (overrule any time)
 
@@ -30,3 +31,4 @@
 | A-11 | 2026-11-12 | Tie-break compare in sortByTitle | plain string < on ISO createdAt then id | frontend-coder | T-09 |
 | A-12 | 2026-11-12 | isDirty | trimmed JSON fingerprint of both drafts; no-op ops return a fresh draft sharing untouched arrays | frontend-coder | T-10 |
 | A-13 | 2026-11-12 | List star before T-15 | non-interactive span (★/☆ from stored state); becomes the labelled toggle button in T-15 | frontend-coder | T-11 |
+| A-14 | 2026-11-12 | Disabled Edit on the view | disabled <button> with the same testid (not an href-less link) | frontend-coder | T-12 |

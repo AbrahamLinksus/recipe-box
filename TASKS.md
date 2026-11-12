@@ -169,13 +169,13 @@ Notes for every task
 - Owner: frontend-coder
 - Depends on: T-08
 - Context: SPEC US-05, §4 F-3 · LLD §4.1, §4.4, §4.5 · files: web/js/ui/screens/view-screen.js, web/css/app.css, tests/e2e/view-scale.spec.js, tests/e2e/helpers/*, docs/wireframes/recipe-view.html
-- Status: Backlog
+- Status: Done
 - Acceptance criteria:
-  - [ ] Opening seeded "Pancakes" shows title (`recipe-title`), "Serves 4", 4 `ingredient-line`s as typed ("200 g flour", "2 eggs", "300 ml milk", "a pinch of salt"), 4 numbered `step-line`s in order and tags `breakfast` `sweet` (`recipe-tags`)
-  - [ ] "Edit" (`edit-recipe`) links to `#/recipe/<id>/edit`; a back link (`back-to-list`) returns to the list; unknown id shows "Recipe not found" + "All recipes" (`not-found`)
-  - [ ] Two-column ingredients/steps at ≥ 800 px, single column at 390 px without horizontal overflow
-  - [ ] `tests/e2e/view-scale.spec.js` (open-at-base case) passes in both projects; screenshots in `.results/T-12/`
-- Result: —
+  - [x] Opening seeded "Pancakes" shows title (`recipe-title`), "Serves 4", 4 `ingredient-line`s as typed ("200 g flour", "2 eggs", "300 ml milk", "a pinch of salt"), 4 numbered `step-line`s in order and tags `breakfast` `sweet` (`recipe-tags`)
+  - [x] "Edit" (`edit-recipe`) links to `#/recipe/<id>/edit`; a back link (`back-to-list`) returns to the list; unknown id shows "Recipe not found" + "All recipes" (`not-found`)
+  - [x] Two-column ingredients/steps at ≥ 800 px, single column at 390 px without horizontal overflow
+  - [x] `tests/e2e/view-scale.spec.js` (open-at-base case) passes in both projects; screenshots in `.results/T-12/`
+- Result: ✅ 4/4 goals + D-08 · 1 owner rework (m1 m2 m4 m5 m6) · 30 e2e pass · open: n1 duplicated Pancakes fixture in e2e helper, n2 new testids for as-built LLD · 8e87194
 
 ### T-13 · Recipe form: add a recipe
 
