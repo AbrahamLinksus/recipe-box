@@ -7,8 +7,8 @@
 | Problem      | Single-user recipe box web app: add, search by title/tag, scale servings, favourite; data saved locally |
 | Repo         | AbrahamLinksus/recipe-box (public)                                                                      |
 | Stage | 7 Build |
-| Milestone | M3 · Find and favourite (1/2 tasks) — M1 done (8666dd4), M2 done (04137c2) |
-| Next step | Start T-15 (favourite star, frontend-coder); T-14 done (170a8eb) |
+| Milestone | M3 · Find and favourite (2/2 tasks, docs sync pending) — M1 done (8666dd4), M2 done (04137c2) |
+| Next step | M3-docs: architect as-built LLD sync (T-14, T-15) then docs README pass, then M3 milestone card |
 | Last updated | 2026-11-12 |
 
 ## Config
@@ -62,6 +62,7 @@ Context gaps agents reported (`Context gap:` in a REPORT). The Orchestrator adds
 | architect, docs | a file with `git diff <since>..main --stat` (Orchestrator writes it) | no shell tool to run git (M2-docs gap reports) |
 
 ## Notes for the next session
+- T-15 approved (fc6a73e). M3 tidy-up minors (T-15): failure-message helper duplicated with form-screen.js (fold into T-18); stale "Could not save" banner not cleared after a later successful toggle; no in-flight guard on star (double-click flips twice); focus drops to body when un-starring under Favourites only; tests: meaningless SPEC_RECIPES.length assertion, racy final click before navigation, wrong "(favourite)" comment in helpers/collection.js. T-15 agent decisions: star updates only after save succeeds (no optimistic update); focus restored to the same star after re-render; failure mapping copied not shared (T-18 area). M3 as-built LLD sync: favourite-toggle.js shared button; recipe-row-star retired; header Add recomputed per notification. wip/T-15 left on origin (merged).
 - Session 2026-11-12 (3): T-14 approved (170a8eb). Old leftover branches were deleted by the owner; wip/T-14 remains on origin (merged; ignore on resume). T-14's 3 reviewer minors and 4 agent decisions were in a lost .results report; not recorded.
 - Session 2026-11-12 (3): T-14 approved (170a8eb). Old leftover branches were deleted by the owner; wip/T-14 is left on origin (merged, ignore on resume). T-14 reviewer minors (3) and agent decisions (4) were in a lost .results report — carry to M3 tidy-up only if re-reviewed.
 - M2 approved 2026-11-12 (milestone card, 04137c2). Owner chose: continue M3 in a fresh session. CR hold was skipped (owner-approved) for T-05b, T-13 and M2-docs via a patched copy of taskgit; do not assume that approval carries over — ask again if wip/CR-1 still exists.

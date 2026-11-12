@@ -225,14 +225,14 @@ Notes for every task
 - Owner: frontend-coder
 - Depends on: T-05b, T-12, T-14
 - Context: SPEC US-07, US-08, §4 F-4, §5 F-4 · LLD §3.4, §3.5, §4.4, §4.5, §2.5 · files: web/js/ui/screens/{list-screen,view-screen}.js, web/css/app.css, tests/e2e/favourite.spec.js, tests/e2e/persistence.spec.js, tests/e2e/helpers/*
-- Status: Backlog
+- Status: Done
 - Acceptance criteria:
-  - [ ] Star (`favourite-toggle`, `<button aria-pressed>`) on a list row and on the view toggles favourite immediately: ★ with `aria-label="Remove from favourites"`, ☆ with `aria-label="Mark as favourite"`
-  - [ ] SPEC §5 F-4: star Banana Bread, tick "Favourites only" (`favourites-only`) → list shows Banana Bread only; after `page.reload()` the star is still filled
-  - [ ] Stars (list rows and view) and both list Add buttons (`add-recipe`, `add-first-recipe`) are disabled while `store.status !== 'ready'` and recomputed on every store notification (header included, §3.5, §4.5). Corrupt seed at start → all disabled. A rejected toggle shows the "Could not save: …" banner and the star keeps its stored state
-  - [ ] Cross-tab e2e in `tests/e2e/persistence.spec.js`: seed the SPEC §5 recipes, open the list, then a second page in the same context writes `{oops` to `recipe-box:collection` → all three rows stay listed (search "b" still filters), status banner shown, Add/stars disabled, stored value byte-identical. The second page then writes valid data → banner cleared, controls enabled. Same on the Pancakes view: star disabled, then enabled
-  - [ ] `tests/e2e/favourite.spec.js` passes in both projects; screenshots in `.results/T-15/`
-- Result: —
+  - [x] Star (`favourite-toggle`, `<button aria-pressed>`) on a list row and on the view toggles favourite immediately: ★ with `aria-label="Remove from favourites"`, ☆ with `aria-label="Mark as favourite"`
+  - [x] SPEC §5 F-4: star Banana Bread, tick "Favourites only" (`favourites-only`) → list shows Banana Bread only; after `page.reload()` the star is still filled
+  - [x] Stars (list rows and view) and both list Add buttons (`add-recipe`, `add-first-recipe`) are disabled while `store.status !== 'ready'` and recomputed on every store notification (header included, §3.5, §4.5). Corrupt seed at start → all disabled. A rejected toggle shows the "Could not save: …" banner and the star keeps its stored state
+  - [x] Cross-tab e2e in `tests/e2e/persistence.spec.js`: seed the SPEC §5 recipes, open the list, then a second page in the same context writes `{oops` to `recipe-box:collection` → all three rows stay listed (search "b" still filters), status banner shown, Add/stars disabled, stored value byte-identical. The second page then writes valid data → banner cleared, controls enabled. Same on the Pancakes view: star disabled, then enabled
+  - [x] `tests/e2e/favourite.spec.js` passes in both projects; screenshots in `.results/T-15/`
+- Result: ✅ 5/5 goals · 76 e2e · coverage 99.94% · review 0 major, 5 minor · fc6a73e
 
 ## M4 · Scale
 
