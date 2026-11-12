@@ -411,3 +411,7 @@ button.star:disabled {
   color: #555;
   font-size: 13px;
 }
+.bar-actions {
+  display: flex;
+  gap: 8px;
+}

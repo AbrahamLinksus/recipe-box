@@ -2,6 +2,7 @@ import { h, clear } from '../dom.js';
 import { favouriteToggle, TOGGLE_FOCUS } from '../favourite-toggle.js';
 import { servingsControl, SERVINGS_FOCUS } from '../servings-control.js';
 import { renderKeepingFocus } from '../focus-keeper.js';
+import { saveFailureMessage } from '../save-failure.js';
 import { formatIngredientLine } from '../../core/scaling/scaling.js';
 
 /**
@@ -92,14 +93,27 @@ function editControl(id, canEdit) {
 /**
  * @param {string} id
  * @param {boolean} canEdit
+ * @param {() => void} onDelete
  * @returns {HTMLElement}
  */
-function topBar(id, canEdit) {
+function topBar(id, canEdit, onDelete) {
   return h(
     'header',
     { class: 'view-bar' },
     h('a', { href: '#/', 'data-testid': 'back-to-list', text: '\u2190 All recipes' }),
-    editControl(id, canEdit),
+    h(
+      'div',
+      { class: 'bar-actions' },
+      editControl(id, canEdit),
+      h('button', {
+        class: 'btn',
+        type: 'button',
+        'data-testid': 'delete-recipe',
+        disabled: !canEdit,
+        onclick: onDelete,
+        text: 'Delete',
+      }),
+    ),
   );
 }
 
@@ -113,12 +127,53 @@ function notFound() {
   );
 }
 
-const VIEW_FOCUS = Object.freeze({ ...TOGGLE_FOCUS, ...SERVINGS_FOCUS });
+/**
+ * Confirm, then remove; a rejected remove shows the banner and stays on the view (LLD 4.4).
+ * After the dialog it bails out if the view is gone or the store turned read-only, and it
+ * ignores a second Delete while a remove is still pending.
+ * @param {import('../router.js').ScreenContext} ctx
+ * @param {string} id
+ * @param {() => boolean} isMounted true while the view's DOM is on the page (app clears it on unmount)
+ * @returns {() => Promise<void>}
+ */
+function deleteHandler({ store, banner, dialogs, router }, id, isMounted) {
+  let busy = false;
+  return async () => {
+    const recipe = store.get(id);
+    if (!recipe || busy) return;
+    const confirmed = await dialogs.confirm({
+      message: `Delete '${recipe.title}'? Are you sure?`,
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel',
+    });
+    if (!confirmed || busy || !isMounted() || store.status !== 'ready') return;
+    busy = true;
+    try {
+      await store.remove(id);
+    } catch (err) {
+      const message = saveFailureMessage(err);
+      if (message) banner.show('error', message);
+      return;
+    } finally {
+      busy = false;
+    }
+    if (isMounted()) router.navigate({ name: 'list' }, { replace: true });
+  };
+}
+
+const VIEW_FOCUS = Object.freeze({
+  ...TOGGLE_FOCUS,
+  ...SERVINGS_FOCUS,
+  'edit-recipe': 'back-to-list',
+  'delete-recipe': 'back-to-list',
+});
 
 /** @type {import('../router.js').MountScreen} */
-export function mountViewScreen(container, { store, banner }, route) {
+export function mountViewScreen(container, ctx, route) {
+  const { store, banner } = ctx;
   const id = route.name === 'view' ? route.id : '';
   const content = h('div', { class: 'view-content' });
+  const onDelete = deleteHandler(ctx, id, () => content.isConnected);
   let servings = 0;
   let shownRecipe = '';
 
@@ -138,7 +193,7 @@ export function mountViewScreen(container, { store, banner }, route) {
     content.append(
       ...(recipe
         ? [
-            topBar(id, store.status === 'ready'),
+            topBar(id, store.status === 'ready', onDelete),
             recipeHeader(recipe, favouriteToggle(recipe, store, banner)),
             servingsControl({
               base: recipe.servings,
