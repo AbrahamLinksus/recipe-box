@@ -2,7 +2,7 @@
 
 A small personal recipe box that runs on your own computer. It keeps your recipes in your browser, and nothing is sent anywhere.
 
-> **Status: milestone M2 (add, list and open).** You can add a recipe, see all your recipes A–Z, and open one to read it. Search, tag filter, favourites, scaling, edit and delete come in later milestones. Until then the Edit link on a recipe leads to a "Page not found" page.
+> **Status: milestone M3 (find and favourite).** You can add a recipe, see all your recipes A–Z, open one to read it, search by title, filter by tag, show only favourites, and mark recipes as favourites. Scaling the servings, edit and delete come in later milestones. Until then the Edit link on a recipe leads to a "Page not found" page.
 
 ## Requirements
 
@@ -29,11 +29,17 @@ Always use the address `http://127.0.0.1:47321/`. The browser treats `localhost:
   - A title, at least one ingredient and at least one step are required.
   - Tags are saved in lower case, and a tag repeated in the same recipe is ignored.
   - If you leave the form with unsaved text, Recipe Box asks "Discard changes?".
-- **List:** the front page shows all your recipes sorted A–Z by title, with their tags and a count (for example "3 recipes").
+- **List:** the front page shows your recipes sorted A–Z by title, each with its tags, a favourite star and a count (for example "3 recipes").
+- **Search:** type in the search box to narrow the list by title as you type. Matching ignores upper and lower case and finds part of a title, so "pan" finds "Pancakes".
+- **Tag filter:** choose a tag from the tag menu (**All tags** shows everything) to see only recipes with that tag.
+- **Favourites only:** tick **Favourites only** to see only your favourite recipes.
+- **Combined filters:** search, tag and Favourites only work together, and a recipe must match all of them. If nothing matches, the list says "No recipes match your search". Click **Clear filters** to show all recipes again.
+- **Favourites:** click the star beside a recipe in the list, or beside its title on the recipe page, to mark it (★) or unmark it (☆). The change is saved straight away and is still there after a restart.
+- **Filters and navigation:** the search text, tag and Favourites only setting stay the same when you open a recipe and go back with **← All recipes**. They are not saved, so reloading the page shows all recipes again.
 - **Open:** click a recipe's title to read its servings, ingredients and numbered steps. Use **← All recipes** to go back.
-- **Not yet available:** search, the tag filter, favourites, scaling the servings, editing and deleting.
+- **Not yet available:** scaling the servings, editing and deleting.
 
-**Read-only banner.** If Recipe Box cannot read your saved recipes, a banner at the top says that they could not be read, so Recipe Box will not change them, and that nothing has been deleted. Recipe Box keeps showing the recipes it had last. While the banner is shown, a new recipe cannot be saved. A second banner, "This browser is blocking storage for Recipe Box", means the browser will not let the app use its storage at all.
+**Read-only banner.** If Recipe Box cannot read your saved recipes, a banner at the top says that they could not be read, so Recipe Box will not change them, and that nothing has been deleted. Recipe Box keeps showing the recipes it had last. While the banner is shown, a new recipe cannot be saved and the favourite stars are disabled. A second banner, "This browser is blocking storage for Recipe Box", means the browser will not let the app use its storage at all, and the same controls are disabled.
 
 ## Where your recipes are stored
 

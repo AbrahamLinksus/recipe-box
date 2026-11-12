@@ -20,6 +20,10 @@
 > last milestone". §5.5 is aligned to owner decision **D-11** (Save disabled live while the store is read-only);
 > that part is **not built yet** (T-18). Parts of §3/§4/§5 still belong to later tasks (T-14, T-15, T-17, T-18, T-19);
 > each "As built (M2)" note says what is missing.
+> **As-built sync M3 (2026-11-12):** §0.2, §1.4, §2.5, §3, §4, §8.1, §11 checked against the code at the end of
+> milestone M3 (T-14 filter panel and no-match state, T-15 favourite star). Changes are marked "As built (M3)" in
+> place and listed in "Changes since last milestone"; M3 tidy-up minors are under "Known deferred minors (M3 tidy-up list)".
+> Still to come: edit form and D-11 live Save (T-18), servings control (T-17), Delete (T-19).
 
 ## §0 Overview
 
@@ -63,6 +67,7 @@ recipe-box/
 │     ├─ persistence/           # §10 M10 collection-codec.js local-storage-persistence.js
 │     └─ ui/                    # §2–§5 app.js router.js dialogs.js dom.js banner.js filter-state.js form-model.js
 │        │                      #        form-widgets.js form-ingredients.js form-steps.js form-tags.js (as built M2, §5.1)
+│        │                      #        list-filters.js (§3.1) favourite-toggle.js (§3.1, used by §3 and §4) (as built M3)
 │        └─ screens/            #        list-screen.js view-screen.js form-screen.js not-found-screen.js (as built M1)
 └─ tests/
    ├─ helpers/                  # fake-storage.js, memory-persistence.js, recipes.fixture.js (SPEC §5 data)
@@ -176,6 +181,7 @@ Version caveat: these majors are from the research and general knowledge, not ve
 
 **As built (M1), exact pins in `package.json` `devDependencies`:** `eslint` 9.39.5 · `@eslint/js` 9.39.5 · `globals` 16.5.0 · `prettier` 3.9.10 · `typescript` 5.9.3 · `@types/node` 24.19.2 · `dependency-cruiser` 17.4.3 · `@playwright/test` 1.59.1 (P1 in use: e2e runs in M1). All inside the listed majors; no packages added or removed. Runtime dependencies: still none.
 **As built (M2):** pins unchanged; no packages added or removed in M2.
+**As built (M3):** pins unchanged (`package.json` checked); no packages added or removed in M3. Runtime dependencies: still none.
 
 ### §0.5 Config and secrets
 No secrets, no `.env` needed. Environment variables (documented in README, all optional):
@@ -349,6 +355,7 @@ sequenceDiagram
 ```
 As built (M1): the last step is not built yet; M1's list screen renders `store.list()` in insertion order with no filter (see §3).
 As built (M2): the list screen renders `sortByTitle(store.list())` (A–Z, §8); `filterRecipes` with the filter panel arrives in T-14.
+As built (M3): the last step is built as drawn: the list screen renders `filterRecipes(store.list(), filterState.get())` (§3.1), or "No recipes yet" when `store.list()` is empty.
 
 ### §1.5 Errors and edge cases
 - `listen` rejects with `EADDRINUSE` → probe. Probe outcomes: `ours` → open + exit 0; `other` (non-200, wrong JSON, timeout 1500 ms) → port-conflict; `none` (`ECONNREFUSED`: the other instance exited meanwhile) → retry `listen` once, then port-conflict.
@@ -453,29 +460,63 @@ export function createApp(deps) {}  // builds router, dialogs, banner, filterSta
     passes no message, so the text reads "Could not save: Could not save (quota). Your last change was not stored."
     (deferred minor, see "Known deferred minors"). Any other non-field error → "Could not save. Your last change was not stored."
     The form clears its own banner after the next successful save.
+    As built (M3, star): `favourite-toggle.js` maps a rejected `toggleFavourite` the same way (its own copy of the
+    form's mapping, `failureMessage`): `StoreReadOnlyError` → no banner; `PersistenceWriteError` → "Could not save: <err.message>.
+    Your last change was not stored." (same doubled text); anything else → "Could not save. Your last change was not stored.",
+    shown with `banner.show('error', …)`. Unlike the form, a later successful toggle does **not** clear that banner
+    (deferred minor, M3 list).
   - (CR-1) The status can change **while a screen is mounted** (cross-tab `reload()`, §9.5), in both directions. The banner and every screen's write controls follow `store.status` on every store notification, not only at mount. The two status texts above stay as they are for both cases (nothing loaded, or the last loaded recipes still shown): both say that nothing will be changed.
 - Unhandled promise rejections in UI → `banner.show('error', 'Something went wrong. Reload the page to continue.')` and `console.error` (the only console call in web code, in `app.js`).
 - Layout (`app.css`): mobile-first single column; `@media (min-width: 800px)` → filters sidebar 280 px on list, two-column ingredients/steps on view and form, page max-width 1100 px (matches wireframes). At 390 px nothing overflows horizontally; tap targets ≥ 40 px.
-- Accessibility: header `<h1>` per screen, buttons are `<button>`, star is `<button aria-pressed>` with `aria-label`.
+  As built (M3): `.list-layout` is `display: block` below 800 px (filter panel `section.filters` stacked above `div.results`) and `display: flex; gap: 24px` from 800 px, with `.filters { width: 280px; flex-shrink: 0 }`. `button.star` is ≥ 44×44 px, grey with `cursor: not-allowed` when disabled. `.sr-only` visually hides the search and tag labels. On the view, `.title-row` puts the star beside the `<h1>`.
+- Accessibility: header `<h1>` per screen, buttons are `<button>`, star is `<button aria-pressed>` with `aria-label`. As built (M3): exactly this, on the list rows and on the view (§3.1 `favouriteToggle`); the search box and tag select have visually hidden `<label for>`s, the checkbox sits inside its visible "Favourites only" `<label>`.
 - Test ids (stable, for §11 e2e): `add-recipe`, `banner`, `confirm-dialog`, `confirm-ok`, `confirm-cancel`, `back-to-list`; as built (M1) also `confirm-message` and `not-found` (the not-found page `<main>`).
 
 ---
 
 ## §3 M3 Recipe list screen
 - **Responsibility:** Render the filtered A–Z recipe list with search, tag filter, favourites-only, counts, empty and no-match states.
-- **Path(s):** `web/js/ui/screens/list-screen.js`
-- **Depends on:** §8 (`filterRecipes`, `listTags`, `hasActiveFilters`), §9 (`list`, `toggleFavourite`, `subscribe`, `status`), §2 (screen contract, filter-state, router).
+- **Path(s):** `web/js/ui/screens/list-screen.js`; as built (M3): `web/js/ui/list-filters.js` (filter panel) and `web/js/ui/favourite-toggle.js` (star button, shared with §4)
+- **Depends on:** §8 (`filterRecipes`, `listTags`, `hasActiveFilters`), §9 (`list`, `toggleFavourite`, `subscribe`, `status`), §2 (screen contract, filter-state, router). As built (M3): `hasActiveFilters` is not used by the UI (the no-match state is chosen by "list not empty and 0 matches"); `favourite-toggle.js` also imports §9 `errors.js` (`StoreReadOnlyError`, `PersistenceWriteError`) and uses `ctx.banner` (§2).
 
 ### §3.1 Interfaces / signatures
 ```js
 /** @type {import('../router.js').MountScreen} */
 export function mountListScreen(container, ctx, route) {}
+
+// web/js/ui/list-filters.js (as built M3, T-14)
+/** @typedef {{ element: HTMLElement,
+ *   refreshTags(recipes: readonly Recipe[]): void,   // rebuild tag <option>s from listTags; if the selected tag is gone,
+ *                                                    //   filterState.set({ tag: null }) and select "All tags"
+ *   syncFromState(): void,                           // copy filterState.get() into the three controls
+ *   focusSearch(): void }} FilterPanel */
+/** Built once per mount; each control writes filterState.set(...) then calls onChange.
+ *  @param {FilterState} filterState @param {() => void} onChange @returns {FilterPanel} */
+export function createFilterPanel(filterState, onChange) {}
+
+// web/js/ui/favourite-toggle.js (as built M3, T-15) — used by §3 rows and the §4 view header
+/** <button type="button" class="star" data-testid="favourite-toggle" data-recipe-id aria-pressed aria-label>
+ *  text ★/☆ and aria-pressed/aria-label from the STORED recipe.favourite (no optimistic change);
+ *  disabled = store.status !== 'ready' (evaluated when the button is built, i.e. on every re-render);
+ *  click → await store.toggleFavourite(id); rejection → banner per §2.5 (none for StoreReadOnlyError).
+ *  @param {Recipe} recipe @param {RecipeStore} store @param {Banner} banner @returns {HTMLElement} */
+export function favouriteToggle(recipe, store, banner) {}
+/** Runs render(); if a favourite-toggle inside region had focus before, focuses the enabled toggle with the same
+ *  data-recipe-id afterwards (keyboard users can keep toggling). @param {HTMLElement} region @param {() => void} render */
+export function renderKeepingToggleFocus(region, render) {}
 ```
 Internal structure: the filter panel (search input, tag `<select>`, favourites checkbox) is rendered **once** per mount; only the results region (`count` + rows / state) re-renders on input or store change, so the search box keeps focus and caret while typing.
 
-**As built (M1, T-08 walking skeleton), the rest is M2 (T-09/T-10):** the screen renders a header (`<h1>Recipe Box</h1>` + `add-recipe` "+ Add recipe") and a separate results region (`div.results`) that re-renders on every store change via `store.subscribe` (the unsubscribe is the handle's `unmount`). Results: `store.list().length === 0` → `empty-state` "No recipes yet" + `add-first-recipe`; otherwise `recipe-count` + `<ul>` of `recipe-row` (title link `recipe-row-title` to `#/recipe/<encoded id>`, tag chips). Not yet built: filter panel, A–Z sort (rows are in store insertion order), stars, no-match state. Both add buttons navigate to `#/new`, which shows "Page not found" until M2 (A-10). Write controls are disabled when `store.status !== 'ready'`, computed once at mount (deferred minor; (CR-1) must be recomputed on every store notification, see §3.5).
+**As built (M1, T-08 walking skeleton), the rest is M2 (T-09/T-10):** the screen renders a header (`<h1>Recipe Box</h1>` + `add-recipe` "+ Add recipe") and a separate results region (`div.results`) that re-renders on every store change via `store.subscribe` (the unsubscribe is the handle's `unmount`). Results: `store.list().length === 0` → `empty-state` "No recipes yet" + `add-first-recipe`; otherwise `recipe-count` + `<ul>` of `recipe-row` (title link `recipe-row-title` to `#/recipe/<encoded id>`, tag chips). In M1 rows were in store insertion order. Both add buttons navigate to `#/new`, which shows "Page not found" until M2 (A-10). Write controls are disabled when `store.status !== 'ready'`, computed once at mount (deferred minor; (CR-1) must be recomputed on every store notification, see §3.5). *(Superseded by the M2 and M3 notes below: filter panel, A–Z sort, stars and no-match state are built; `disabled` is recomputed on every notification.)*
 
-**As built (M2, T-11):** rows are now `sortByTitle(store.list())` (A–Z, §8.1). Each row ends with a **non-interactive** star `<span class="star" data-testid="recipe-row-star">` showing `★`/`☆` from the stored `favourite` (`title` "Favourite"/"Not favourite"); it becomes the labelled `favourite-toggle` button of §3.4 in T-15 (A-13). Row tag chips are plain `<span class="tag">` (no test id). The results region sits in `div.list-layout`, so the T-14 filter panel can be a sibling that never re-renders. Still not built: filter panel, no-match state, "Clear filters" (T-14); star toggle and the per-notification recompute of `disabled` (T-15).
+**As built (M2, T-11):** rows are now `sortByTitle(store.list())` (A–Z, §8.1). Row tag chips are plain `<span class="tag">` (no test id). The results region sits in `div.list-layout`, so the filter panel can be a sibling that never re-renders. *(The M2 read-only star `<span data-testid="recipe-row-star">`, A-13, was replaced in T-15 by the `favourite-toggle` button; see the M3 note.)*
+
+**As built (M3, T-14 + T-15):** structure `<main class="page">` → `header.list-header` (`<h1>Recipe Box</h1>` + `add-recipe` button "+ Add recipe") → `div.list-layout` → `section.filters[aria-label="Search and filter"]` (from `createFilterPanel`: `input[type=search]#search-input` placeholder "Search by title…", `select#tag-filter`, `label.check` holding the `favourites-only` checkbox + "Favourites only") and `div.results`.
+- Mount: `add.disabled = store.status !== 'ready'`, `panel.refreshTags(store.list())`, `panel.syncFromState()` (restores the filter from `ctx.filterState`, so search text, tag and favourites-only survive list → view → list), `renderResults()`; the handle's `unmount` is the `store.subscribe` unsubscribe.
+- `renderResults()`: clears `div.results`; `store.list()` empty → `empty-state` (Add-first disabled when not `ready`); else `filterRecipes(store.list(), filterState.get())` (A–Z, §8.1) → 0 rows → `no-match-state`, else `recipe-count` + `ul.recipe-list` of rows. Row = `li.recipe-row[data-recipe-id]` → `div.recipe-main` (title link `recipe-row-title` to `#/recipe/<encoded id>`, tag chips) + `favouriteToggle(recipe, store, banner)`.
+- A control change calls `renderResults()` directly (not the focus-keeping wrapper; the focused control is outside `div.results`, so focus and caret stay).
+- Store notification (`onStoreChange`): recompute `add.disabled`, `panel.refreshTags(store.list())` (drops a vanished selected tag), then `renderKeepingToggleFocus(results, renderResults)`. Because the rows, stars and Add-first button are rebuilt on every notification, **all list write controls follow `store.status` in both directions** (CR-1, §3.5).
+- "Clear filters": `filterState.reset()`, `panel.syncFromState()`, `renderResults()`, `panel.focusSearch()`.
 
 ### §3.4 Behaviour
 | Trigger | Effect |
@@ -491,7 +532,9 @@ Internal structure: the filter panel (search input, tag `<select>`, favourites c
 
 States (exact texts): count line `"1 recipe"` / `"N recipes"` (count of shown rows); `store.list().length === 0` → "No recipes yet" + button "Add your first recipe" (`#/new`); else 0 matches → "No recipes match your search" + button "Clear filters". Row: title, tag chips in stored order (A–Z), star `★` (favourite, `aria-label="Remove from favourites"`) / `☆` (`aria-label="Mark as favourite"`).
 
-Test ids: `search-input`, `tag-filter`, `favourites-only`, `recipe-count`, `recipe-row` (with `data-recipe-id`), `recipe-row-title`, `favourite-toggle`, `empty-state`, `add-first-recipe`, `no-match-state`, `clear-filters`. As built (M2): also `recipe-row-star` (the read-only star span until T-15, A-13). In T-15 the span is replaced by the `favourite-toggle` `<button aria-pressed>` above and `recipe-row-star` is retired (its `list.spec.js` assertions move to `favourite-toggle`).
+As built (M3): every row of the table above is built as written. Store change: the tag reset happens in `refreshTags` and is written back to `filterState` (so it also holds after navigation). Star click: the row star does not change until the save succeeds and the store notifies (no optimistic update); on rejection it stays as stored. Un-starring a row while "Favourites only" is on removes the row, and focus then falls to `<body>` (deferred minor). The texts of the States paragraph match exactly; the tag `<select>` option for all is "All tags" (`value=""`).
+
+Test ids: `search-input`, `tag-filter`, `favourites-only`, `recipe-count`, `recipe-row` (with `data-recipe-id`), `recipe-row-title`, `favourite-toggle`, `empty-state`, `add-first-recipe`, `no-match-state`, `clear-filters`. As built (M3): all present; `favourite-toggle` also carries `data-recipe-id`. `recipe-row-star` (the M2 read-only span, A-13) is **retired**: T-15 replaced it with the `favourite-toggle` `<button aria-pressed>` and moved its `list.spec.js` assertions there.
 
 ### §3.5 Errors and edge cases
 - Read-only store status → stars and add buttons disabled (`disabled` attribute), list still readable.
@@ -500,6 +543,7 @@ Test ids: `search-input`, `tag-filter`, `favourites-only`, `recipe-count`, `reci
   - Read-only **after a good load** (a cross-tab reload failed): `store.list()` still returns the last loaded recipes. Rows, search, tag filter, favourites-only filter, counts and the no-match state keep working on them; row title links open the view (§4). Stars, "Add recipe" and "Add your first recipe" are disabled.
   - The disabled state is recomputed on **every store notification** (header Add button included, not only the results region), so it switches off when the status leaves `ready` and back on when a later reload returns `ready`. This closes the T-08 deferred minor "Add buttons go stale".
 - `toggleFavourite` rejection → banner (§2.5), star stays in the stored state.
+- As built (M3, T-15): **done.** Header `add-recipe` is recomputed in `onStoreChange`; stars and "Add your first recipe" are rebuilt with `disabled = store.status !== 'ready'` on every notification. Read-only after a good load keeps rows, search, tag filter, favourites-only, count and no-match state working (e2e `persistence.spec.js` "cross-tab corrupt write on the list": stars and Add disabled, search still filters, value untouched, then all enabled again after a good write). A `StoreReadOnlyError` from a click in the gap before the notification shows no extra banner. There is no in-flight guard: a quick double click sends two toggles, which flip the favourite twice (deferred minor).
 
 ---
 
@@ -516,13 +560,14 @@ export function mountViewScreen(container, ctx, route) {}  // route.name === 'vi
 Screen-local state: `servings` (starts at `recipe.servings`, never saved; a new mount always starts at base).
 
 **As built (M2, T-12):** the view is read-only display. Structure: `<main class="page">` → `div.view-content`, which `render()` rebuilds on mount and on **every** store notification (`store.subscribe(render)`; the unsubscribe is `unmount`):
+- As built (M3, T-15): `render()` runs through `renderKeepingToggleFocus(content, render)` on notifications (§3.1), so a focused star keeps focus after toggling.
 - `header.view-bar`: `back-to-list` link "← All recipes" (`#/`) + the Edit control. Edit is an `<a class="btn" href="#/recipe/<encoded id>/edit">` while `store.status === 'ready'`, else a **disabled `<button>`** with the same `edit-recipe` test id (A-14). Recomputed on every notification, so it follows the status in both directions (CR-1).
-- `div.view-head`: `<h1 data-testid="recipe-title">`, `<p class="serves" data-testid="recipe-serves">Serves N</p>`, `div[data-testid=recipe-tags]` of `<span class="tag" data-testid="recipe-tag">` in stored order.
+- `div.view-head`: `div.title-row` (`<h1 data-testid="recipe-title">` + the `favourite-toggle` star from §3.1 `favouriteToggle`, as built M3), `<p class="serves" data-testid="recipe-serves">Serves N</p>`, `div[data-testid=recipe-tags]` of `<span class="tag" data-testid="recipe-tag">` in stored order.
 - `div.cols` → `section.panel.ing[data-testid=ingredients-panel]` (`<h2>Ingredients</h2>` + `<ul>` of `ingredient-line`) and `section.panel.steps[data-testid=steps-panel]` (`<h2>Steps</h2>` + `<ol>` of `step-line`).
 - Ingredient line = `formatIngredientLine(ing, recipe.servings, recipe.servings)` (base = target, so amounts are shown as typed): `<strong data-testid="ingredient-amount">` + a space, **only when the amount text is non-empty**, then the name.
 - Unknown id (or recipe gone after a notification): `div.state[data-testid=not-found]` "Recipe not found" + `<a class="btn" data-testid="not-found-back" href="#/">All recipes</a>`.
 
-Not built yet: servings control, Reset and the scaling note (T-17); star (T-15); Delete (T-19).
+Not built yet: servings control, Reset and the scaling note (T-17); Delete (T-19). (The star is built, M3/T-15.)
 
 ### §4.4 Behaviour
 | Trigger | Effect |
@@ -542,7 +587,7 @@ Test ids: `recipe-title`, `recipe-tags`, `servings-input`, `servings-dec`, `serv
 
 ### §4.5 Errors and edge cases
 - Unknown id → "Recipe not found" + "All recipes" link (no crash).
-- Read-only store → star, Edit, Delete disabled; scaling still works. As built (M2, A-14): "disabled Edit" is a `<button type="button" disabled>` with test id `edit-recipe` (never an `<a>` without `href`); while `ready` it is the `<a href>` link. Star and Delete follow the same rule when T-15 / T-19 add them.
+- Read-only store → star, Edit, Delete disabled; scaling still works. As built (M2, A-14): "disabled Edit" is a `<button type="button" disabled>` with test id `edit-recipe` (never an `<a>` without `href`); while `ready` it is the `<a href>` link. Delete follows the same rule when T-19 adds it. As built (M3, T-15): the view star is the shared `favourite-toggle` `<button>`, `disabled` while `store.status !== 'ready'`, rebuilt on every store notification, so it is disabled when a cross-tab reload fails and enabled again when one returns `ready` (e2e `persistence.spec.js` "cross-tab corrupt write on the view"). Rejection handling as in §3.5.
 - (CR-1) Reachable when a cross-tab reload fails after a good load (§9.5): `store.get(id)` still returns the recipe from the last loaded snapshot, so the view stays on screen with the banner (§2.5). Star, Edit and Delete are recomputed on every store notification (disabled while `store.status !== 'ready'`, enabled again when a reload returns `ready`). The re-render on a store notification **keeps the current screen-local `servings`** (it is not reset to base), so scaling keeps working across status changes.
 - (CR-1) Read-only **at start** (nothing loaded): `store.get(id)` is `undefined` → "Recipe not found" + "All recipes" link, with the status banner explaining why.
 - (CR-1) A reload that returns `ready` with fresh data where the recipe no longer exists → not-found state (same as "store change" in §4.4).
@@ -824,7 +869,7 @@ export function sortByTitle(recipes) {}
 ```
 Matching: `title.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())`; empty query matches all; `tag` exact match against `recipe.tags`.
 
-As built (M2, T-09): `web/js/core/search/search.js` matches these signatures (inputs typed `readonly Recipe[]`; `RecipeFilter` typedef repeated here, same shape as §2.1). Details: the `sortByTitle` tie-break compares `createdAt` and then `id` with plain `<` (ISO strings sort correctly as text, A-11); `filterRecipes` checks favourites, then tag, then title; `listTags` sorts with the default `Array.prototype.sort()` (UTF-16 code-unit order, not `localeCompare`). Stored tags are lower-case, so this equals A–Z for ASCII tags; accented tags may sort after `z` (deferred minor). Not yet used by the UI except `sortByTitle` (§3, T-14 wires the rest).
+As built (M2, T-09): `web/js/core/search/search.js` matches these signatures (inputs typed `readonly Recipe[]`; `RecipeFilter` typedef repeated here, same shape as §2.1). Details: the `sortByTitle` tie-break compares `createdAt` and then `id` with plain `<` (ISO strings sort correctly as text, A-11); `filterRecipes` checks favourites, then tag, then title; `listTags` sorts with the default `Array.prototype.sort()` (UTF-16 code-unit order, not `localeCompare`). Stored tags are lower-case, so this equals A–Z for ASCII tags; accented tags may sort after `z` (deferred minor). Not yet used by the UI except `sortByTitle` (§3, T-14 wires the rest). As built (M3): §3 uses `filterRecipes` (list results) and `listTags` (tag options, via `list-filters.js`); `sortByTitle` is no longer called by the UI directly (`filterRecipes` sorts); `hasActiveFilters` is unit-tested but unused by the UI.
 
 ### §8.2 Contract examples (unit tests, SPEC §5 F-2 data)
 | Filter | Result |
@@ -1019,6 +1064,8 @@ As built (M1): `package.json` also has `"test:nocov": "node --test \"tests/unit/
 
 As built (M2): scripts unchanged. The DOM-bound form modules `web/js/ui/form-{widgets,ingredients,steps,tags}.js` are **not** in the exclusion list; they stay out of the unit coverage numbers only because no unit test imports them (Node reports loaded files only). They are covered by `tests/e2e/add.spec.js`. If a unit test ever imports one, add `--test-coverage-exclude="web/js/ui/form-{widgets,ingredients,steps,tags}.js"` (pure `form-model.js` stays included).
 
+As built (M3): scripts and `.prettierignore` unchanged. The new DOM-bound modules `web/js/ui/list-filters.js` and `web/js/ui/favourite-toggle.js` are in the same position as the form modules: not in the exclusion list, out of the coverage numbers only because no unit test imports them; covered by `tests/e2e/list.spec.js`, `favourite.spec.js` and `persistence.spec.js`.
+
 ### §11.2 ESLint (`eslint.config.js`, flat config)
 - `@eslint/js` recommended for all `**/*.js`; `ignores`: `node_modules`, `.results`, `docs`, `test-results`, `playwright-report`.
 - Globals: `web/js/**` → `globals.browser`; **`web/js/core/**` → no browser globals** (ES2023 only, so `window`/`document`/`localStorage` fail `no-undef`); `server/**`, `tests/**`, config files → `globals.node`.
@@ -1082,6 +1129,7 @@ echo "check.sh: all checks passed"
   3. else Playwright's default browser settings.
   Same Chromium engine in every case; no browser is downloaded. `scripts/screenshot.mjs` still hard-codes `msedge` (deferred minor). The rest of the config is unchanged (port 47399, projects `desktop` 1280×800 and `narrow` 390×844).
 - As built (M2): e2e specs now `list.spec.js` (empty state, A–Z rows, count, read-only star), `add.spec.js` (F-1 add flow, validation errors, discard confirm, tag chips, ingredient/step row operations), `view-scale.spec.js` (the view part of F-3 only: header, serves, ingredients/steps panels, tags, not-found, Edit disabled while read-only; scaling assertions arrive with T-17), `persistence.spec.js`. New helper `tests/e2e/helpers/recipes.js` (`seedPancakes(page)`, `PANCAKES_ID`; built on `seedRaw` from `seed.js`, which seeds once per tab via a `sessionStorage` marker so reloads do not re-seed). New unit suites: `tests/unit/core/search/search.test.js` (§8.2), `tests/unit/ui/form-model.test.js` (§5.1), `tests/unit/store/recipe-store-reload-failure.test.js` (§9.5 table).
+- As built (M3): no new unit suites. E2E additions: `list.spec.js` (Tab order add → search → tag → favourites → add-first; search as you type keeps focus and caret; tag options A–Z combined with search and favourites-only; no-match state and "Clear filters" resetting controls and focusing search; filters survive list → view → list; filters sidebar from 800 px, stacked below; `recipe-row-star` assertions moved to `favourite-toggle`); new `favourite.spec.js` (F-4: star Banana Bread, favourites-only, survives reload; view star toggles and shows on the list; keyboard toggle keeps focus; corrupt seed disables Add; quota-rejected toggle shows "Could not save" and keeps the stored star); `persistence.spec.js` (cross-tab corrupt write on the list and on the view: rows stay, stars/Add disabled, then re-enabled after a good write). New helper `tests/e2e/helpers/collection.js` (`recipe()`, `SPEC_RECIPES` with no favourite, `seedCollection(page, recipes?)` on top of `seedRaw`).
 
 ---
 
@@ -1120,6 +1168,14 @@ echo "check.sh: all checks passed"
 | M2 | §0.1, §11.6 | e2e browser: Edge if installed, else `$PLAYWRIGHT_BROWSERS_PATH/chromium` (cloud: `/opt/pw-browsers`), else Playwright default | e2e must run in cloud sessions without Edge | D-08 |
 | M2 | §11.1, §11.6 | New specs/suites (`add`, `view-scale` view part, list A–Z; `search`, `form-model`, `recipe-store-reload-failure`); `helpers/recipes.js`; note on form modules and coverage. No script or package changes | as-built record | T-05b, T-09..T-13 |
 | M2 | CONVENTIONS §1 | New "Accessible form fields" rule (label/for, aria-label, error id + aria-describedby, ≥ 40 px, disabled button over href-less link) | the form made the pattern concrete | T-13, A-14 |
+| M3 | §0.2, §3, §3.1 | Filter panel split into new `web/js/ui/list-filters.js` (`createFilterPanel` → `{ element, refreshTags, syncFromState, focusSearch }`), built once per mount, sibling of `div.results` | file/function size limits; keeps focus while typing (design intent of §3.1) | T-14 |
+| M3 | §3.1, §3.4, §1.4, §8.1 | Search, tag filter, favourites-only, count, no-match state and "Clear filters" built as §3.4; filter restored from `filterState` on mount (survives list → view → list); vanished selected tag reset in `filterState`; `hasActiveFilters` not used by the UI | describe code as built | T-14 |
+| M3 | §0.2, §3.1, §4.1, §4.5 | New shared `web/js/ui/favourite-toggle.js` (`favouriteToggle`, `renderKeepingToggleFocus`) used by list rows and the view header (`div.title-row`); star state from the stored recipe only (no optimistic update); focus returns to the same star after a re-render | one star for both screens; keyboard users keep toggling | T-15 |
+| M3 | §3.4 | `recipe-row-star` span retired, replaced by the `favourite-toggle` `<button aria-pressed>` (with `data-recipe-id`) | planned replacement | T-15, A-13 |
+| M3 | §3.5, §4.5, §2.5 | Write controls follow `store.status` on every notification: header Add recomputed, stars and Add-first rebuilt; view star rebuilt (disabled while not `ready`). Closes the T-08 "Add buttons go stale" minor | CR-1 requirement | T-15, D-09 |
+| M3 | §2.5 | Star rejection mapped like the form (copied `failureMessage`): no banner for `StoreReadOnlyError`, "Could not save…" otherwise; not cleared by a later successful toggle | describe code as built (duplication + stale banner are deferred minors) | T-15 |
+| M3 | §2.5 | Layout/accessibility as built: `.list-layout` flex from 800 px with 280 px `.filters`, stacked below; `button.star` ≥ 44 px; visually hidden labels (`.sr-only`) for search and tag | describe code as built | T-14, T-15 |
+| M3 | §0.4, §11.1, §11.6 | No package or script changes; new DOM modules not unit-imported (coverage note); e2e additions in `list`, new `favourite`, `persistence` specs; new `helpers/collection.js` | as-built record | T-14, T-15 |
 
 ### Known deferred minors (M1 tidy-up list, owner-approved to defer)
 - T-02: `browser.js` has no URL guard of its own (relies on the URL coming from config).
@@ -1128,7 +1184,7 @@ echo "check.sh: all checks passed"
 - T-02: `HEALTH_PATH` is defined twice (`static-handler.js` exports it; `probe.js` has its own copy).
 - T-05 m2: a `save` that never settles stalls the write queue (no timeout on the chain).
 - T-06 m-A: `isForeignData` in `local-storage-persistence.js` repeats the codec's version check; base it on `decodeCollection` before any v2 format exists.
-- T-08: the list screen's Add buttons are enabled/disabled once at mount, so they go stale after a cross-tab status change. (CR-1: no longer deferrable; §3.5 now requires recomputing them on every store notification.)
+- ~~T-08: the list screen's Add buttons are enabled/disabled once at mount, so they go stale after a cross-tab status change.~~ **Closed in M3 (T-15):** recomputed on every store notification (§3.5).
 - T-08: errors thrown before `createApp(...).start()` miss the banner (the global listeners are installed in `start()`).
 - T-08: the status-sync `banner.clear()` can wipe a generic error banner.
 
@@ -1144,4 +1200,15 @@ echo "check.sh: all checks passed"
 - D-08 not applied to `scripts/screenshot.mjs` (still `channel: 'msedge'` only).
 - `.githooks/pre-commit` is not executable in fresh clones.
 - T-05b: two test-strength notes on the reload-failure suite.
-- Still open from M1 and owned by T-15: list Add buttons / stars `disabled` computed once at mount (§3.5).
+- ~~Still open from M1 and owned by T-15: list Add buttons / stars `disabled` computed once at mount (§3.5).~~ **Closed in M3 (T-15).**
+- T-11 "star aria-label" note: closed in M3 (T-15 `favourite-toggle` has `aria-label` + `aria-pressed`).
+
+### Known deferred minors (M3 tidy-up list)
+- T-15: the save-failure message mapping (`failureMessage`) is copied in `web/js/ui/favourite-toggle.js` and `screens/form-screen.js`; share one reason→text helper. Fold into T-18 together with the M2 "doubled Could not save" fix (§2.5).
+- T-15: a "Could not save" banner shown after a failed toggle is not cleared by a later successful toggle (the form clears its own; §2.5 says the message persists until the next success).
+- T-15: no in-flight guard on the star: a fast double click sends two `toggleFavourite` calls and flips the favourite twice (§3.5).
+- T-15: un-starring a row while "Favourites only" is on removes the row; focus drops to `<body>` (§3.4). Move focus to a sensible neighbour (next row's star or the search box).
+- T-15 tests: `favourite.spec.js` asserts the meaningless `SPEC_RECIPES.length === 3`; "star on the view toggles…" makes a final click right before navigating back (racy, does not await the result); `helpers/collection.js` comment says "Banana Bread (favourite)" but `SPEC_RECIPES` stores it as not favourite.
+- M3 sync: `list.spec.js` keeps its own `recipe()` / `seedRecipes()` copy of what `tests/e2e/helpers/collection.js` now exports.
+- M3 sync: `docs/diagrams/lld-components.mmd` (and the §0.3 diagram) do not show `list-filters.js` / `favourite-toggle.js`; they sit inside the "js/ui" box under §3/§4.
+- T-14: 3 reviewer minors and 4 agent decisions were in a lost report and are not recorded (STATE.md); carry them only if re-reviewed.
