@@ -1,12 +1,15 @@
 import { filterRecipes } from '../../core/search/search.js';
 import { h, clear } from '../dom.js';
 import { createFilterPanel } from '../list-filters.js';
+import { favouriteToggle, renderKeepingToggleFocus } from '../favourite-toggle.js';
 
 /**
  * @param {import('../../core/recipe/types.js').Recipe} recipe
+ * @param {import('../../store/recipe-store.js').RecipeStore} store
+ * @param {import('../banner.js').Banner} banner
  * @returns {HTMLElement}
  */
-function recipeRow(recipe) {
+function recipeRow(recipe, store, banner) {
   return h(
     'li',
     { class: 'recipe-row', 'data-testid': 'recipe-row', 'data-recipe-id': recipe.id },
@@ -21,12 +24,7 @@ function recipeRow(recipe) {
       }),
       h('div', {}, ...recipe.tags.map((tag) => h('span', { class: 'tag', text: tag }))),
     ),
-    h('span', {
-      class: 'star',
-      'data-testid': 'recipe-row-star',
-      title: recipe.favourite ? 'Favourite' : 'Not favourite',
-      text: recipe.favourite ? '★' : '☆',
-    }),
+    favouriteToggle(recipe, store, banner),
   );
 }
 
@@ -72,40 +70,47 @@ function emptyState(router, disabled) {
 
 /**
  * @param {readonly import('../../core/recipe/types.js').Recipe[]} recipes
+ * @param {import('../../store/recipe-store.js').RecipeStore} store
+ * @param {import('../banner.js').Banner} banner
  * @returns {HTMLElement[]}
  */
-function recipeList(recipes) {
+function recipeList(recipes, store, banner) {
   const count = recipes.length === 1 ? '1 recipe' : `${recipes.length} recipes`;
   return [
     h('p', { class: 'count', 'data-testid': 'recipe-count', text: count }),
-    h('ul', { class: 'recipe-list' }, ...recipes.map(recipeRow)),
+    h('ul', { class: 'recipe-list' }, ...recipes.map((r) => recipeRow(r, store, banner))),
   ];
 }
 
 /**
  * @param {import('../router.js').Router} router
- * @param {boolean} disabled
- * @returns {HTMLElement}
+ * @returns {HTMLButtonElement}
  */
-function listHeader(router, disabled) {
-  return h(
-    'header',
-    { class: 'list-header' },
-    h('h1', { text: 'Recipe Box' }),
+function addButton(router) {
+  return /** @type {HTMLButtonElement} */ (
     h('button', {
       type: 'button',
       class: 'btn primary',
       'data-testid': 'add-recipe',
-      disabled,
       onclick: () => router.navigate({ name: 'new' }),
       text: '+ Add recipe',
-    }),
+    })
   );
 }
 
+/**
+ * @param {HTMLElement} add
+ * @param {HTMLElement} layout
+ * @returns {HTMLElement}
+ */
+function listPage(add, layout) {
+  const header = h('header', { class: 'list-header' }, h('h1', { text: 'Recipe Box' }), add);
+  return h('main', { class: 'page' }, header, layout);
+}
+
 /** @type {import('../router.js').MountScreen} */
-export function mountListScreen(container, { store, router, filterState }) {
-  const disabled = store.status !== 'ready';
+export function mountListScreen(container, { store, router, filterState, banner }) {
+  const add = addButton(router);
   const results = h('div', { class: 'results' });
   const panel = createFilterPanel(filterState, renderResults);
 
@@ -119,24 +124,28 @@ export function mountListScreen(container, { store, router, filterState }) {
   function renderResults() {
     clear(results);
     if (store.list().length === 0) {
-      results.append(emptyState(router, disabled));
+      results.append(emptyState(router, store.status !== 'ready'));
       return;
     }
     const recipes = filterRecipes(store.list(), filterState.get());
-    results.append(...(recipes.length === 0 ? [noMatchState(clearFilters)] : recipeList(recipes)));
+    results.append(
+      ...(recipes.length === 0 ? [noMatchState(clearFilters)] : recipeList(recipes, store, banner)),
+    );
   }
 
   function onStoreChange() {
+    add.disabled = store.status !== 'ready';
     panel.refreshTags(store.list());
-    renderResults();
+    renderKeepingToggleFocus(results, renderResults);
   }
 
+  add.disabled = store.status !== 'ready';
   panel.refreshTags(store.list());
   panel.syncFromState();
   renderResults();
   // The filter panel is a sibling of results, so re-rendering results never replaces the
   // controls or steals their focus.
   const layout = h('div', { class: 'list-layout' }, panel.element, results);
-  container.append(h('main', { class: 'page' }, listHeader(router, disabled), layout));
+  container.append(listPage(add, layout));
   return { unmount: store.subscribe(onStoreChange) };
 }
