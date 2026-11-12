@@ -21,6 +21,7 @@ const SCREENS = {
   list: mountListScreen,
   view: mountViewScreen,
   new: mountFormScreen,
+  edit: mountFormScreen,
 };
 
 /**
@@ -69,6 +70,11 @@ export function createApp({ root, store, window }) {
   );
   const dialogs = createDialogs();
   const filterState = createFilterState();
+  /** @type {import('./router.js').ScreenContext['onBeforeUnload']} */
+  const onBeforeUnload = (listener) => {
+    window.addEventListener('beforeunload', listener);
+    return () => window.removeEventListener('beforeunload', listener);
+  };
   /** @type {import('./router.js').ScreenHandle | null} */
   let current = null;
 
@@ -77,8 +83,12 @@ export function createApp({ root, store, window }) {
     current?.unmount();
     clear(root);
     const mountScreen =
-      SCREENS[/** @type {'list' | 'view' | 'new'} */ (route.name)] ?? mountNotFoundScreen;
-    current = mountScreen(root, { store, router, dialogs, banner, filterState }, route);
+      SCREENS[/** @type {'list' | 'view' | 'new' | 'edit'} */ (route.name)] ?? mountNotFoundScreen;
+    current = mountScreen(
+      root,
+      { store, router, dialogs, banner, filterState, onBeforeUnload },
+      route,
+    );
   }
 
   const router = createRouter({
