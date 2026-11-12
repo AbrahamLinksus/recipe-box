@@ -2,6 +2,7 @@ import { h, clear } from '../dom.js';
 import { favouriteToggle, TOGGLE_FOCUS } from '../favourite-toggle.js';
 import { servingsControl, SERVINGS_FOCUS } from '../servings-control.js';
 import { renderKeepingFocus } from '../focus-keeper.js';
+import { saveFailureMessage } from '../save-failure.js';
 import { formatIngredientLine } from '../../core/scaling/scaling.js';
 
 /**
@@ -92,14 +93,27 @@ function editControl(id, canEdit) {
 /**
  * @param {string} id
  * @param {boolean} canEdit
+ * @param {() => void} onDelete
  * @returns {HTMLElement}
  */
-function topBar(id, canEdit) {
+function topBar(id, canEdit, onDelete) {
   return h(
     'header',
     { class: 'view-bar' },
     h('a', { href: '#/', 'data-testid': 'back-to-list', text: '\u2190 All recipes' }),
-    editControl(id, canEdit),
+    h(
+      'div',
+      { class: 'bar-actions' },
+      editControl(id, canEdit),
+      h('button', {
+        class: 'btn',
+        type: 'button',
+        'data-testid': 'delete-recipe',
+        disabled: !canEdit,
+        onclick: onDelete,
+        text: 'Delete',
+      }),
+    ),
   );
 }
 
@@ -113,11 +127,40 @@ function notFound() {
   );
 }
 
+/**
+ * Confirm, then remove; a rejected remove shows the banner and stays on the view (LLD 4.4).
+ * @param {import('../router.js').ScreenContext} ctx
+ * @param {string} id
+ * @returns {() => Promise<void>}
+ */
+function deleteHandler({ store, banner, dialogs, router }, id) {
+  return async () => {
+    const recipe = store.get(id);
+    if (!recipe) return;
+    const confirmed = await dialogs.confirm({
+      message: `Delete '${recipe.title}'? Are you sure?`,
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel',
+    });
+    if (!confirmed) return;
+    try {
+      await store.remove(id);
+    } catch (err) {
+      const message = saveFailureMessage(err);
+      if (message) banner.show('error', message);
+      return;
+    }
+    router.navigate({ name: 'list' }, { replace: true });
+  };
+}
+
 const VIEW_FOCUS = Object.freeze({ ...TOGGLE_FOCUS, ...SERVINGS_FOCUS });
 
 /** @type {import('../router.js').MountScreen} */
-export function mountViewScreen(container, { store, banner }, route) {
+export function mountViewScreen(container, ctx, route) {
+  const { store, banner } = ctx;
   const id = route.name === 'view' ? route.id : '';
+  const onDelete = deleteHandler(ctx, id);
   const content = h('div', { class: 'view-content' });
   let servings = 0;
   let shownRecipe = '';
@@ -138,7 +181,7 @@ export function mountViewScreen(container, { store, banner }, route) {
     content.append(
       ...(recipe
         ? [
-            topBar(id, store.status === 'ready'),
+            topBar(id, store.status === 'ready', onDelete),
             recipeHeader(recipe, favouriteToggle(recipe, store, banner)),
             servingsControl({
               base: recipe.servings,
