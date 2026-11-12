@@ -70,4 +70,9 @@ test('rejected write shows the Could not save banner and keeps the stored star',
   await expect(page.getByTestId('banner')).toContainText('Could not save');
   await expect(star).toHaveText('☆');
   expect(SPEC_RECIPES.length).toBe(3);
+  const stored = await page.evaluate(() => localStorage.getItem('recipe-box:collection'));
+  const banana = JSON.parse(stored ?? '{}').recipes.find(
+    (/** @type {{title: string}} */ r) => r.title === 'Banana Bread',
+  );
+  expect(banana.favourite).toBeFalsy();
 });

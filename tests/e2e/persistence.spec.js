@@ -57,6 +57,7 @@ test('cross-tab corrupt write on the list: rows stay, controls disabled, then re
   await expect(page.getByTestId('banner')).toBeVisible();
   await expect(page.getByTestId('recipe-count')).toHaveText('3 recipes');
   await expect(page.getByTestId('add-recipe')).toBeDisabled();
+  await expect(page.getByTestId('favourite-toggle')).toHaveCount(3);
   for (const star of await page.getByTestId('favourite-toggle').all()) {
     await expect(star).toBeDisabled();
   }
@@ -66,6 +67,7 @@ test('cross-tab corrupt write on the list: rows stay, controls disabled, then re
   await writeRaw(other, JSON.stringify({ version: 1, recipes: SPEC_RECIPES }));
   await expect(page.getByTestId('banner')).toBeHidden();
   await expect(page.getByTestId('add-recipe')).toBeEnabled();
+  await expect(page.getByTestId('favourite-toggle')).toHaveCount(3);
   for (const star of await page.getByTestId('favourite-toggle').all()) {
     await expect(star).toBeEnabled();
   }
