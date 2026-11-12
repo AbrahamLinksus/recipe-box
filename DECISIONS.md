@@ -15,6 +15,7 @@
 | D-09 | 2026-11-12 | Unreadable data after a cross-tab reload (LLD §9.5 vs §3.5/§4.5) | Keep the last loaded recipes visible, read-only, with banner → CR-1 | Show nothing and amend §3.5/§4.5; decide later | T-12 |
 | D-10 | 2026-11-12 | CR-1 · keep last recipes visible on unreadable reload | LLD §9.5 load-path table (+§2.5/§3.5/§4.5/§5.5); new T-05b in M2; T-15/T-17/T-18/T-19 criteria updated | Cancel CR | CR-1 |
 | D-11 | 2026-11-12 | Save on the recipe form while the store is read-only (LLD §2.5 vs §5.5) | Disable Save live, following store.status (§2.5 / CR-1); architect aligns §5.5 at M2 as-built sync; add form gets it in T-15/T-18 | Keep Save enabled, store rejects with StoreReadOnlyError (§5.5) | T-13 |
+| D-12 | 2026-11-12 | Pre-existing failing e2e test (persistence.spec.js cross-tab list recover: search filter left active) | Fix in T-20 (full e2e pass) | Fix now / fold into T-19 | T-17, T-18 |
 
 ## Tier 2 — decided by agents (overrule any time)
 
@@ -34,3 +35,6 @@
 | A-12 | 2026-11-12 | isDirty | trimmed JSON fingerprint of both drafts; no-op ops return a fresh draft sharing untouched arrays | frontend-coder | T-10 |
 | A-13 | 2026-11-12 | List star before T-15 | non-interactive span (★/☆ from stored state); becomes the labelled toggle button in T-15 | frontend-coder | T-11 |
 | A-14 | 2026-11-12 | Disabled Edit on the view | disabled <button> with the same testid (not an href-less link) | frontend-coder | T-12 |
+| A-15 | 2026-11-12 | Unknown id on the edit hash | reuse mountNotFoundScreen | frontend-coder | T-18 |
+| A-16 | 2026-11-12 | Cancel on the edit form | returns to the recipe view | frontend-coder | T-18 |
+| A-17 | 2026-11-12 | beforeunload + save-failure text | ctx.onBeforeUnload in ScreenContext; one reason→text map in web/js/ui/save-failure.js | frontend-coder | T-18 |

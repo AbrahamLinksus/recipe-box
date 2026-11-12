@@ -270,14 +270,14 @@ Notes for every task
 - Owner: frontend-coder
 - Depends on: T-13
 - Context: SPEC US-09, §4 F-5, §5 F-5 · LLD §5.1, §5.4, §5.5, §2.4, §2.5 · files: web/js/ui/screens/form-screen.js, web/js/ui/app.js, web/css/app.css, tests/e2e/edit.spec.js, tests/e2e/helpers/*
-- Status: Backlog
+- Status: Done
 - Acceptance criteria:
-  - [ ] `#/recipe/<id>/edit` shows "Edit recipe" pre-filled with every field (amounts as typed); unknown id → not-found state
-  - [ ] SPEC §5 F-5: Pancakes serves 4 → 6 plus tag `weekend`, Save → view shows "Serves 6" and tags `breakfast` `sweet` `weekend`, list shows the new tag, and both survive `page.reload()`; Back after save does not return to the form
-  - [ ] Change the title, press Cancel → "Discard changes?"; Discard → view shows the old title; Keep editing → form keeps the change; closing the tab while dirty triggers the browser's leave prompt (`beforeunload`)
-  - [ ] Same validation as add (empty title blocked). Save rejected by the store, i.e. `StoreReadOnlyError` (edit hash opened after a cross-tab `{oops`: form pre-filled from the kept recipe) / `RecipeNotFoundError` / write failure → banner, form stays open and dirty, stored value unchanged
-  - [ ] `tests/e2e/edit.spec.js` passes in both projects; screenshots in `.results/T-18/`
-- Result: —
+  - [x] `#/recipe/<id>/edit` shows "Edit recipe" pre-filled with every field (amounts as typed); unknown id → not-found state
+  - [x] SPEC §5 F-5: Pancakes serves 4 → 6 plus tag `weekend`, Save → view shows "Serves 6" and tags `breakfast` `sweet` `weekend`, list shows the new tag, and both survive `page.reload()`; Back after save does not return to the form
+  - [x] Change the title, press Cancel → "Discard changes?"; Discard → view shows the old title; Keep editing → form keeps the change; closing the tab while dirty triggers the browser's leave prompt (`beforeunload`)
+  - [x] Same validation as add (empty title blocked). Save rejected by the store, i.e. `StoreReadOnlyError` (edit hash opened after a cross-tab `{oops`: form pre-filled from the kept recipe) / `RecipeNotFoundError` / write failure → banner, form stays open and dirty, stored value unchanged
+  - [x] `tests/e2e/edit.spec.js` passes in both projects; screenshots in `.results/T-18/`
+- Result: ✅ 5/5 goals · 0 major, 4 minor (M4 tidy-up) · D-11 + shared save-failure text + ctx beforeunload folded in · 3cbe826
 
 ### T-19 · Delete a recipe with confirm
 
@@ -302,6 +302,7 @@ Notes for every task
   - [ ] New `tests/e2e/layout.spec.js`: on every screen (list, view, add, edit, not-found) at 390 px `document.documentElement.scrollWidth <= clientWidth` and every button/link/input is ≥ 40 px tall
   - [ ] Each screen has one `<h1>`; every interactive element is a real button/link/control with its LLD `data-testid`; stars have `aria-pressed` and `aria-label`
   - [ ] Screenshots of list, view (Pancakes at 3 servings), form (with a validation error) and delete dialog at 1280 and 390 px in `.results/T-20/`, side by side with the wireframe renders, with differences listed in the report
+  - [ ] Fix the pre-existing test bug in `tests/e2e/persistence.spec.js` "cross-tab corrupt write on the list … recover" (search filter `b` left active, so it counts 1 star instead of 3) — D-12
   - [ ] `bash scripts/check.sh --e2e` passes with all specs (list, add, view-scale, favourite, edit, delete, persistence, layout) in both projects
 - Result: —
 

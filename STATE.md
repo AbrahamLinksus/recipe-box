@@ -7,8 +7,8 @@
 | Problem      | Single-user recipe box web app: add, search by title/tag, scale servings, favourite; data saved locally |
 | Repo         | AbrahamLinksus/recipe-box (public)                                                                      |
 | Stage | 7 Build |
-| Milestone | M4 · Scale (T-16 done, T-17 next) — M1 done (8666dd4), M2 done (04137c2), M3 done (44e6b69) |
-| Next step | Fresh session: `/setup-project resume recipe-box` → start T-17 (servings control on the recipe view, frontend-coder); run `npm ci` in every new worktree first |
+| Milestone | M4 · Scale (T-16 done, T-17 in debug round 1; T-18 of M5 done early) — M1 done (8666dd4), M2 done (04137c2), M3 done (44e6b69) |
+| Next step | Finish T-17 (wip/T-17: debugger round 1 for focus loss after +/−/Reset, then re-test + re-review) → T-19 → T-20; run `npm ci` in every new worktree first |
 | Last updated | 2026-11-12 |
 
 ## Config
@@ -62,6 +62,8 @@ Context gaps agents reported (`Context gap:` in a REPORT). The Orchestrator adds
 | architect, docs | a file with `git diff <since>..main --stat` (Orchestrator writes it) | no shell tool to run git (M2-docs gap reports) |
 
 ## Notes for the next session
+- Session 2026-11-12 (4): T-18 approved (3cbe826). T-18 reviewer minors (M4 tidy-up): edit.spec Back-after-save check is weak; RecipeNotFound test does not assert dirty/stored value; no unit test for form-save.js; `cancelTo` type cast. LLD as-built sync needed for §2.1/§2.5/§5.1/§5.4/§5.5 (form-save.js, form-top.js, save-failure.js, ctx.onBeforeUnload). M2 "doubled Could not save", M3 duplicated failureMessage and M2 m-8 are closed by T-18. Parallel e2e runs in two worktrees clash on port 47399: use a temp config with another port.
+- T-17 review minors: focus helper should be shared with favourite-toggle (debugger round 1 doing it); no upper bound on servings (huge value → Infinity amounts; core, pre-existing).
 - M3 approved 2026-11-12 (milestone card, 44e6b69). Owner chose: continue M4 in a fresh session. M3 deferred minors are in docs/LLD.md "Known deferred minors". Merged leftovers on origin: wip/T-14, wip/T-15, wip/M3-docs (ignore; owner deletes in GitHub UI). M3-docs approve first failed exit 5 only because node_modules was missing in the worktree.
 - T-15 approved (fc6a73e). M3 tidy-up minors (T-15): failure-message helper duplicated with form-screen.js (fold into T-18); stale "Could not save" banner not cleared after a later successful toggle; no in-flight guard on star (double-click flips twice); focus drops to body when un-starring under Favourites only; tests: meaningless SPEC_RECIPES.length assertion, racy final click before navigation, wrong "(favourite)" comment in helpers/collection.js. T-15 agent decisions: star updates only after save succeeds (no optimistic update); focus restored to the same star after re-render; failure mapping copied not shared (T-18 area). M3 as-built LLD sync: favourite-toggle.js shared button; recipe-row-star retired; header Add recomputed per notification. wip/T-15 left on origin (merged).
 - Session 2026-11-12 (3): T-14 approved (170a8eb). Old leftover branches were deleted by the owner; wip/T-14 remains on origin (merged; ignore on resume). T-14's 3 reviewer minors and 4 agent decisions were in a lost .results report; not recorded.
