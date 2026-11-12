@@ -5,7 +5,8 @@
  *
  * @typedef {{ store: import('../store/recipe-store.js').RecipeStore, router: Router,
  *   dialogs: import('./dialogs.js').Dialogs, banner: import('./banner.js').Banner,
- *   filterState: import('./filter-state.js').FilterState }} ScreenContext
+ *   filterState: import('./filter-state.js').FilterState,
+ *   onBeforeUnload(listener: (e: BeforeUnloadEvent) => void): () => void }} ScreenContext
  * @typedef {{ unmount(): void, canLeave?(): Promise<boolean> }} ScreenHandle
  * @typedef {(container: HTMLElement, ctx: ScreenContext, route: Route) => ScreenHandle} MountScreen
  */

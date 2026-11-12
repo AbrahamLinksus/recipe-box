@@ -1,19 +1,7 @@
 import { h } from './dom.js';
-import { PersistenceWriteError, StoreReadOnlyError } from '../store/errors.js';
+import { saveFailureMessage } from './save-failure.js';
 
 const TOGGLE = 'favourite-toggle';
-
-/**
- * @param {unknown} err
- * @returns {string | null} banner text, or null when the status banner already says it
- */
-function failureMessage(err) {
-  if (err instanceof StoreReadOnlyError) return null;
-  if (err instanceof PersistenceWriteError) {
-    return `Could not save: ${err.message}. Your last change was not stored.`;
-  }
-  return 'Could not save. Your last change was not stored.';
-}
 
 /**
  * The star button. Its look always comes from the stored recipe (no optimistic change), so a
@@ -29,7 +17,7 @@ export function favouriteToggle(recipe, store, banner) {
     try {
       await store.toggleFavourite(recipe.id);
     } catch (err) {
-      const message = failureMessage(err);
+      const message = saveFailureMessage(err);
       if (message) banner.show('error', message);
     }
   }
