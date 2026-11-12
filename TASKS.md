@@ -254,14 +254,14 @@ Notes for every task
 - Owner: frontend-coder
 - Depends on: T-15, T-16
 - Context: SPEC US-06, §4 F-3, §5 F-3 · LLD §4.1, §4.4, §4.5, §7.1 · files: web/js/ui/screens/view-screen.js, web/css/app.css, tests/e2e/view-scale.spec.js, tests/e2e/helpers/*, docs/wireframes/recipe-view.html
-- Status: Backlog
+- Status: Done
 - Acceptance criteria:
-  - [ ] − / number / + (`servings-dec`, `servings-input`, `servings-inc`) rescale every ingredient instantly via `formatIngredientLine`; − is disabled at 1; typing `0`, empty or `abc` keeps the previous value and blur resets the input text
-  - [ ] SPEC §5 F-3 in e2e: Pancakes 4→6 "300 g flour", "3 eggs", "450 ml milk", "a pinch of salt"; 4→3 "150 g", "1½", "225 ml"; 4→1 "50 g", "½", "75 ml"; Banana Bread 8→2 "¾", "¼ tsp", "62½ g"; 8→1 "½", "¼ tsp", "31¼ g"
-  - [ ] "Reset (4)" (`servings-reset`) and the note "Recipe saved for 4 servings; scaling is not saved." appear only while scaled; reopening the recipe or reloading shows base servings and stored data is unchanged
-  - [ ] `tests/e2e/view-scale.spec.js` passes in both projects; screenshots of Pancakes at 3 servings (1280/390 px) in `.results/T-17/`
-  - [ ] A store notification while scaled keeps the screen-local servings (§4.5). On Pancakes at 3 servings, toggling the star (or a cross-tab reload) re-renders the view still at 3 with "150 g flour", "1½ eggs", "225 ml milk"
-- Result: —
+  - [x] − / number / + (`servings-dec`, `servings-input`, `servings-inc`) rescale every ingredient instantly via `formatIngredientLine`; − is disabled at 1; typing `0`, empty or `abc` keeps the previous value and blur resets the input text
+  - [x] SPEC §5 F-3 in e2e: Pancakes 4→6 "300 g flour", "3 eggs", "450 ml milk", "a pinch of salt"; 4→3 "150 g", "1½", "225 ml"; 4→1 "50 g", "½", "75 ml"; Banana Bread 8→2 "¾", "¼ tsp", "62½ g"; 8→1 "½", "¼ tsp", "31¼ g"
+  - [x] "Reset (4)" (`servings-reset`) and the note "Recipe saved for 4 servings; scaling is not saved." appear only while scaled; reopening the recipe or reloading shows base servings and stored data is unchanged
+  - [x] `tests/e2e/view-scale.spec.js` passes in both projects; screenshots of Pancakes at 3 servings (1280/390 px) in `.results/T-17/`
+  - [x] A store notification while scaled keeps the screen-local servings (§4.5). On Pancakes at 3 servings, toggling the star (or a cross-tab reload) re-renders the view still at 3 with "150 g flour", "1½ eggs", "225 ml milk"
+- Result: ✅ 5/5 goals · 1 major (focus after +/−/Reset) fixed in 2 debugger rounds · 0 major on re-review, 3 minor (M4 tidy-up) · 2958941
 
 ## M5 · Edit, delete and finish
 

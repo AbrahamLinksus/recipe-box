@@ -38,3 +38,5 @@
 | A-15 | 2026-11-12 | Unknown id on the edit hash | reuse mountNotFoundScreen | frontend-coder | T-18 |
 | A-16 | 2026-11-12 | Cancel on the edit form | returns to the recipe view | frontend-coder | T-18 |
 | A-17 | 2026-11-12 | beforeunload + save-failure text | ctx.onBeforeUnload in ScreenContext; one reason→text map in web/js/ui/save-failure.js | frontend-coder | T-18 |
+| A-18 | 2026-11-12 | Servings state on the view | reset only on first show of a recipe id; kept across store notifications (with focus and typed text) | frontend-coder | T-17 |
+| A-19 | 2026-11-12 | Focus after re-render | shared renderKeepingFocus in web/js/ui/focus-keeper.js; fallback per control (servings → input; star none) | debugger | T-17 |
