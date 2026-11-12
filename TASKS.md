@@ -306,6 +306,19 @@ Notes for every task
   - [x] `bash scripts/check.sh --e2e` passes with all specs (list, add, view-scale, favourite, edit, delete, persistence, layout) in both projects
 - Result: ✅ 5/5 goals · 170 e2e pass · 0 major, 3 minor (M5 sync) · T-19 m-7 folded in · ffef845
 
+### T-21 · Delete: already-deleted recipe counts as deleted (D-13)
+
+- Owner: frontend-coder
+- Depends on: T-19
+- Context: DECISIONS D-13 · LLD §2.5, §4.5 · files: web/js/ui/screens/view-screen.js, tests/e2e/delete.spec.js
+- Status: Backlog
+- Acceptance criteria:
+  - [ ] With the delete dialog open on Tomato Soup, a second page removes Tomato Soup; confirming Delete shows no "Could not save" banner and lands on the list (Banana Bread, Pancakes) via replace; Back does not reopen it
+  - [ ] Other rejected removes (read-only store, write failure) keep the existing banner behaviour
+  - [ ] T-19 m-8: e2e test for Back with the dialog open, then confirm → nothing removed
+  - [ ] `bash scripts/check.sh --e2e` passes in both projects
+- Result: —
+
 ## User story coverage
 
 | Story | Tasks |
