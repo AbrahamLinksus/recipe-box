@@ -14,6 +14,7 @@
 | D-08 | 2026-11-11 | Browser for e2e (amends D-03) | Edge (channel msedge) when installed, else the Playwright Chromium already on the machine; same Chromium engine. Implemented in T-12 | Always Chromium; skip e2e in the cloud | T-12 |
 | D-09 | 2026-11-12 | Unreadable data after a cross-tab reload (LLD §9.5 vs §3.5/§4.5) | Keep the last loaded recipes visible, read-only, with banner → CR-1 | Show nothing and amend §3.5/§4.5; decide later | T-12 |
 | D-10 | 2026-11-12 | CR-1 · keep last recipes visible on unreadable reload | LLD §9.5 load-path table (+§2.5/§3.5/§4.5/§5.5); new T-05b in M2; T-15/T-17/T-18/T-19 criteria updated | Cancel CR | CR-1 |
+| D-11 | 2026-11-12 | Save on the recipe form while the store is read-only (LLD §2.5 vs §5.5) | Disable Save live, following store.status (§2.5 / CR-1); architect aligns §5.5 at M2 as-built sync; add form gets it in T-15/T-18 | Keep Save enabled, store rejects with StoreReadOnlyError (§5.5) | T-13 |
 
 ## Tier 2 — decided by agents (overrule any time)
 

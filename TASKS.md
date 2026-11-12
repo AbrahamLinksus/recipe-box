@@ -182,27 +182,27 @@ Notes for every task
 - Owner: frontend-coder
 - Depends on: T-05, T-10, T-11, T-12
 - Context: SPEC US-01, US-08, §4 F-1, §5 F-1 · LLD §5.1, §5.4, §5.5, §6.2, §2.4 · files: web/js/ui/screens/form-screen.js, web/js/ui/app.js, web/css/app.css, tests/e2e/add.spec.js, tests/e2e/helpers/*, docs/wireframes/recipe-form.html
-- Status: Backlog
+- Status: Done
 - Acceptance criteria:
-  - [ ] `#/new` shows "Add recipe" with title, servings, ingredient rows (amount/unit/name, add/remove), step rows (add/remove/up/down), tag chips (Enter or comma adds, ✕ removes) and the two help texts from §5.4
-  - [ ] SPEC §5 F-1: entering Pancakes with tags `Breakfast`, `sweet ` and saving opens its view with tags `breakfast` `sweet`; back on the list it appears; after `page.reload()` it is still there with all fields intact
-  - [ ] Empty title → "Title is required" under the title (`error-title`), nothing saved; "Toast" serves 1 with no ingredients → "Add at least one ingredient"; first invalid field focused and `aria-invalid` set
-  - [ ] Cancel or navigating away with changes asks "Discard changes?" (Keep editing keeps the form; Discard goes to the list); Save is disabled while saving
-  - [ ] `tests/e2e/add.spec.js` covers the three F-1 rows and the discard confirm, passing in both projects; screenshots in `.results/T-13/`
-- Result: —
+  - [x] `#/new` shows "Add recipe" with title, servings, ingredient rows (amount/unit/name, add/remove), step rows (add/remove/up/down), tag chips (Enter or comma adds, ✕ removes) and the two help texts from §5.4
+  - [x] SPEC §5 F-1: entering Pancakes with tags `Breakfast`, `sweet ` and saving opens its view with tags `breakfast` `sweet`; back on the list it appears; after `page.reload()` it is still there with all fields intact
+  - [x] Empty title → "Title is required" under the title (`error-title`), nothing saved; "Toast" serves 1 with no ingredients → "Add at least one ingredient"; first invalid field focused and `aria-invalid` set
+  - [x] Cancel or navigating away with changes asks "Discard changes?" (Keep editing keeps the form; Discard goes to the list); Save is disabled while saving
+  - [x] `tests/e2e/add.spec.js` covers the three F-1 rows and the discard confirm, passing in both projects; screenshots in `.results/T-13/`
+- Result: ✅ 5/5 goals · 1 fix round (M-1 unlabelled inputs + m-1,2,4,5,6,7,9) · 52 e2e pass · open: m-3 Save while read-only → D-11 (disable), m-8 window via ScreenContext, n-1 add.spec.js:189 test title · 35e517b
 
 ### T-05b · Store: keep the last loaded recipes when a reload fails (CR-1)
 
 - Owner: backend-coder
 - Depends on: T-05
 - Context: SPEC US-08 · LLD §9.1, §9.5 · files: web/js/store/recipe-store.js, tests/unit/store/*, tests/helpers/memory-persistence.js
-- Status: Backlog
+- Status: Done
 - Acceptance criteria:
-  - [ ] The non-ready branch of `#load()` in `web/js/store/recipe-store.js` no longer resets the snapshot. A first load that is `unreadable`, `unavailable` or rejects still gives `list()` = `[]` and `get(id)` = `undefined`, with the §9.5 status and reason (one unit test per case)
-  - [ ] After a good load, a `reload()` that is `unreadable`, `unavailable` or rejects keeps the same frozen recipes in `list()`, `get(id)` still finds them, `status`/`statusReason` are set and subscribers are notified exactly once. `create`, `update`, `remove` and `toggleFavourite` then reject with `StoreReadOnlyError` and `save` is never called
-  - [ ] A later `reload()` returning `ok` → `ready` with the fresh data, reason `null`, notified once; returning `empty` → `ready` with `[]`; switching between `unreadable` and `unavailable` notifies; a successful write followed by a failing reload keeps the written data
-  - [ ] Existing store tests that expected `[]` after a failed reload are updated (not deleted); the T-04 start-up tests still pass unchanged; checks pass
-- Result: —
+  - [x] The non-ready branch of `#load()` in `web/js/store/recipe-store.js` no longer resets the snapshot. A first load that is `unreadable`, `unavailable` or rejects still gives `list()` = `[]` and `get(id)` = `undefined`, with the §9.5 status and reason (one unit test per case)
+  - [x] After a good load, a `reload()` that is `unreadable`, `unavailable` or rejects keeps the same frozen recipes in `list()`, `get(id)` still finds them, `status`/`statusReason` are set and subscribers are notified exactly once. `create`, `update`, `remove` and `toggleFavourite` then reject with `StoreReadOnlyError` and `save` is never called
+  - [x] A later `reload()` returning `ok` → `ready` with the fresh data, reason `null`, notified once; returning `empty` → `ready` with `[]`; switching between `unreadable` and `unavailable` notifies; a successful write followed by a failing reload keeps the written data
+  - [x] Existing store tests that expected `[]` after a failed reload are updated (not deleted); the T-04 start-up tests still pass unchanged; checks pass
+- Result: ✅ 4/4 goals · 0 major · open: 2 minor test-strength notes (reload-failure test reason assertion; empty-recovery reason-null) · e104b93
 
 ## M3 · Find and favourite
 

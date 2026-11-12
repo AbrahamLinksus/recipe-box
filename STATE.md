@@ -7,8 +7,8 @@
 | Problem      | Single-user recipe box web app: add, search by title/tag, scale servings, favourite; data saved locally |
 | Repo         | AbrahamLinksus/recipe-box (public)                                                                      |
 | Stage | 7 Build |
-| Milestone | M2 · Add, list and open (4/6 tasks) — M1 done (8666dd4) |
-| Next step | Fresh session: `/setup-project resume recipe-box` → start T-13 (add form, frontend-coder) ∥ T-05b (store fix, backend-coder; LLD §9.5 CR-1). Then M2 milestone (architect as-built sync + docs) |
+| Milestone | M2 · Add, list and open (6/6 tasks — all Done; milestone wrap-up next) — M1 done (8666dd4) |
+| Next step | M2-docs: architect as-built sync of docs/LLD.md (M2 sync list below + D-11 §5.5 alignment), then docs README pass; then M2 milestone card |
 | Last updated | 2026-11-12 |
 
 ## Config
@@ -61,6 +61,10 @@ Context gaps agents reported (`Context gap:` in a REPORT). The Orchestrator adds
 | reviewer (UI) | web/js/ui/dom.js; TASKS.md rows of later tasks touching the same screen | T-12 review needed them to judge coverage |
 
 ## Notes for the next session
+- Session 2026-11-12 (2): T-05b (e104b93) and T-13 (35e517b) approved. Leftover wip/CR-1 on origin blocks taskgit approve (exit 8: CR hold) and cannot be deleted from cloud sessions (push --delete disconnects). Owner approved skipping the CR hold once for these two merges; ask the owner to delete wip/CR-1 + wip/T-09..T-12 in the GitHub web UI before the next approve.
+- D-11 (owner): Save disabled live while store is read-only. T-18 brief: apply it to the shared form screen (add + edit), subscribe to store.status; remove the §5.5 "Save rejects" path from the UI.
+- M2 tidy-up minors (T-13): m-8 beforeunload on global window (pass via ScreenContext), n-1 add.spec.js:189 test title says focus stays put but checks it moves; m-4 + m-9 fixes have no automated test. T-05b: 2 minor test-strength notes.
+- M2 as-built LLD sync list (T-13): form split into form-widgets/form-ingredients/form-steps/form-tags.js; testids/ids error-<field> + aria-describedby; tag chip remove 40px; §5.5 align with D-11.
 - Session 2026-11-12: T-09, T-10, T-11, T-12 approved; D-08 (e2e browser fallback), D-09 + CR-1 (D-10) merged. Owner chose to continue in a fresh session after CR-1.
 - M1 approved 2026-11-12 (milestone card). Owner chose: continue M2 in a fresh session via `/setup-project resume recipe-box`.
 - After the plan merge, DECISIONS.md/STATE.md rows recorded on main during planning were overwritten; restored in 3f7e683. Verify rows after any merge that owns shared files.
