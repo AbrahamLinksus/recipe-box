@@ -191,6 +191,19 @@ Notes for every task
   - [ ] `tests/e2e/add.spec.js` covers the three F-1 rows and the discard confirm, passing in both projects; screenshots in `.results/T-13/`
 - Result: —
 
+### T-05b · Store: keep the last loaded recipes when a reload fails (CR-1)
+
+- Owner: backend-coder
+- Depends on: T-05
+- Context: SPEC US-08 · LLD §9.1, §9.5 · files: web/js/store/recipe-store.js, tests/unit/store/*, tests/helpers/memory-persistence.js
+- Status: Backlog
+- Acceptance criteria:
+  - [ ] The non-ready branch of `#load()` in `web/js/store/recipe-store.js` no longer resets the snapshot. A first load that is `unreadable`, `unavailable` or rejects still gives `list()` = `[]` and `get(id)` = `undefined`, with the §9.5 status and reason (one unit test per case)
+  - [ ] After a good load, a `reload()` that is `unreadable`, `unavailable` or rejects keeps the same frozen recipes in `list()`, `get(id)` still finds them, `status`/`statusReason` are set and subscribers are notified exactly once. `create`, `update`, `remove` and `toggleFavourite` then reject with `StoreReadOnlyError` and `save` is never called
+  - [ ] A later `reload()` returning `ok` → `ready` with the fresh data, reason `null`, notified once; returning `empty` → `ready` with `[]`; switching between `unreadable` and `unavailable` notifies; a successful write followed by a failing reload keeps the written data
+  - [ ] Existing store tests that expected `[]` after a failed reload are updated (not deleted); the T-04 start-up tests still pass unchanged; checks pass
+- Result: —
+
 ## M3 · Find and favourite
 
 ### T-14 · List search, tag filter, favourites-only and no-match state
@@ -210,13 +223,14 @@ Notes for every task
 ### T-15 · Favourite star on list and view
 
 - Owner: frontend-coder
-- Depends on: T-05, T-12, T-14
-- Context: SPEC US-07, US-08, §4 F-4, §5 F-4 · LLD §3.4, §3.5, §4.4, §4.5, §2.5 · files: web/js/ui/screens/{list-screen,view-screen}.js, web/css/app.css, tests/e2e/favourite.spec.js, tests/e2e/helpers/*
+- Depends on: T-05b, T-12, T-14
+- Context: SPEC US-07, US-08, §4 F-4, §5 F-4 · LLD §3.4, §3.5, §4.4, §4.5, §2.5 · files: web/js/ui/screens/{list-screen,view-screen}.js, web/css/app.css, tests/e2e/favourite.spec.js, tests/e2e/persistence.spec.js, tests/e2e/helpers/*
 - Status: Backlog
 - Acceptance criteria:
   - [ ] Star (`favourite-toggle`, `<button aria-pressed>`) on a list row and on the view toggles favourite immediately: ★ with `aria-label="Remove from favourites"`, ☆ with `aria-label="Mark as favourite"`
   - [ ] SPEC §5 F-4: star Banana Bread, tick "Favourites only" (`favourites-only`) → list shows Banana Bread only; after `page.reload()` the star is still filled
-  - [ ] Read-only store (corrupt seed) → stars disabled on list and view; a rejected toggle shows the "Could not save: …" banner and the star keeps its stored state
+  - [ ] Stars (list rows and view) and both list Add buttons (`add-recipe`, `add-first-recipe`) are disabled while `store.status !== 'ready'` and recomputed on every store notification (header included, §3.5, §4.5). Corrupt seed at start → all disabled. A rejected toggle shows the "Could not save: …" banner and the star keeps its stored state
+  - [ ] Cross-tab e2e in `tests/e2e/persistence.spec.js`: seed the SPEC §5 recipes, open the list, then a second page in the same context writes `{oops` to `recipe-box:collection` → all three rows stay listed (search "b" still filters), status banner shown, Add/stars disabled, stored value byte-identical. The second page then writes valid data → banner cleared, controls enabled. Same on the Pancakes view: star disabled, then enabled
   - [ ] `tests/e2e/favourite.spec.js` passes in both projects; screenshots in `.results/T-15/`
 - Result: —
 
@@ -239,13 +253,14 @@ Notes for every task
 
 - Owner: frontend-coder
 - Depends on: T-15, T-16
-- Context: SPEC US-06, §4 F-3, §5 F-3 · LLD §4.1, §4.4, §7.1 · files: web/js/ui/screens/view-screen.js, web/css/app.css, tests/e2e/view-scale.spec.js, tests/e2e/helpers/*, docs/wireframes/recipe-view.html
+- Context: SPEC US-06, §4 F-3, §5 F-3 · LLD §4.1, §4.4, §4.5, §7.1 · files: web/js/ui/screens/view-screen.js, web/css/app.css, tests/e2e/view-scale.spec.js, tests/e2e/helpers/*, docs/wireframes/recipe-view.html
 - Status: Backlog
 - Acceptance criteria:
   - [ ] − / number / + (`servings-dec`, `servings-input`, `servings-inc`) rescale every ingredient instantly via `formatIngredientLine`; − is disabled at 1; typing `0`, empty or `abc` keeps the previous value and blur resets the input text
   - [ ] SPEC §5 F-3 in e2e: Pancakes 4→6 "300 g flour", "3 eggs", "450 ml milk", "a pinch of salt"; 4→3 "150 g", "1½", "225 ml"; 4→1 "50 g", "½", "75 ml"; Banana Bread 8→2 "¾", "¼ tsp", "62½ g"; 8→1 "½", "¼ tsp", "31¼ g"
   - [ ] "Reset (4)" (`servings-reset`) and the note "Recipe saved for 4 servings; scaling is not saved." appear only while scaled; reopening the recipe or reloading shows base servings and stored data is unchanged
   - [ ] `tests/e2e/view-scale.spec.js` passes in both projects; screenshots of Pancakes at 3 servings (1280/390 px) in `.results/T-17/`
+  - [ ] A store notification while scaled keeps the screen-local servings (§4.5). On Pancakes at 3 servings, toggling the star (or a cross-tab reload) re-renders the view still at 3 with "150 g flour", "1½ eggs", "225 ml milk"
 - Result: —
 
 ## M5 · Edit, delete and finish
@@ -260,7 +275,7 @@ Notes for every task
   - [ ] `#/recipe/<id>/edit` shows "Edit recipe" pre-filled with every field (amounts as typed); unknown id → not-found state
   - [ ] SPEC §5 F-5: Pancakes serves 4 → 6 plus tag `weekend`, Save → view shows "Serves 6" and tags `breakfast` `sweet` `weekend`, list shows the new tag, and both survive `page.reload()`; Back after save does not return to the form
   - [ ] Change the title, press Cancel → "Discard changes?"; Discard → view shows the old title; Keep editing → form keeps the change; closing the tab while dirty triggers the browser's leave prompt (`beforeunload`)
-  - [ ] Same validation as add (empty title blocked); `RecipeNotFoundError` / write failure → banner, form stays open and dirty
+  - [ ] Same validation as add (empty title blocked). Save rejected by the store, i.e. `StoreReadOnlyError` (edit hash opened after a cross-tab `{oops`: form pre-filled from the kept recipe) / `RecipeNotFoundError` / write failure → banner, form stays open and dirty, stored value unchanged
   - [ ] `tests/e2e/edit.spec.js` passes in both projects; screenshots in `.results/T-18/`
 - Result: —
 
@@ -273,7 +288,7 @@ Notes for every task
 - Acceptance criteria:
   - [ ] "Delete" (`delete-recipe`) on Tomato Soup opens `confirm-dialog` with "Delete 'Tomato Soup'? Are you sure?" and Cancel / Delete; focus starts on Cancel
   - [ ] Cancel (and Esc) keeps the recipe and stays on the view; Delete removes it and lands on the list showing Banana Bread, Pancakes; after `page.reload()` it is still gone; Back does not reopen the deleted recipe
-  - [ ] Read-only store → Delete disabled; a rejected `remove` shows the banner and stays on the view
+  - [ ] Delete is disabled while `store.status !== 'ready'` and recomputed on every store notification. With the view open, a second page writing `{oops` → recipe still shown, Delete disabled; valid data written again → Delete enabled. A rejected `remove` shows the banner and stays on the view
   - [ ] `tests/e2e/delete.spec.js` passes in both projects; screenshot of the dialog in `.results/T-19/`
 - Result: —
 
@@ -301,7 +316,7 @@ Notes for every task
 | US-05 Open recipe | T-12 |
 | US-06 Scale servings | T-16, T-17 |
 | US-07 Favourite + "Favourites only" | T-05, T-09, T-14, T-15 |
-| US-08 Data persists across restart | T-02 (fixed address), T-04, T-06, T-08, T-13, T-15, T-18 (reload checks) |
+| US-08 Data persists across restart | T-02 (fixed address), T-04, T-05b, T-06, T-08, T-13, T-15, T-18 (reload checks) |
 | US-09 Edit recipe | T-03, T-05, T-10, T-18 |
 | US-10 Delete with confirm | T-05, T-07, T-19 |
 | US-11 One-command start | T-01, T-02, T-08 |

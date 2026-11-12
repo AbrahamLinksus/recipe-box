@@ -12,6 +12,9 @@
 > **As-built sync M1 (2026-11-12):** §0–§2, §6, §7, §9, §10, §11 checked against the code at the end of
 > milestone M1 (T-01..T-08, T-16). Changes are marked "As built (M1)" in place and listed in
 > "Changes since last milestone" at the end; deferred minors are listed under "Known deferred minors".
+> **Change request CR-1 (2026-11-12, owner decision D-09):** after a good load, a reload that yields
+> `unreadable`/`unavailable` keeps the last loaded recipes visible, read-only. Changed text is marked "(CR-1)"
+> in §2.5, §3.5, §4.5, §5.5, §9.1, §9.5, §10.5 and listed in "Changes since last milestone".
 
 ## §0 Overview
 
@@ -436,6 +439,7 @@ export function createApp(deps) {}  // builds router, dialogs, banner, filterSta
   - `unreadable`: "Your saved recipes could not be read, so Recipe Box will not change them. Nothing has been deleted." All write controls disabled (Add, star, Edit, Delete, Save).
   - `unavailable`: "This browser is blocking storage for Recipe Box, so recipes cannot be loaded or saved." Same disabling.
   - write failure (§9.5): "Could not save: <reason>. Your last change was not stored." (info persists until next success).
+  - (CR-1) The status can change **while a screen is mounted** (cross-tab `reload()`, §9.5), in both directions. The banner and every screen's write controls follow `store.status` on every store notification, not only at mount. The two status texts above stay as they are for both cases (nothing loaded, or the last loaded recipes still shown): both say that nothing will be changed.
 - Unhandled promise rejections in UI → `banner.show('error', 'Something went wrong. Reload the page to continue.')` and `console.error` (the only console call in web code, in `app.js`).
 - Layout (`app.css`): mobile-first single column; `@media (min-width: 800px)` → filters sidebar 280 px on list, two-column ingredients/steps on view and form, page max-width 1100 px (matches wireframes). At 390 px nothing overflows horizontally; tap targets ≥ 40 px.
 - Accessibility: header `<h1>` per screen, buttons are `<button>`, star is `<button aria-pressed>` with `aria-label`.
@@ -455,7 +459,7 @@ export function mountListScreen(container, ctx, route) {}
 ```
 Internal structure: the filter panel (search input, tag `<select>`, favourites checkbox) is rendered **once** per mount; only the results region (`count` + rows / state) re-renders on input or store change, so the search box keeps focus and caret while typing.
 
-**As built (M1, T-08 walking skeleton), the rest is M2 (T-09/T-10):** the screen renders a header (`<h1>Recipe Box</h1>` + `add-recipe` "+ Add recipe") and a separate results region (`div.results`) that re-renders on every store change via `store.subscribe` (the unsubscribe is the handle's `unmount`). Results: `store.list().length === 0` → `empty-state` "No recipes yet" + `add-first-recipe`; otherwise `recipe-count` + `<ul>` of `recipe-row` (title link `recipe-row-title` to `#/recipe/<encoded id>`, tag chips). Not yet built: filter panel, A–Z sort (rows are in store insertion order), stars, no-match state. Both add buttons navigate to `#/new`, which shows "Page not found" until M2 (A-10). Write controls are disabled when `store.status !== 'ready'`, computed once at mount (deferred minor).
+**As built (M1, T-08 walking skeleton), the rest is M2 (T-09/T-10):** the screen renders a header (`<h1>Recipe Box</h1>` + `add-recipe` "+ Add recipe") and a separate results region (`div.results`) that re-renders on every store change via `store.subscribe` (the unsubscribe is the handle's `unmount`). Results: `store.list().length === 0` → `empty-state` "No recipes yet" + `add-first-recipe`; otherwise `recipe-count` + `<ul>` of `recipe-row` (title link `recipe-row-title` to `#/recipe/<encoded id>`, tag chips). Not yet built: filter panel, A–Z sort (rows are in store insertion order), stars, no-match state. Both add buttons navigate to `#/new`, which shows "Page not found" until M2 (A-10). Write controls are disabled when `store.status !== 'ready'`, computed once at mount (deferred minor; (CR-1) must be recomputed on every store notification, see §3.5).
 
 ### §3.4 Behaviour
 | Trigger | Effect |
@@ -475,6 +479,10 @@ Test ids: `search-input`, `tag-filter`, `favourites-only`, `recipe-count`, `reci
 
 ### §3.5 Errors and edge cases
 - Read-only store status → stars and add buttons disabled (`disabled` attribute), list still readable.
+- (CR-1) Both read-only cases come from §9.5:
+  - Read-only **at start** (first load `unreadable`/`unavailable`): `store.list()` is `[]`, so the list shows the "No recipes yet" state with "Add your first recipe" disabled, plus the status banner (§2.5). Nothing was loaded, so nothing is shown.
+  - Read-only **after a good load** (a cross-tab reload failed): `store.list()` still returns the last loaded recipes. Rows, search, tag filter, favourites-only filter, counts and the no-match state keep working on them; row title links open the view (§4). Stars, "Add recipe" and "Add your first recipe" are disabled.
+  - The disabled state is recomputed on **every store notification** (header Add button included, not only the results region), so it switches off when the status leaves `ready` and back on when a later reload returns `ready`. This closes the T-08 deferred minor "Add buttons go stale".
 - `toggleFavourite` rejection → banner (§2.5), star stays in the stored state.
 
 ---
@@ -510,6 +518,9 @@ Test ids: `recipe-title`, `recipe-tags`, `servings-input`, `servings-dec`, `serv
 ### §4.5 Errors and edge cases
 - Unknown id → "Recipe not found" + "All recipes" link (no crash).
 - Read-only store → star, Edit, Delete disabled; scaling still works.
+- (CR-1) Reachable when a cross-tab reload fails after a good load (§9.5): `store.get(id)` still returns the recipe from the last loaded snapshot, so the view stays on screen with the banner (§2.5). Star, Edit and Delete are recomputed on every store notification (disabled while `store.status !== 'ready'`, enabled again when a reload returns `ready`). The re-render on a store notification **keeps the current screen-local `servings`** (it is not reset to base), so scaling keeps working across status changes.
+- (CR-1) Read-only **at start** (nothing loaded): `store.get(id)` is `undefined` → "Recipe not found" + "All recipes" link, with the status banner explaining why.
+- (CR-1) A reload that returns `ready` with fresh data where the recipe no longer exists → not-found state (same as "store change" in §4.4).
 - `remove` rejection → banner, stay on view.
 
 ---
@@ -555,6 +566,7 @@ Test ids: `title-input`, `servings-input`, `ingredient-row`, `ingredient-amount-
 ### §5.5 Errors and edge cases
 - Save rejected by the store (`StoreReadOnlyError`, `PersistenceWriteError`, `RecipeNotFoundError` when another tab deleted the recipe) → banner with the reason, form stays dirty and open.
 - Double-click on Save: button disabled while the save promise is pending.
+- (CR-1) The status can leave `ready` while the form is open (cross-tab reload, §9.5); the edit form can also be reached by typing the hash while read-only (its data comes from the kept snapshot). The form stays editable so typed text is not lost, but Save rejects with `StoreReadOnlyError` → status banner text from §2.5, form stays dirty and open. If a later reload returns `ready`, Save works again against the fresh data (`RecipeNotFoundError` if the recipe is gone there).
 - (M1 sync, A-03) A `ValidationError` from the store with an empty `fieldErrors` (`{}`: non-object input or bad tags) has no field to mark → show a generic "Could not save" banner and keep the form open; a non-empty `fieldErrors` is rendered inline like `validateDraft` errors.
 
 ---
@@ -778,14 +790,16 @@ export class RecipeStore {
    *  @returns {Promise<StoreStatus>} */ async init() {}
   /** @returns {StoreStatus} */ get status() {}
   /** @returns {string | null} reason for unreadable/unavailable */ get statusReason() {}
-  /** @returns {readonly Recipe[]} frozen snapshot, insertion order */ list() {}
-  /** @returns {Recipe | undefined} */ get(id) {}
+  /** @returns {readonly Recipe[]} frozen snapshot, insertion order. (CR-1) In every status this is the last
+   *  good snapshot: data from the latest ok/empty load or successful write; [] if none yet (table in §9.5) */ list() {}
+  /** @returns {Recipe | undefined} (CR-1) looks up the same snapshot as list(), in every status */ get(id) {}
   /** @param {RecipeInput} input @returns {Promise<Recipe>} favourite false, new id, createdAt = updatedAt = now */ async create(input) {}
   /** keeps id, favourite, createdAt; sets updatedAt @throws RecipeNotFoundError */ async update(id, input) {}
   /** @throws RecipeNotFoundError */ async remove(id) {}
   /** flips favourite, sets updatedAt @returns {Promise<Recipe>} */ async toggleFavourite(id) {}
   /** @param {() => void} listener @returns {() => void} unsubscribe */ subscribe(listener) {}
-  /** re-load after another tab changed storage; notifies. Runs on the same serial chain as writes */ async reload() {}
+  /** re-load after another tab changed storage; notifies. Runs on the same serial chain as writes.
+   *  (CR-1) unreadable/unavailable keeps list()/get() data unchanged; ok/empty replaces it (§9.5) */ async reload() {}
 }
 ```
 
@@ -803,11 +817,27 @@ As built (M1), in detail:
 - `toggleFavourite` / `update` / `remove` look the id up inside the chain → `RecipeNotFoundError` if another write or a reload removed it.
 
 ### §9.5 Errors and edge cases
-- `init()` result mapping: `ok` → `ready` with recipes; `empty` → `ready` with `[]` (nothing written until the first change); `unreadable` / `unavailable` → that status, `list()` returns `[]`, all writes rejected.
-- Cross-tab: `watch` callback → `reload()`; if the reload yields `unreadable`, switch to read-only. Last write wins between tabs (acceptable for one user).
+- ~~`init()` result mapping: … `unreadable` / `unavailable` → that status, `list()` returns `[]`~~ — replaced by the CR-1 rules below (the old rule emptied the list on every failed reload, which contradicted §3.5 and §4.5).
+- **(CR-1, D-09) Load result mapping — one rule for `init()` and `reload()`.** The store keeps one in-memory collection, the *last good snapshot*: it starts as `[]` and is replaced only by an `ok`/`empty` load or by a successful write. A load that yields `unreadable` or `unavailable` (including `persistence.load()` rejecting) changes `status` and `statusReason` but **never touches the snapshot**. `list()` and `get(id)` always read the snapshot, in every status.
+
+  | Path | Load result | `status` | `statusReason` | `list()` / `get(id)` | Writes |
+  |---|---|---|---|---|---|
+  | first load (`init()`) | `ok` | `ready` | `null` | loaded recipes | allowed |
+  | first load | `empty` | `ready` | `null` | `[]` (nothing written until the first change) | allowed |
+  | first load | `unreadable` / `unavailable` / `load()` rejects | that status (`unavailable` for a rejection) | the result's reason (`load failed: <message>` for a rejection) | `[]` / `undefined`: nothing was loaded | `StoreReadOnlyError` |
+  | `reload()` after a good load (status `ready`) | `unreadable` / `unavailable` / rejects | that status | that reason | **unchanged**: the last good snapshot stays visible, read-only | `StoreReadOnlyError` |
+  | `reload()` while already read-only | `unreadable` / `unavailable` / rejects | that status (may switch between the two) | that reason | unchanged (still the last good snapshot, or `[]` if there never was one) | `StoreReadOnlyError` |
+  | `reload()` in any status | `ok` / `empty` | `ready` | `null` | replaced by the fresh data (`[]` for `empty`) | allowed again |
+
+  "After a good load" covers every snapshot the store accepted: from `init()`, from an earlier `reload()`, or from this tab's own successful writes. A second `init()` call follows the same rule.
+- **(CR-1) Writes never use a stale snapshot.** The write guard (§9.4 step 1) rejects every write unless `status === 'ready'`, and `ready` is entered only by an `ok`/`empty` load, which replaces the snapshot first. So the kept snapshot is display-only: no write is ever built on it, and leaving read-only mode always starts from freshly loaded data.
+- **(CR-1) A-09 still holds, at two levels.** (1) Store: no `persistence.save()` call while `status !== 'ready'`, so data that this build cannot read is never written over. (2) Adapter (§10.1): `save` re-reads the stored value and refuses (`PersistenceWriteError('unavailable')`) if it is foreign/unknown-version/not JSON, which covers the gap between another tab's write and this tab's `storage` event. In that gap a write is rejected while the status is still `ready`; the status stays `ready` until the `watch` → `reload()` that follows switches it to `unreadable`.
+- **(CR-1) Listener notification.** `reload()` sets `status`, `statusReason` and the snapshot together, then calls `#notify()` **once**, after every reload, whether or not anything changed. So subscribers always see a consistent state and get a call on every status change in both directions (`ready` → read-only, read-only → `ready`, `unreadable` ↔ `unavailable`). They re-read `status`, `statusReason` and `list()` / `get()`; the store sends no payload. `init()` does not notify (the UI subscribes after it). A write notifies only on success (§9.4). Listener isolation (A-07, below) applies to all of these.
+- Cross-tab: `watch` callback → `reload()` (see the table above). Last write wins between tabs (acceptable for one user).
 - Returned recipes are deep-frozen; UI never mutates them.
 - As built (M1): loaded recipes are `structuredClone`d before deep-freezing, so objects owned by the persistence layer are never frozen (A-05).
 - As built (M1): `persistence.load()` **rejecting** (instead of returning a `LoadResult`) maps to status `unavailable` with reason `load failed: <message>`; the store never stays stuck in `loading`. `statusReason` is the `LoadResult.reason` (or `null` for ok/empty). A reload that returns `ok`/`empty` after `unreadable` makes the store `ready` again.
+- (CR-1) Code change needed: as built (M1), `#load()` in `web/js/store/recipe-store.js` sets `#recipes = []` in its non-ready branch. CR-1 removes that assignment, so a non-ready result leaves `#recipes` as it is. The initial `#recipes = Object.freeze([])` gives the "first load → `[]`" rows of the table above. Required unit tests (in `tests/unit/store/`), one per table row: first-load unreadable/unavailable/rejecting → `[]`; good load then reload unreadable → same frozen recipes, `get(id)` works, status `unreadable`, reason set, one notification, `create`/`update`/`remove`/`toggleFavourite` reject `StoreReadOnlyError` with no `save` call; then reload `ok` → `ready`, fresh data, reason `null`, notified; reload `empty` → `ready`, `[]`; a successful write followed by a failing reload keeps the written data.
 - As built (M1, A-07): listener isolation. `#notify()` calls each subscriber in a `try`; a throwing listener does not stop the others and never fails the write or reload that triggered it (the data is already saved). The error is passed to `globalThis.reportError` (browser: fires the window `error` event, which §2's `app.js` turns into the generic-error banner); where `reportError` is missing (Node) it is rethrown on a fresh microtask.
 
 ---
@@ -869,6 +899,7 @@ Size: a few hundred recipes ≈ well under 1 MB vs the ~5 MiB per-origin limit.
 
 ### §10.5 Errors and edge cases
 - Never writes when the store is not `ready` (§9.5), so an unreadable value is left exactly as it was. As built (M1): the adapter also guards this itself (A-09, §10.1), so a value another tab changed to an unknown version after this tab loaded is not overwritten either.
+- (CR-1) Keeping the last loaded recipes visible in read-only mode (§9.5) is store-only. This adapter does not change: `load()` still returns `unreadable`/`unavailable` with no recipes, never writes, and `save` keeps the A-09 guard.
 - Future schema versions: add `decodeV2`; `decodeCollection` upgrades older versions in memory, written back on the next change. Not needed in v1.
 - Private/incognito windows lose data at session end (README note). Clearing site data for `127.0.0.1` deletes all recipes (owner accepted; README warns).
 - `requestDurability()` is called once per start; Firefox may show a permission prompt the first time.
@@ -982,6 +1013,9 @@ echo "check.sh: all checks passed"
 | M1 | §10.1, §10.5 | `save` refuses to overwrite foreign/unknown-version/non-JSON data (`PersistenceWriteError('unavailable')`) | never destroy data written by a newer tab | A-09 |
 | M1 | §0.4, §11.1, §11.6 | Exact dev-dependency pins recorded; `test:nocov` and `prepare` scripts; e2e seed helper and the extra unit suites | as-built record | T-01..T-08 |
 | M1 | §7.1 | Checked against T-16 (built early): no deviations | — | T-16 |
+| CR-1 | §9.1, §9.5 | One load-result rule for `init()`/`reload()`: `unreadable`/`unavailable` never change the in-memory snapshot (first load → `[]`; failed reload after a good load → last loaded recipes kept, read-only); `ok`/`empty` → `ready` with fresh data. Per-path table, write guard on fresh data only, A-09 at store + adapter level, notify once per reload. Code fix: drop `#recipes = []` from the non-ready branch of `#load()` | §9.5 contradicted §3.5/§4.5; owner chose to keep the last recipes visible | D-09 |
+| CR-1 | §2.5, §3.1, §3.5, §4.5, §5.5 | Read-only UI rules made reachable and precise: start-up read-only vs read-only after a good load; write controls recomputed on every store notification; view keeps screen-local servings across re-renders; form stays editable but Save rejects | follows from the §9.5 change | D-09 |
+| CR-1 | §10.5 | Note only: the adapter is unchanged | — | D-09 |
 
 ### Known deferred minors (M1 tidy-up list, owner-approved to defer)
 - T-02: `browser.js` has no URL guard of its own (relies on the URL coming from config).
@@ -990,6 +1024,6 @@ echo "check.sh: all checks passed"
 - T-02: `HEALTH_PATH` is defined twice (`static-handler.js` exports it; `probe.js` has its own copy).
 - T-05 m2: a `save` that never settles stalls the write queue (no timeout on the chain).
 - T-06 m-A: `isForeignData` in `local-storage-persistence.js` repeats the codec's version check; base it on `decodeCollection` before any v2 format exists.
-- T-08: the list screen's Add buttons are enabled/disabled once at mount, so they go stale after a cross-tab status change.
+- T-08: the list screen's Add buttons are enabled/disabled once at mount, so they go stale after a cross-tab status change. (CR-1: no longer deferrable; §3.5 now requires recomputing them on every store notification.)
 - T-08: errors thrown before `createApp(...).start()` miss the banner (the global listeners are installed in `start()`).
 - T-08: the status-sync `banner.clear()` can wipe a generic error banner.
