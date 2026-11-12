@@ -2,7 +2,7 @@
 
 A small personal recipe box that runs on your own computer. It keeps your recipes in your browser, and nothing is sent anywhere.
 
-> **Status: milestone M3 (find and favourite).** You can add a recipe, see all your recipes A–Z, open one to read it, search by title, filter by tag, show only favourites, and mark recipes as favourites. Scaling the servings, edit and delete come in later milestones. Until then the Edit link on a recipe leads to a "Page not found" page.
+> **Status: milestone M4 (scale and edit).** You can add a recipe, see all your recipes A–Z, open one to read it, scale its servings, edit it, search by title, filter by tag, show only favourites, and mark recipes as favourites. Deleting a recipe comes in a later milestone.
 
 ## Requirements
 
@@ -37,9 +37,13 @@ Always use the address `http://127.0.0.1:47321/`. The browser treats `localhost:
 - **Favourites:** click the star beside a recipe in the list, or beside its title on the recipe page, to mark it (★) or unmark it (☆). The change is saved straight away and is still there after a restart.
 - **Filters and navigation:** the search text, tag and Favourites only setting stay the same when you open a recipe and go back with **← All recipes**. They are not saved, so reloading the page shows all recipes again.
 - **Open:** click a recipe's title to read its servings, ingredients and numbered steps. Use **← All recipes** to go back.
-- **Not yet available:** scaling the servings, editing and deleting.
+- **Scale the servings:** open a recipe and use **−** and **+** (or type a whole number) in the servings box. Every amount is recalculated for the new number of servings and shown as a kitchen fraction rounded to the nearest ¼ (for example 1½ eggs). A value below 1, or text that is not a whole number, is not accepted and the previous number stays. **−** is disabled at 1. Click **Reset** to go back to the recipe's own servings.
+  - Scaling is not saved. Reopening the recipe shows its own servings again.
+- **Edit:** on a recipe's page, click **Edit**. The form opens filled in with the recipe. Change any field, then click **Save** to see the updated recipe, or **Cancel** to go back without saving. The same checks as for a new recipe apply.
+  - If you have changed something, Recipe Box asks "Discard changes?" before it leaves the form. Closing the browser tab with unsaved changes also shows the browser's own leave-page prompt.
+- **Not yet available:** deleting a recipe.
 
-**Read-only banner.** If Recipe Box cannot read your saved recipes, a banner at the top says that they could not be read, so Recipe Box will not change them, and that nothing has been deleted. Recipe Box keeps showing the recipes it had last. While the banner is shown, a new recipe cannot be saved and the favourite stars are disabled. A second banner, "This browser is blocking storage for Recipe Box", means the browser will not let the app use its storage at all, and the same controls are disabled.
+**Read-only banner.** If Recipe Box cannot read your saved recipes, a banner at the top says that they could not be read, so Recipe Box will not change them, and that nothing has been deleted. Recipe Box keeps showing the recipes it had last. While the banner is shown, a new recipe cannot be saved, a recipe cannot be edited or saved, and the favourite stars and **Edit** are disabled. Changing the servings still works, because it is not saved. A second banner, "This browser is blocking storage for Recipe Box", means the browser will not let the app use its storage at all, and the same controls are disabled.
 
 ## Where your recipes are stored
 
