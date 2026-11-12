@@ -8,7 +8,7 @@
 | Repo         | AbrahamLinksus/recipe-box (public)                                                                      |
 | Stage | 7 Build |
 | Milestone | M2 · Add, list and open (4/6 tasks) — M1 done (8666dd4) |
-| Next step | T-13 (add form) ∥ T-05b (store keeps last recipes, CR-1); then M2 milestone docs |
+| Next step | Fresh session: `/setup-project resume recipe-box` → start T-13 (add form, frontend-coder) ∥ T-05b (store fix, backend-coder; LLD §9.5 CR-1). Then M2 milestone (architect as-built sync + docs) |
 | Last updated | 2026-11-12 |
 
 ## Config
@@ -61,6 +61,7 @@ Context gaps agents reported (`Context gap:` in a REPORT). The Orchestrator adds
 | reviewer (UI) | web/js/ui/dom.js; TASKS.md rows of later tasks touching the same screen | T-12 review needed them to judge coverage |
 
 ## Notes for the next session
+- Session 2026-11-12: T-09, T-10, T-11, T-12 approved; D-08 (e2e browser fallback), D-09 + CR-1 (D-10) merged. Owner chose to continue in a fresh session after CR-1.
 - M1 approved 2026-11-12 (milestone card). Owner chose: continue M2 in a fresh session via `/setup-project resume recipe-box`.
 - After the plan merge, DECISIONS.md/STATE.md rows recorded on main during planning were overwritten; restored in 3f7e683. Verify rows after any merge that owns shared files.
 - Owner chose: T-16 (scaling, pure) starts as soon as T-03 is Done, in parallel with M2.
