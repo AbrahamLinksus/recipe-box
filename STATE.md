@@ -55,7 +55,7 @@ Context gaps agents reported (`Context gap:` in a REPORT). The Orchestrator adds
 
 | Role | Also read | Why (from gap report) |
 | ---- | --------- | --------------------- |
-| architect | <plugin root>/skills/setup-project/scopes.json; package.json; .prettierignore | scopes override format; §0.4 package pins (gap reports: plan lld, M1-docs) |
+| architect | <plugin root>/skills/setup-project/scopes.json; package.json; .prettierignore; web/js/ui (grep) + affected screen files for CR impact | scopes override format; §0.4 package pins (gap reports: plan lld, M1-docs); CR-1 needed screens to judge task impact |
 | reviewer | DECISIONS.md (rows relevant to the task); docs/SPEC.md §5 when fixtures are involved | T-02 / T-03 reviews needed decisions + spec examples |
 | debugger | docs/CONVENTIONS.md logging rules | T-05 debug needed them |
 | reviewer (UI) | web/js/ui/dom.js; TASKS.md rows of later tasks touching the same screen | T-12 review needed them to judge coverage |
