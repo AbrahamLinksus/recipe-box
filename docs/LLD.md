@@ -28,6 +28,10 @@
 > place and listed in "Changes since last milestone"; M4 tidy-up minors are under "Known deferred minors (M4 tidy-up list)".
 > D-11 (Save disabled live while read-only) is now **built** for add and edit.
 > Still to come: Delete (T-19), full e2e pass incl. the D-12 `persistence.spec.js` fix (T-20).
+> **As-built sync M5 (2026-11-12):** §0.4, §2.1, §2.5, §4, §11 checked against the code at the end of milestone M5
+> (T-18 edit, already synced at M4 and re-checked; T-19 delete; T-20 layout and accessibility pass, D-12 test fix).
+> Changes are marked "As built (M5)" in place and listed in "Changes since last milestone"; M5 tidy-up minors are under
+> "Known deferred minors (M5 tidy-up list)". Every SPEC flow (F-1..F-6) is now built; no section is "not built yet".
 
 ## §0 Overview
 
@@ -189,6 +193,7 @@ Version caveat: these majors are from the research and general knowledge, not ve
 **As built (M2):** pins unchanged; no packages added or removed in M2.
 **As built (M3):** pins unchanged (`package.json` checked); no packages added or removed in M3. Runtime dependencies: still none.
 **As built (M4):** pins unchanged (`package.json` checked); no packages added or removed in M4 (T-17, T-18). Runtime dependencies: still none.
+**As built (M5):** pins unchanged (`package.json` checked); no packages added or removed in M5 (T-19, T-20). Runtime dependencies: still none.
 
 ### §0.5 Config and secrets
 No secrets, no `.env` needed. Environment variables (documented in README, all optional):
@@ -416,6 +421,12 @@ export function createRouter(deps) {}
  *  the typed text and caret back. Focus outside region, or on a testid without a rule, is left alone.
  *  @param {HTMLElement} region @param {() => void} render @param {FocusTargets} targets */
 export function renderKeepingFocus(region, render, targets) {}
+/** As built (M5, T-20): put focus back on the first ENABLED element with this testid inside region, but ONLY when focus
+ *  was lost (activeElement is <body>, null, or still inside a just-closed <dialog>); focus anywhere else is left alone.
+ *  Used by the view after the delete confirm dialog closes (§4.1), because a store notification may have rebuilt the
+ *  Delete button that opened it while the dialog was open. No unit test yet (M5 list m-1).
+ *  @param {HTMLElement} region @param {string} testid */
+export function restoreFocus(region, testid) {}
 
 // web/js/ui/save-failure.js (as built M4, T-18, A-17) — the one reason→text map for rejected writes (§2.5)
 /** StoreReadOnlyError → null (the status banner already explains);
@@ -425,6 +436,7 @@ export function renderKeepingFocus(region, render, targets) {}
  *    'Could not save. Your last change was not stored.'
  *  @param {unknown} err @returns {string | null} */
 export function saveFailureMessage(err) {}
+// As built (M5, T-19): used by three callers: form Save (§5), star (§3.1) and the view's Delete (§4.1, rejected remove).
 
 // web/js/ui/dialogs.js — native <dialog id="confirm-dialog"> in index.html (parts: confirm-message, confirm-ok, confirm-cancel)
 /** @typedef {{ message: string, confirmLabel: string, cancelLabel: string }} ConfirmOptions */
@@ -484,7 +496,7 @@ export function createApp(deps) {}  // builds router, dialogs, banner, filterSta
 - Routes: `#/` or empty → list; `#/recipe/<id>` → view; `#/recipe/<id>/edit` → edit; `#/new` → add; anything else → `notFound` screen ("Page not found" + "All recipes" link).
 - As built (M1, A-10): only the list screen exists, so `#/new`, `#/recipe/<id>` and `#/recipe/<id>/edit` parse correctly but show "Page not found" until M2 adds their screens (the "Add recipe" / "Add your first recipe" buttons therefore lead there for now). As built (M2): `#/new` (§5, add only) and `#/recipe/<id>` (§4) have screens; `#/recipe/<id>/edit` still shows "Page not found" until T-18. As built (M4, T-18): `#/recipe/<id>/edit` mounts the form in edit mode (§5); an edit hash for an unknown id shows the "Page not found" screen (A-15).
 - As built (M1): the generic-error banner and the status banner share one region; a status change back to `ready` calls `banner.clear()`, which can also clear a generic error (deferred minor, see "Known deferred minors").
-- After a successful save or delete, navigate with `{ replace: true }` so Back does not return to the form/deleted recipe.
+- After a successful save or delete, navigate with `{ replace: true }` so Back does not return to the form/deleted recipe. As built (M5): both are built (save §5.4 at M4; delete §4.4 in T-19, e2e "Delete removes it, survives reload, Back does not reopen it").
 - Store status banner (shown on every screen, `role="alert"`):
   - `unreadable`: "Your saved recipes could not be read, so Recipe Box will not change them. Nothing has been deleted." All write controls disabled (Add, star, Edit, Delete, Save).
   - `unavailable`: "This browser is blocking storage for Recipe Box, so recipes cannot be loaded or saved." Same disabling.
@@ -509,11 +521,22 @@ export function createApp(deps) {}  // builds router, dialogs, banner, filterSta
     | unknown reason, `RecipeNotFoundError`, any other error | "Could not save. Your last change was not stored." |
     | `StoreReadOnlyError` | none (status banner already shown) |
     This closes the M2 "doubled Could not save" minor and the M3 "duplicated `failureMessage`" minor. Still open (M3 list): the star does not clear its banner after a later successful toggle.
+    **As built (M5, T-19):** a rejected `store.remove` on the view's Delete uses the same table (so the text says "Could not save",
+    not "Could not delete"). Consequence: a `RecipeNotFoundError` from `remove` (another tab deleted the recipe after this tab
+    opened the confirm dialog) shows the generic "Could not save. Your last change was not stored." while the view already shows
+    "Recipe not found". Behaviour is kept as built; recorded as M5 minor T-19 m-5 (an owner decision is needed to change this table).
   - (CR-1) The status can change **while a screen is mounted** (cross-tab `reload()`, §9.5), in both directions. The banner and every screen's write controls follow `store.status` on every store notification, not only at mount. The two status texts above stay as they are for both cases (nothing loaded, or the last loaded recipes still shown): both say that nothing will be changed.
 - Unhandled promise rejections in UI → `banner.show('error', 'Something went wrong. Reload the page to continue.')` and `console.error` (the only console call in web code, in `app.js`).
 - Layout (`app.css`): mobile-first single column; `@media (min-width: 800px)` → filters sidebar 280 px on list, two-column ingredients/steps on view and form, page max-width 1100 px (matches wireframes). At 390 px nothing overflows horizontally; tap targets ≥ 40 px.
   As built (M3): `.list-layout` is `display: block` below 800 px (filter panel `section.filters` stacked above `div.results`) and `display: flex; gap: 24px` from 800 px, with `.filters { width: 280px; flex-shrink: 0 }`. `button.star` is ≥ 44×44 px, grey with `cursor: not-allowed` when disabled. `.sr-only` visually hides the search and tag labels. On the view, `.title-row` puts the star beside the `<h1>`.
+  As built (M5, T-20, `web/css/app.css`), the rules that make the 390 px / ≥ 40 px promise hold on every screen:
+  - No horizontal scroll at 390 px: long recipe text wraps (`.view-head h1` and `.panel` have `overflow-wrap: anywhere`; `.panel` has `min-width: 0` so the 800 px columns can shrink); the confirm dialog is capped at `max-width: calc(100vw - 32px)`; the servings control, ingredient rows and tag box wrap (`flex-wrap`).
+  - Tap targets ≥ 40 px tall: `.btn` (buttons and button-styled links), `.recipe-title` row links, `.input` fields, `.chip-remove` and `.servings-input` use `min-height: 40px`; the view's "← All recipes" link (`.view-bar > a`) is `inline-flex` with `min-height: 40px`; the confirm dialog's buttons (`.dialog-actions button`) are `min-height: 40px`; the "Favourites only" checkbox (`.filters .check input`) is **24 × 40 px** inside a 40 px tall `label.check`; `button.star` stays 44 px; servings −/+ are ≥ 40 px wide.
+  - View header actions: Edit and Delete sit together in `div.bar-actions` (flex, gap 8 px) at the right of `header.view-bar`.
+  - Checked by `tests/e2e/layout.spec.js` at 390 × 844 on list, view, add, edit, unknown page and unknown recipe (§11.6).
+  - Wireframe differences that remain are styling only (native form controls, star colour, blue Back link, dimmed dialog backdrop, the extra "Serves N" line); the form was only partly compared with its wireframe (M5 list m-3).
 - Accessibility: header `<h1>` per screen, buttons are `<button>`, star is `<button aria-pressed>` with `aria-label`. As built (M3): exactly this, on the list rows and on the view (§3.1 `favouriteToggle`); the search box and tag select have visually hidden `<label for>`s, the checkbox sits inside its visible "Favourites only" `<label>`.
+  As built (M5, T-20): **exactly one `<h1>` on every screen**: list "Recipe Box", view = recipe title, form "Add recipe" / "Edit recipe", not-found screen "Page not found" (`screens/not-found-screen.js`), and the view's not-found state now has `<h1>Recipe not found</h1>` (it was plain text). Every visible `button`, `a[href]`, `input`, `select`, `textarea` outside the confirm `<dialog>` carries a `data-testid` (the dialog's buttons have theirs too, but the e2e check skips the dialog, M5 list m-2). Stars carry `aria-pressed` + `aria-label` on list and view. All checked in `layout.spec.js`.
 - Test ids (stable, for §11 e2e): `add-recipe`, `banner`, `confirm-dialog`, `confirm-ok`, `confirm-cancel`, `back-to-list`; as built (M1) also `confirm-message` and `not-found` (the not-found page `<main>`).
 
 ---
@@ -598,7 +621,7 @@ Test ids: `search-input`, `tag-filter`, `favourites-only`, `recipe-count`, `reci
 ## §4 M4 Recipe view screen
 - **Responsibility:** Show one recipe with a view-only servings control and scaled amounts; favourite, edit and delete actions.
 - **Path(s):** `web/js/ui/screens/view-screen.js`; as built (M4, T-17): `web/js/ui/servings-control.js` (the servings control)
-- **Depends on:** §7 (`formatIngredientLine`, `parseServingsInput`, `stepServings`), §9 (`get`, `toggleFavourite`, `remove`, `subscribe`), §2 (dialogs, router). As built (M4): the screen imports `formatIngredientLine` (§7) directly; `servings-control.js` imports `MIN_SERVINGS`, `parseServingsInput`, `stepServings` (§7); focus handling uses §2's `focus-keeper.js`; the star is §3.1's `favouriteToggle`.
+- **Depends on:** §7 (`formatIngredientLine`, `parseServingsInput`, `stepServings`), §9 (`get`, `toggleFavourite`, `remove`, `subscribe`), §2 (dialogs, router). As built (M4): the screen imports `formatIngredientLine` (§7) directly; `servings-control.js` imports `MIN_SERVINGS`, `parseServingsInput`, `stepServings` (§7); focus handling uses §2's `focus-keeper.js`; the star is §3.1's `favouriteToggle`. As built (M5, T-19/T-20): Delete uses `ctx.dialogs.confirm` (§2.1), `store.remove`, `ctx.router.navigate`, §2's `saveFailureMessage` (save-failure.js) and `restoreFocus` (focus-keeper.js).
 
 ### §4.1 Interfaces / signatures
 ```js
@@ -613,9 +636,20 @@ Screen-local state: `servings` (starts at `recipe.servings`, never saved; a new 
 - `div.view-head`: `div.title-row` (`<h1 data-testid="recipe-title">` + the `favourite-toggle` star from §3.1 `favouriteToggle`, as built M3), `<p class="serves" data-testid="recipe-serves">Serves N</p>`, `div[data-testid=recipe-tags]` of `<span class="tag" data-testid="recipe-tag">` in stored order.
 - `div.cols` → `section.panel.ing[data-testid=ingredients-panel]` (`<h2>Ingredients</h2>` + `<ul>` of `ingredient-line`) and `section.panel.steps[data-testid=steps-panel]` (`<h2>Steps</h2>` + `<ol>` of `step-line`).
 - Ingredient line = `formatIngredientLine(ing, recipe.servings, recipe.servings)` (base = target, so amounts are shown as typed): `<strong data-testid="ingredient-amount">` + a space, **only when the amount text is non-empty**, then the name.
-- Unknown id (or recipe gone after a notification): `div.state[data-testid=not-found]` "Recipe not found" + `<a class="btn" data-testid="not-found-back" href="#/">All recipes</a>`.
+- Unknown id (or recipe gone after a notification): `div.state[data-testid=not-found]` "Recipe not found" + `<a class="btn" data-testid="not-found-back" href="#/">All recipes</a>`. As built (M5, T-20): the text is now an `<h1>Recipe not found</h1>` (one `<h1>` per screen, §2.5).
 
-Not built yet: servings control, Reset and the scaling note (T-17); Delete (T-19). (The star is built, M3/T-15.)
+~~Not built yet: servings control, Reset and the scaling note (T-17); Delete (T-19).~~ All built: star (M3/T-15), servings control (M4/T-17), Delete (M5/T-19, below).
+
+**As built (M5, T-19 + T-20): Delete.**
+- Markup: `header.view-bar` → `back-to-list` link + `div.bar-actions` holding the Edit control and Delete. Delete is **always a `<button type="button" class="btn" data-testid="delete-recipe">Delete</button>`** (never a link), `disabled = store.status !== 'ready'`. The bar is rebuilt by `render()` on every store notification, so Delete follows the status live in both directions, like Edit and the star (CR-1).
+- Handler (`deleteHandler(ctx, id, isMounted, content)`, module-private, built once per mount; `isMounted = () => content.isConnected`):
+  1. `recipe = store.get(id)`; return if it is gone or a remove from this view is still pending (`busy`).
+  2. `confirmed = await ctx.dialogs.confirm({ message: "Delete '<title>'? Are you sure?", confirmLabel: 'Delete', cancelLabel: 'Cancel' })` (focus starts on Cancel, Esc/backdrop = cancel, §2.1).
+  3. `restoreFocus(content, 'delete-recipe')` (§2.1): if a store notification rebuilt the bar while the dialog was open, focus goes back to the new Delete button instead of `<body>`.
+  4. **Return without removing anything** when: not confirmed; `busy`; the view is no longer mounted (`!content.isConnected`, e.g. Back pressed while the dialog was open); or `store.status !== 'ready'` (the data turned unreadable/unavailable while the dialog was open). No banner is shown in these cases.
+  5. `busy = true`; `await store.remove(id)`. Rejection → `saveFailureMessage(err)` (§2.5) → `banner.show('error', text)` when not `null` (none for `StoreReadOnlyError`); stay on the view. `finally`: `busy = false`.
+  6. Success → if still mounted, `router.navigate({ name: 'list' }, { replace: true })`, so Back does not reopen the deleted recipe. (The store notification before it briefly re-renders the view as not-found; the navigation replaces it.)
+- Focus rules: `VIEW_FOCUS = { ...TOGGLE_FOCUS, ...SERVINGS_FOCUS, 'edit-recipe': 'back-to-list', 'delete-recipe': 'back-to-list' }` (frozen). A focused Edit or Delete keeps focus after a re-render while enabled; when the store goes read-only (Edit becomes a disabled button, Delete disabled) focus falls back to the "← All recipes" link instead of `<body>`.
 
 **As built (M4, T-17): servings control.**
 ```js
@@ -639,7 +673,7 @@ export const SERVINGS_FOCUS;
 ```
 - `view-screen.js` keeps screen-local `servings` and `shownRecipe` (the id whose servings were initialised). `render()` sets `servings = recipe.servings` **only the first time a recipe with this id is shown**; every later render (store notifications included) keeps the current value (A-18, CR-1 §4.5). `setServings(next)` stores the value and re-renders.
 - Order inside `div.view-content`: `header.view-bar`, `div.view-head`, `servingsControl(...)`, `div.cols`. Ingredient lines are now `formatIngredientLine(ing, recipe.servings, servings)`, so at base the amounts are shown as typed and otherwise scaled (§7).
-- Every re-render after mount (servings change and store notification) runs through `renderKeepingFocus(content, render, VIEW_FOCUS)` with `VIEW_FOCUS = { ...TOGGLE_FOCUS, ...SERVINGS_FOCUS }` (A-19). So a focused star, −, +, Reset or input keeps focus (or falls back to the input), and while typing in the input the typed text and caret survive the rebuild.
+- Every re-render after mount (servings change and store notification) runs through `renderKeepingFocus(content, render, VIEW_FOCUS)` with `VIEW_FOCUS = { ...TOGGLE_FOCUS, ...SERVINGS_FOCUS }` (A-19; as built M5 also `edit-recipe` / `delete-recipe` → `back-to-list`, see the Delete note below). So a focused star, −, +, Reset or input keeps focus (or falls back to the input), and while typing in the input the typed text and caret survive the rebuild.
 - The servings control is never disabled: scaling works in every store status (§4.5).
 
 ### §4.4 Behaviour
@@ -660,6 +694,8 @@ Test ids: `recipe-title`, `recipe-tags`, `servings-input`, `servings-dec`, `serv
 
 As built (M4, T-17): the four servings rows of the table are built as written, with these details: "Reset (N)" is a `<button>` (not a link); the note has no test id; on invalid or empty input no re-render happens, so the typed text stays until blur/Enter puts back the applied value; a valid partial value (e.g. `1` on the way to `12`) is applied at once and the focus keeper restores the text and caret. Edit is still the `<a href>` link from M2 (the hash change routes to the form, §5); Delete is T-19. `servings-input` is used both here and by the form (§5.4); never on screen together.
 
+As built (M5, T-19): the Delete row of the table is built as written, plus the guards of §4.1 (no remove after the view unmounted, after the store went read-only, or while one is pending). Edit is still a link via `href` (not `navigate`), unchanged. `delete-recipe` is present; there is no extra test id (dialog parts use §2's `confirm-*` ids).
+
 ### §4.5 Errors and edge cases
 - Unknown id → "Recipe not found" + "All recipes" link (no crash).
 - Read-only store → star, Edit, Delete disabled; scaling still works. As built (M2, A-14): "disabled Edit" is a `<button type="button" disabled>` with test id `edit-recipe` (never an `<a>` without `href`); while `ready` it is the `<a href>` link. Delete follows the same rule when T-19 adds it. As built (M3, T-15): the view star is the shared `favourite-toggle` `<button>`, `disabled` while `store.status !== 'ready'`, rebuilt on every store notification, so it is disabled when a cross-tab reload fails and enabled again when one returns `ready` (e2e `persistence.spec.js` "cross-tab corrupt write on the view"). Rejection handling as in §3.5.
@@ -668,6 +704,7 @@ As built (M4, T-17): the four servings rows of the table are built as written, w
 - (CR-1) Read-only **at start** (nothing loaded): `store.get(id)` is `undefined` → "Recipe not found" + "All recipes" link, with the status banner explaining why.
 - (CR-1) A reload that returns `ready` with fresh data where the recipe no longer exists → not-found state (same as "store change" in §4.4).
 - `remove` rejection → banner, stay on view.
+- As built (M5, T-19): **done.** Delete is a `<button>` in `div.bar-actions`, disabled unless `store.status === 'ready'`, recomputed on every store notification (e2e "Delete follows the store status live"). Confirming after the store went read-only while the dialog was open removes nothing, shows no "Could not save" banner and leaves the stored value byte-identical (e2e "data turning unreadable while the dialog is open: confirm changes nothing"); confirming after the view unmounted removes nothing either (`content.isConnected` check; no e2e yet, M5 list T-19 m-8). A quota-rejected remove shows "Could not save: browser storage is full. …", the dialog closes and the recipe stays (e2e "a rejected remove …"). A `RecipeNotFoundError` from `remove` maps to the generic "Could not save. Your last change was not stored." (§2.5 table, unchanged; M5 list T-19 m-5).
 
 ---
 
@@ -1182,6 +1219,8 @@ As built (M3): scripts and `.prettierignore` unchanged. The new DOM-bound module
 
 As built (M4): scripts and `.prettierignore` unchanged. Two new UI modules **are** unit-imported and therefore count toward the coverage thresholds: `web/js/ui/focus-keeper.js` (`tests/unit/ui/focus-keeper.test.js`) and `web/js/ui/save-failure.js` (`tests/unit/ui/save-failure.test.js`). The other new DOM-bound modules (`servings-control.js`, `form-save.js`, `form-top.js`) are not unit-imported, so they stay out of the numbers; they are covered by `tests/e2e/view-scale.spec.js` and `tests/e2e/edit.spec.js` (no unit test for `form-save.js`: deferred minor).
 
+As built (M5): scripts, `package.json` and `.prettierignore` unchanged (checked). `view-screen.js` stays under the `screens/**` exclusion (Delete covered by `tests/e2e/delete.spec.js`). `focus-keeper.js` is unit-imported, so its new `restoreFocus` counts toward the coverage numbers without a unit test of its own (covered by e2e "a store re-render while the dialog is open: focus returns to Delete on close"; M5 list T-20 m-1).
+
 ### §11.2 ESLint (`eslint.config.js`, flat config)
 - `@eslint/js` recommended for all `**/*.js`; `ignores`: `node_modules`, `.results`, `docs`, `test-results`, `playwright-report`.
 - Globals: `web/js/**` → `globals.browser`; **`web/js/core/**` → no browser globals** (ES2023 only, so `window`/`document`/`localStorage` fail `no-undef`); `server/**`, `tests/**`, config files → `globals.node`.
@@ -1248,6 +1287,11 @@ echo "check.sh: all checks passed"
 - As built (M2): e2e specs now `list.spec.js` (empty state, A–Z rows, count, read-only star), `add.spec.js` (F-1 add flow, validation errors, discard confirm, tag chips, ingredient/step row operations), `view-scale.spec.js` (the view part of F-3 only: header, serves, ingredients/steps panels, tags, not-found, Edit disabled while read-only; scaling assertions arrive with T-17), `persistence.spec.js`. New helper `tests/e2e/helpers/recipes.js` (`seedPancakes(page)`, `PANCAKES_ID`; built on `seedRaw` from `seed.js`, which seeds once per tab via a `sessionStorage` marker so reloads do not re-seed). New unit suites: `tests/unit/core/search/search.test.js` (§8.2), `tests/unit/ui/form-model.test.js` (§5.1), `tests/unit/store/recipe-store-reload-failure.test.js` (§9.5 table).
 - As built (M3): no new unit suites. E2E additions: `list.spec.js` (Tab order add → search → tag → favourites → add-first; search as you type keeps focus and caret; tag options A–Z combined with search and favourites-only; no-match state and "Clear filters" resetting controls and focusing search; filters survive list → view → list; filters sidebar from 800 px, stacked below; `recipe-row-star` assertions moved to `favourite-toggle`); new `favourite.spec.js` (F-4: star Banana Bread, favourites-only, survives reload; view star toggles and shows on the list; keyboard toggle keeps focus; corrupt seed disables Add; quota-rejected toggle shows "Could not save" and keeps the stored star); `persistence.spec.js` (cross-tab corrupt write on the list and on the view: rows stay, stars/Add disabled, then re-enabled after a good write). New helper `tests/e2e/helpers/collection.js` (`recipe()`, `SPEC_RECIPES` with no favourite, `seedCollection(page, recipes?)` on top of `seedRaw`).
 - As built (M4): new unit suites `tests/unit/ui/focus-keeper.test.js` (`renderKeepingFocus`: same control, fallback, typed text and caret) and `tests/unit/ui/save-failure.test.js` (the §2.5 reason→text table). E2E: `view-scale.spec.js` extended with the F-3 scaling flow (Pancakes 4 → 6/3/1 via the input, Banana Bread 8 → 2/1, −/+ stepping and − disabled at 1, invalid text and blur, Reset and note only while scaled and nothing stored, scaled servings kept across a store notification and a cross-tab storage event, keyboard focus kept or falling back to the input, reopening shows base); new `edit.spec.js` (F-5: pre-filled form with amounts as typed, unknown id, serves 4 → 6 + tag survives reload and Back skips the form, Cancel/discard dialog, `beforeunload` only while dirty, empty title blocked, read-only store disables Save, Save follows status live on the add form too, reasoned write-failure banner, recipe deleted in another tab). Known failing test, pre-existing: `persistence.spec.js` "cross-tab ... list recover" leaves the search filter active (D-12, fix in T-20). Parallel e2e runs in two worktrees clash on port 47399; use a temporary config with another port.
+- As built (M5): no new unit suites. Test infra: `tests/unit/server/main-process.test.js` no longer uses the fixed port 47398 (several worktrees running `check.sh` at once collided); it asks the OS for a free port (a throw-away `http` server `listen(0, '127.0.0.1')`, read `address().port`, close; retried if it is ever 47321, CONVENTIONS §5) and passes it as `RECIPE_BOX_PORT` to the spawned `server/main.js`. E2E still uses the fixed port **47399** (`playwright.config.js` unchanged), so the parallel-worktree clash note above still applies. D-12 is **fixed** (test-only): `persistence.spec.js` "cross-tab corrupt write on the list: rows stay, controls disabled, then recover" now clears the search box (`fill('')`, expects 3 rows) before the good write, so the recover assertions see every star. E2E additions:
+  - New `delete.spec.js` (F-6, Tomato Soup seeded with `SPEC_RECIPES`; cross-tab writes come from a real second page): "Delete opens the dialog with focus on Cancel"; "Cancel and Esc keep the recipe on the view"; "Delete removes it, survives reload, Back does not reopen it"; "Delete follows the store status live"; "a rejected remove shows the banner and stays on the view"; "data turning unreadable while the dialog is open: confirm changes nothing"; "a store re-render while the dialog is open: focus returns to Delete on close". Screenshots to `.results/T-19/`.
+  - New `layout.spec.js` (viewport 390 × 844 in both projects): for each of list (`#/`), view, add, edit, unknown page (`#/nope`) and unknown recipe: "no horizontal scroll at 390 px"; "buttons, links and inputs are at least 40 px tall" (every visible `button, a[href], input, select, textarea`, soft asserts); "one h1 and every control carries a data-testid" (dialog contents skipped). Plus "stars have aria-pressed and aria-label on the list and the view" and "the confirm dialog buttons are at least 40 px tall".
+  - Unchanged and still passing: `edit.spec.js` (titles: "edit form is pre-filled with every field, amounts as typed", "unknown id shows the not-found state", "F-5: serves 4 to 6 plus tag weekend, survives reload, Back skips the form", "Cancel asks to discard; Keep editing keeps, Discard shows the old title", "beforeunload is prevented only while dirty", "empty title is blocked and nothing is stored", "read-only store: edit form is pre-filled, Save disabled, stored value unchanged", "Save follows the store status live on the add form too", "write failure shows a reasoned banner, form stays open and dirty", "recipe deleted in another tab: Save shows a banner and the form stays open"), `list`, `add`, `view-scale`, `favourite`.
+  - Spec per SPEC flow is now complete: `list` (F-2), `add` (F-1), `view-scale` (F-3), `favourite` (F-4), `edit` (F-5), `delete` (F-6), `persistence`, plus `layout` (390 px and accessibility).
 
 ---
 
@@ -1304,6 +1348,13 @@ echo "check.sh: all checks passed"
 | M4 | §5.5 | **D-11 built:** Save `disabled = state.saving || store.status !== 'ready'` at mount, on every store notification and around each save; `save()` returns early while not `ready`; add and edit alike. `RecipeNotFoundError` on save → generic "Could not save…" banner | D-11 implemented | T-18, D-11 |
 | M4 | §11.1, §11.3, §11.6 | No package or script changes; `focus-keeper.js` and `save-failure.js` are unit-imported (now in coverage); note that `tsconfig.node.json` lacks `DOM.Iterable`; new unit suites and e2e (`view-scale` scaling, new `edit`); D-12 known failing `persistence.spec.js` test → T-20 | as-built record | T-17, T-18, D-12 |
 | M4 | CONVENTIONS §1 | New "Shared UI helpers, not copies" rule (focus keeper, save-failure text, window listeners through `ScreenContext`) | T-17/T-18 made the patterns concrete | A-17, A-19 |
+| M5 | §2.1, §2.4, §2.5, §5.1, §5.4, §5.5 | T-18 items (`form-save.js`, `form-top.js`, `save-failure.js`, `ctx.onBeforeUnload`) re-checked against the code: already synced at M4, no further change | as-built check | T-18 |
+| M5 | §4, §4.1, §4.4 | Delete built: always a `<button>` in new `div.bar-actions` (with Edit), `disabled` unless `ready`, rebuilt on every notification; confirm dialog → `store.remove` → list with `{ replace: true }`; module-private `deleteHandler` with `busy`, `content.isConnected` and `store.status` checks after the dialog, so a confirm after read-only or unmount removes nothing | F-6; never act on stale data or a gone view | T-19 (m-6) |
+| M5 | §2.1, §2.5, §4.5 | Rejected `remove` mapped by `saveFailureMessage` (third caller); `RecipeNotFoundError` from `remove` shows the generic "Could not save…" while the view already says "Recipe not found". Kept as built; recorded as M5 minor, owner decision needed to change the §2.5 table | describe code as built | T-19 (m-5) |
+| M5 | §2.1, §4.1 | New `restoreFocus(region, testid)` in `focus-keeper.js`: after the delete dialog closes, focus returns to the (possibly rebuilt) Delete button if it was lost to `<body>`; `VIEW_FOCUS` gains `edit-recipe` / `delete-recipe` → `back-to-list` | keyboard users keep their place; closes T-19 m-7 | T-20 |
+| M5 | §2.5, §4.1 | Layout/a11y pass: one `<h1>` per screen (view not-found state now `<h1>Recipe not found</h1>`); ≥ 40 px targets incl. Back link, dialog buttons, favourites checkbox 24 × 40 px; text wrapping and dialog `max-width` so nothing overflows at 390 px | SPEC 390 px / tap-target promise, checked by e2e | T-20 |
+| M5 | §11.1, §11.6 | No package/script changes; new `delete.spec.js` and `layout.spec.js`; D-12 fixed in `persistence.spec.js` (clear search before recover); `main-process.test.js` uses an OS-assigned port (e2e still 47399) | as-built record; parallel `check.sh` runs no longer collide | T-19, T-20, D-12 |
+| M5 | CONVENTIONS §1 | "Shared UI helpers" rule extended: after a dialog closes, give focus back with `restoreFocus`; one `<h1>` per screen | T-19/T-20 made the patterns concrete | T-20 |
 
 ### Known deferred minors (M1 tidy-up list, owner-approved to defer)
 - T-02: `browser.js` has no URL guard of its own (relies on the URL coming from config).
@@ -1350,6 +1401,22 @@ echo "check.sh: all checks passed"
 - T-18: the `RecipeNotFoundError` e2e test ("recipe deleted in another tab") does not assert that the form stays dirty or that the stored value is unchanged.
 - T-18: no unit test for `web/js/ui/form-save.js` (`createSave`, `createSaveSync`); covered by e2e only (§11.1).
 - T-18: `screens/form-screen.js` casts `cancelTo` to `Route` instead of typing it (`/** @type {Route} */` on the declaration).
-- D-12: pre-existing failing e2e test `tests/e2e/persistence.spec.js` (cross-tab list recover leaves the search filter active). **Fix in T-20** (full e2e pass).
+- ~~D-12: pre-existing failing e2e test `tests/e2e/persistence.spec.js` (cross-tab list recover leaves the search filter active). **Fix in T-20** (full e2e pass).~~ **Closed in M5 (T-20):** the test clears the search box before the recover step (§11.6).
 - M4 sync: `docs/diagrams/lld-components.mmd` and the §0.3 diagram still omit `list-filters.js`, `favourite-toggle.js`, `focus-keeper.js`, `save-failure.js`, `servings-control.js`, `form-save.js`, `form-top.js` (all inside the "js/ui" box; `docs/diagrams/` is outside the architect's write scope).
 - Process note (not code): parallel e2e runs in two worktrees clash on port 47399; use a temporary Playwright config with another port.
+
+### Known deferred minors (M5 tidy-up list)
+New in M5:
+- T-19 m-5: a `RecipeNotFoundError` from `store.remove` after confirming Delete (another tab deleted the recipe while the dialog was open) shows the generic "Could not save. Your last change was not stored." although the view already shows "Recipe not found" (§2.5 table, §4.5). Behaviour unchanged; changing it changes the §2.5 contract (owner decision).
+- T-19 m-8: no e2e test for "Back while the confirm dialog is open, then confirm" (the `content.isConnected` guard in §4.1 is untested).
+- ~~T-19 m-7: focus drops to `<body>` when the dialog closes after a store re-render.~~ **Closed in M5 (T-20):** `restoreFocus` (§2.1, §4.1).
+- T-20 m-1: `restoreFocus` in `web/js/ui/focus-keeper.js` needs a comment on when it runs (after both Delete and Cancel; harmless when focus is elsewhere) and has no unit test (`tests/unit/ui/focus-keeper.test.js` covers `renderKeepingFocus` only).
+- T-20 m-2: `tests/e2e/layout.spec.js` "one h1 and every control carries a data-testid" skips everything inside `<dialog>`, so the dialog buttons' test ids are not checked there.
+- T-20 m-3: the form screens were only partly compared with the wireframe; known wireframe differences are styling only (native controls, star colour, blue Back link, dimmed dialog backdrop, extra "Serves N" line).
+Still open from earlier lists (carried):
+- T-17: unscaled view shows "Reset (6)" after another tab changes base servings (§4.5, A-18); no upper bound on servings (`Infinity` amounts, §7); `tsconfig.node.json` lacks `DOM.Iterable` (§11.3).
+- T-18: weak "Back skips the form" check in `edit.spec.js`; `RecipeNotFoundError` e2e does not assert dirty form / unchanged stored value; no unit test for `form-save.js`; `cancelTo` cast to `Route` in `form-screen.js`.
+- M3/M4 sync: `docs/diagrams/lld-components.mmd` and the §0.3 diagram still omit the shared UI modules (`list-filters`, `favourite-toggle`, `focus-keeper`, `save-failure`, `servings-control`, `form-save`, `form-top`).
+- `.githooks/pre-commit` is still not executable in fresh clones (owner not yet asked).
+- E2E fixed port 47399: parallel worktree runs still clash (unit server test fixed in T-19).
+- Earlier M1–M3 items not marked closed above remain open as listed.
