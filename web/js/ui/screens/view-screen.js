@@ -1,14 +1,16 @@
 import { h, clear } from '../dom.js';
 import { favouriteToggle, renderKeepingToggleFocus } from '../favourite-toggle.js';
+import { servingsControl, renderKeepingServingsFocus } from '../servings-control.js';
 import { formatIngredientLine } from '../../core/scaling/scaling.js';
 
 /**
  * @param {import('../../core/recipe/types.js').Ingredient} ingredient
  * @param {number} base
+ * @param {number} target
  * @returns {HTMLElement}
  */
-function ingredientLine(ingredient, base) {
-  const { amount, name } = formatIngredientLine(ingredient, base, base);
+function ingredientLine(ingredient, base, target) {
+  const { amount, name } = formatIngredientLine(ingredient, base, target);
   return h(
     'li',
     { 'data-testid': 'ingredient-line' },
@@ -20,9 +22,10 @@ function ingredientLine(ingredient, base) {
 
 /**
  * @param {import('../../core/recipe/types.js').Recipe} recipe
+ * @param {number} servings
  * @returns {HTMLElement}
  */
-function recipeBody(recipe) {
+function recipeBody(recipe, servings) {
   return h(
     'div',
     { class: 'cols' },
@@ -30,7 +33,7 @@ function recipeBody(recipe) {
       'section',
       { class: 'panel ing', 'data-testid': 'ingredients-panel' },
       h('h2', { text: 'Ingredients' }),
-      h('ul', {}, ...recipe.ingredients.map((i) => ingredientLine(i, recipe.servings))),
+      h('ul', {}, ...recipe.ingredients.map((i) => ingredientLine(i, recipe.servings, servings))),
     ),
     h(
       'section',
@@ -113,16 +116,33 @@ function notFound() {
 export function mountViewScreen(container, { store, banner }, route) {
   const id = route.name === 'view' ? route.id : '';
   const content = h('div', { class: 'view-content' });
+  let servings = 0;
+  let shownRecipe = '';
+
+  /** @param {number} next */
+  function setServings(next) {
+    servings = next;
+    renderKeepingServingsFocus(content, render);
+  }
 
   function render() {
     clear(content);
     const recipe = store.get(id);
+    if (recipe && shownRecipe !== id) {
+      shownRecipe = id;
+      servings = recipe.servings;
+    }
     content.append(
       ...(recipe
         ? [
             topBar(id, store.status === 'ready'),
             recipeHeader(recipe, favouriteToggle(recipe, store, banner)),
-            recipeBody(recipe),
+            servingsControl({
+              base: recipe.servings,
+              getServings: () => servings,
+              onChange: setServings,
+            }),
+            recipeBody(recipe, servings),
           ]
         : [notFound()]),
     );
