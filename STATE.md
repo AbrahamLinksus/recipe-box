@@ -7,8 +7,8 @@
 | Problem      | Single-user recipe box web app: add, search by title/tag, scale servings, favourite; data saved locally |
 | Repo         | AbrahamLinksus/recipe-box (public)                                                                      |
 | Stage | 7 Build |
-| Milestone | M2 · Add, list and open (6/6 tasks — all Done; milestone wrap-up next) — M1 done (8666dd4) |
-| Next step | M2-docs: architect as-built sync of docs/LLD.md (M2 sync list below + D-11 §5.5 alignment), then docs README pass; then M2 milestone card |
+| Milestone | M3 · Find and favourite (0/2 tasks) — M1 done (8666dd4), M2 done (04137c2) |
+| Next step | Fresh session: `/setup-project resume recipe-box` → start T-14 (search/filter UI, frontend-coder) ∥ T-15 (favourite star, frontend-coder) if their files do not overlap; first ask the owner to delete wip/CR-1 on GitHub (else approve exits 8) |
 | Last updated | 2026-11-12 |
 
 ## Config
@@ -59,8 +59,13 @@ Context gaps agents reported (`Context gap:` in a REPORT). The Orchestrator adds
 | reviewer | DECISIONS.md (rows relevant to the task); docs/SPEC.md §5 when fixtures are involved | T-02 / T-03 reviews needed decisions + spec examples |
 | debugger | docs/CONVENTIONS.md logging rules | T-05 debug needed them |
 | reviewer (UI) | web/js/ui/dom.js; TASKS.md rows of later tasks touching the same screen | T-12 review needed them to judge coverage |
+| architect, docs | a file with `git diff <since>..main --stat` (Orchestrator writes it) | no shell tool to run git (M2-docs gap reports) |
 
 ## Notes for the next session
+- M2 approved 2026-11-12 (milestone card, 04137c2). Owner chose: continue M3 in a fresh session. CR hold was skipped (owner-approved) for T-05b, T-13 and M2-docs via a patched copy of taskgit; do not assume that approval carries over — ask again if wip/CR-1 still exists.
+- Leftover merged branches on origin now: wip/CR-1, wip/T-05b, wip/T-09..T-13, wip/M2-docs (all in main; ignore on resume, owner deletes them in the GitHub web UI).
+- Architect and docs agents have no shell: put `git diff <last milestone>..main --stat` output in a file and list it in their Read: field.
+- M2 deferred minors are listed in docs/LLD.md "Known deferred minors (M2 tidy-up list)" (incl. save-failure banner text → T-18).
 - Session 2026-11-12 (2): T-05b (e104b93) and T-13 (35e517b) approved. Leftover wip/CR-1 on origin blocks taskgit approve (exit 8: CR hold) and cannot be deleted from cloud sessions (push --delete disconnects). Owner approved skipping the CR hold once for these two merges; ask the owner to delete wip/CR-1 + wip/T-09..T-12 in the GitHub web UI before the next approve.
 - D-11 (owner): Save disabled live while store is read-only. T-18 brief: apply it to the shared form screen (add + edit), subscribe to store.status; remove the §5.5 "Save rejects" path from the UI.
 - M2 tidy-up minors (T-13): m-8 beforeunload on global window (pass via ScreenContext), n-1 add.spec.js:189 test title says focus stays put but checks it moves; m-4 + m-9 fixes have no automated test. T-05b: 2 minor test-strength notes.
