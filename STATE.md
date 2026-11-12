@@ -6,9 +6,9 @@
 | ------------ | ------------------------------------------------------------------------------------------------------- |
 | Problem      | Single-user recipe box web app: add, search by title/tag, scale servings, favourite; data saved locally |
 | Repo         | AbrahamLinksus/recipe-box (public)                                                                      |
-| Stage | 8 Handover |
+| Stage | Complete |
 | Milestone | All milestones done — M1 (8666dd4), M2 (04137c2), M3 (44e6b69), M4 (f215bcd), M5 (6e43706) |
-| Next step | Handover task: devops CI → architect ARCHITECTURE.md + WALKTHROUGH.md → docs README run/test/extend → reviewer path check → handover card |
+| Next step | None — project handed over 2026-11-12 (cbf0d64). Optional: M5 tidy-up list in docs/LLD.md "Known deferred minors"; chmod +x .githooks/pre-commit; delete merged wip/* branches on origin |
 | Last updated | 2026-11-12 |
 
 ## Config
@@ -63,6 +63,7 @@ Context gaps agents reported (`Context gap:` in a REPORT). The Orchestrator adds
 | architect (as-built) | test titles in tests/e2e/*.spec.js and tests/unit/ui/* for the milestone's tasks | M4-docs: §11.6 needed real test names |
 
 ## Notes for the next session
+- Handover approved 2026-11-12 (cbf0d64): .github/workflows/ci.yml (check + e2e jobs, not yet run on GitHub), docs/ARCHITECTURE.md, docs/WALKTHROUGH.md, README run/test/extend + docs/images. Project Complete.
 - M5 approved 2026-11-12 (6e43706); owner chose continue here. T-21 (D-13) dropped by owner. Owner declined fixing .githooks/pre-commit executable bit (leave on tidy-up list).
 - T-20 approved (ffef845). T-20 minors: m-1 focus-keeper.js restoreFocus needs a comment (runs after delete/cancel, harmless), no unit test; m-2 layout.spec.js:82 testid check skips dialog buttons; m-3 form wireframe only partly compared. Wireframe diffs are styling only (native controls, brown star, blue Back link, dimmed dialog backdrop, extra Serves line). .githooks/pre-commit still not executable (owner not yet asked to fix).
 - T-19 approved (a50003f). T-19 minors: m-5 RecipeNotFoundError after confirm shows generic "Could not save" (needs Architect; M5 sync); m-6 LLD §4.1/§4.5 still say Delete not built + document that confirm after read-only/unmount removes nothing (M5 as-built); m-7 focus drops to body when the dialog closes after a re-render (T-20 a11y); m-8 no test for Back-with-dialog-open then confirm. tests/unit/server/main-process.test.js now uses an OS-assigned port (was fixed 47398 → sync failures); e2e still uses fixed 47399. Leftover merged wip/T-19 on origin: ignore.
