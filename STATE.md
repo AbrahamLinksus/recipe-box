@@ -7,8 +7,8 @@
 | Problem      | Single-user recipe box web app: add, search by title/tag, scale servings, favourite; data saved locally |
 | Repo         | AbrahamLinksus/recipe-box (public)                                                                      |
 | Stage | 7 Build |
-| Milestone | M5 · Edit, delete and finish (T-18, T-19 done; T-20 next) — M1 done (8666dd4), M2 (04137c2), M3 (44e6b69), M4 done (f215bcd) |
-| Next step | Start T-20 (frontend-coder): layout/a11y pass + D-12 test fix + T-19 m-7 focus-after-dialog; run `npm ci` in the new worktree first; then M5-docs (as-built sync incl. T-19 m-5/m-6) |
+| Milestone | M5 · Edit, delete and finish (T-18, T-19, T-20 done; M5-docs next) — M1 (8666dd4), M2 (04137c2), M3 (44e6b69), M4 (f215bcd) |
+| Next step | M5-docs: architect as-built LLD sync (since f215bcd; T-19 m-5/m-6, T-20 restoreFocus) then docs README; milestone card; then stage 8 handover |
 | Last updated | 2026-11-12 |
 
 ## Config
@@ -63,6 +63,7 @@ Context gaps agents reported (`Context gap:` in a REPORT). The Orchestrator adds
 | architect (as-built) | test titles in tests/e2e/*.spec.js and tests/unit/ui/* for the milestone's tasks | M4-docs: §11.6 needed real test names |
 
 ## Notes for the next session
+- T-20 approved (ffef845). T-20 minors: m-1 focus-keeper.js restoreFocus needs a comment (runs after delete/cancel, harmless), no unit test; m-2 layout.spec.js:82 testid check skips dialog buttons; m-3 form wireframe only partly compared. Wireframe diffs are styling only (native controls, brown star, blue Back link, dimmed dialog backdrop, extra Serves line). .githooks/pre-commit still not executable (owner not yet asked to fix).
 - T-19 approved (a50003f). T-19 minors: m-5 RecipeNotFoundError after confirm shows generic "Could not save" (needs Architect; M5 sync); m-6 LLD §4.1/§4.5 still say Delete not built + document that confirm after read-only/unmount removes nothing (M5 as-built); m-7 focus drops to body when the dialog closes after a re-render (T-20 a11y); m-8 no test for Back-with-dialog-open then confirm. tests/unit/server/main-process.test.js now uses an OS-assigned port (was fixed 47398 → sync failures); e2e still uses fixed 47399. Leftover merged wip/T-19 on origin: ignore.
 - M4 approved 2026-11-12 (milestone card, f215bcd). Owner chose: continue M5 in a fresh session. M4 deferred minors are in docs/LLD.md "Known deferred minors (M4 tidy-up list)". Merged leftovers on origin: wip/T-14, wip/T-15, wip/M3-docs (and wip/T-17, wip/T-18, wip/M4-docs if listed) — ignore on resume.
 - Scope check reverts TASK_PROGRESS.md edits made while an agent runs: run `scope` BEFORE editing TASK_PROGRESS.md after an agent returns, and re-apply the Agents: line.

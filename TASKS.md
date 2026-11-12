@@ -297,14 +297,14 @@ Notes for every task
 - Owner: frontend-coder
 - Depends on: T-18, T-19
 - Context: SPEC §7, §9, §12 · LLD §2.5, §11.6 · files: web/css/app.css, web/js/ui/**, tests/e2e/*, docs/wireframes/*.html
-- Status: Backlog
+- Status: Done
 - Acceptance criteria:
-  - [ ] New `tests/e2e/layout.spec.js`: on every screen (list, view, add, edit, not-found) at 390 px `document.documentElement.scrollWidth <= clientWidth` and every button/link/input is ≥ 40 px tall
-  - [ ] Each screen has one `<h1>`; every interactive element is a real button/link/control with its LLD `data-testid`; stars have `aria-pressed` and `aria-label`
-  - [ ] Screenshots of list, view (Pancakes at 3 servings), form (with a validation error) and delete dialog at 1280 and 390 px in `.results/T-20/`, side by side with the wireframe renders, with differences listed in the report
-  - [ ] Fix the pre-existing test bug in `tests/e2e/persistence.spec.js` "cross-tab corrupt write on the list … recover" (search filter `b` left active, so it counts 1 star instead of 3) — D-12
-  - [ ] `bash scripts/check.sh --e2e` passes with all specs (list, add, view-scale, favourite, edit, delete, persistence, layout) in both projects
-- Result: —
+  - [x] New `tests/e2e/layout.spec.js`: on every screen (list, view, add, edit, not-found) at 390 px `document.documentElement.scrollWidth <= clientWidth` and every button/link/input is ≥ 40 px tall
+  - [x] Each screen has one `<h1>`; every interactive element is a real button/link/control with its LLD `data-testid`; stars have `aria-pressed` and `aria-label`
+  - [x] Screenshots of list, view (Pancakes at 3 servings), form (with a validation error) and delete dialog at 1280 and 390 px in `.results/T-20/`, side by side with the wireframe renders, with differences listed in the report
+  - [x] Fix the pre-existing test bug in `tests/e2e/persistence.spec.js` "cross-tab corrupt write on the list … recover" (search filter `b` left active, so it counts 1 star instead of 3) — D-12
+  - [x] `bash scripts/check.sh --e2e` passes with all specs (list, add, view-scale, favourite, edit, delete, persistence, layout) in both projects
+- Result: ✅ 5/5 goals · 170 e2e pass · 0 major, 3 minor (M5 sync) · T-19 m-7 folded in · ffef845
 
 ## User story coverage
 
