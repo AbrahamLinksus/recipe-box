@@ -108,3 +108,16 @@ test('data turning unreadable while the dialog is open: confirm changes nothing'
   await expect(page.getByTestId('banner')).not.toContainText('Could not save');
   expect(await storedValue(page)).toBe('{oops');
 });
+
+test('a store re-render while the dialog is open: focus returns to Delete on close', async ({
+  page,
+}) => {
+  await page.getByTestId('delete-recipe').click();
+  await expect(page.getByTestId('confirm-cancel')).toBeFocused();
+  const changed = SPEC_RECIPES.map((r) => ({ ...r, favourite: r.id === 'r-soup' }));
+  await writeFromOtherTab(page, JSON.stringify({ version: 1, recipes: changed }));
+  await expect(page.getByTestId('favourite-toggle')).toHaveAttribute('aria-pressed', 'true');
+  await page.getByTestId('confirm-cancel').click();
+  await expect(page.getByTestId('confirm-dialog')).toBeHidden();
+  await expect(page.getByTestId('delete-recipe')).toBeFocused();
+});
